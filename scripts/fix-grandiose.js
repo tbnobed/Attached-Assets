@@ -94,12 +94,8 @@ patchFile('grandiose_receive.cc', [
   ],
 ]);
 
-patchFile('grandiose_receive.h', [
-  [
-    'char* name = nullptr;',
-    'const char* name = nullptr;'
-  ],
-]);
+// NOTE: Do NOT change 'char* name' in grandiose_receive.h — it's a mutable
+// buffer used with malloc/free/napi_get_value_string_utf8.
 
 if (totalFixes === 0) {
   console.log('No exact matches found. Trying flexible line-by-line patching...\n');
