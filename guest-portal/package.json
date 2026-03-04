@@ -1,0 +1,12 @@
+{
+  "name": "zoom-iso-guest-portal",
+  "version": "1.0.0",
+  "description": "Guest portal for remote participants to join Zoom ISO Capture sessions via browser",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0"
+  }
+}

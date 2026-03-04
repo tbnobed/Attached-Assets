@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Join Session - Zoom ISO Capture</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://source.zoom.us/videosdk/zoom-video-1.12.5.min.js"></script>
+</head>
+<body>
+  <div id="app">
+    <div id="join-screen" class="screen active">
+      <div class="card">
+        <div class="logo">
+          <div class="logo-icon">ISO</div>
+          <h1>Zoom ISO Capture</h1>
+          <p class="subtitle">Guest Portal</p>
+        </div>
+
+        <div id="error-banner" class="error-banner hidden"></div>
+
+        <form id="join-form">
+          <div class="form-group">
+            <label for="user-name">Your Name</label>
+            <input type="text" id="user-name" placeholder="Enter your display name" maxlength="40" required autofocus>
+          </div>
+
+          <div class="form-group">
+            <label for="session-name">Session</label>
+            <input type="text" id="session-name" readonly>
+          </div>
+
+          <div class="device-section">
+            <h3>Device Setup</h3>
+            <div class="form-group">
+              <label for="camera-select">Camera</label>
+              <select id="camera-select"><option value="">Loading...</option></select>
+            </div>
+            <div class="form-group">
+              <label for="mic-select">Microphone</label>
+              <select id="mic-select"><option value="">Loading...</option></select>
+            </div>
+            <div class="preview-container">
+              <video id="camera-preview" autoplay muted playsinline></video>
+              <div id="preview-placeholder" class="preview-placeholder">
+                <span>Camera preview</span>
+              </div>
+              <div id="audio-meter" class="audio-meter">
+                <div id="audio-level" class="audio-level"></div>
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" id="join-btn" class="btn-primary" disabled>
+            <span id="join-btn-text">Join Session</span>
+            <span id="join-btn-loading" class="hidden">Connecting...</span>
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <div id="session-screen" class="screen">
+      <div class="session-header">
+        <div class="session-info">
+          <span class="session-badge">LIVE</span>
+          <span id="session-label"></span>
+          <span id="participant-count" class="participant-count"></span>
+        </div>
+        <div class="session-controls">
+          <button id="toggle-camera" class="btn-control active" title="Toggle Camera">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+            </svg>
+          </button>
+          <button id="toggle-mic" class="btn-control active" title="Toggle Microphone">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/>
+              <line x1="8" y1="23" x2="16" y2="23"/>
+            </svg>
+          </button>
+          <button id="leave-btn" class="btn-leave" title="Leave Session">Leave</button>
+        </div>
+      </div>
+
+      <div id="video-grid" class="video-grid"></div>
+
+      <div id="session-status" class="session-status">
+        <span id="status-text">Connected</span>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

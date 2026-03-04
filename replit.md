@@ -35,6 +35,16 @@ Electron desktop application for capturing isolated video/audio feeds from Zoom 
 - `SESSION_NAME` - Default session name
 - `SESSION_PASSWORD` - Optional session password
 
+## Guest Portal (`guest-portal/`)
+- Standalone Express server for remote guests to join sessions via browser
+- Serves a web page using the Zoom Video SDK for Web (CDN-loaded)
+- Generates JWT tokens server-side for guests (role=0, participant)
+- Has its own `package.json` — deployed independently on a Linux server
+- Requires same `ZOOM_SDK_KEY`, `ZOOM_SDK_SECRET`, and `SESSION_NAME` as the desktop app
+- Guests open the URL in Chrome/Edge, enter name, select camera/mic, and join
+- Key files: `guest-portal/server.js`, `guest-portal/public/index.html`, `guest-portal/public/app.js`, `guest-portal/public/styles.css`
+
 ## Running
-- Workflow: VNC-based Electron app via `npx electron .`
+- Desktop App Workflow: VNC-based Electron app via `npx electron .`
+- Guest Portal: `cd guest-portal && npm install && npm start` (runs on port 3000)
 - The app uses `--no-sandbox` flag for Replit compatibility
