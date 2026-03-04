@@ -36,9 +36,12 @@ bool ZoomAddon::Initialize(const ZoomConfig& config) {
     initParam.strWebDomain = L"https://zoom.us";
     initParam.enableLogByDefault = true;
 
-    initParam.rawdataOpts.enableRawdataIntermediateMode = true;
+    initParam.rawdataOpts.enableRawdataIntermediateMode = false;
+    initParam.rawdataOpts.videoRawdataMemoryMode = (ZoomSDKRawDataMemoryMode)1;
+    initParam.rawdataOpts.audioRawdataMemoryMode = (ZoomSDKRawDataMemoryMode)1;
+    initParam.rawdataOpts.shareRawdataMemoryMode = (ZoomSDKRawDataMemoryMode)1;
 
-    printf("[ZoomNative] Initializing SDK (rawdata intermediate mode ENABLED)\n");
+    printf("[ZoomNative] Initializing SDK (heap memory mode, intermediate OFF)\n");
     fflush(stdout);
 
     SDKError err = InitSDK(initParam);

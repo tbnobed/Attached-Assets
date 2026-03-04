@@ -22,6 +22,15 @@ public:
     void onRawDataFrameReceived(YUVRawDataI420* data) override {
         if (!data) return;
 
+        if (data->IsLimitedI420()) {
+            if (frameLogCount_ < 3) {
+                printf("[ZoomNative] Video frame: userId=%u limited/placeholder frame — skipping\n", userId_);
+                fflush(stdout);
+            }
+            frameLogCount_++;
+            return;
+        }
+
         unsigned int width = data->GetStreamWidth();
         unsigned int height = data->GetStreamHeight();
         if (width == 0 || height == 0) return;
