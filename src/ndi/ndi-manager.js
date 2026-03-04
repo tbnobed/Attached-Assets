@@ -120,9 +120,10 @@ class NDIManager extends EventEmitter {
         frameRateN: this.settings.video.frameRate * 1000,
         frameRateD: 1000,
         pictureAspectRatio: width / height,
+        frameFormatType: 1,
         fourCC: this.grandiose.FOURCC_RGBA,
-        data: frameBuffer,
         lineStrideBytes: width * 4,
+        data: frameBuffer,
       });
     } catch (err) {
       if (source.framesSent % 300 === 1) {
