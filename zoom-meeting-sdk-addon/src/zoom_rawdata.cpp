@@ -7,12 +7,16 @@
 #include "rawdata/zoom_rawdata_api.h"
 #include "rawdata/rawdata_renderer_interface.h"
 #include "rawdata/rawdata_audio_helper_interface.h"
+#include "meeting_service_interface.h"
+#include "meeting_service_components/meeting_recording_interface.h"
 
 using namespace ZOOMSDK;
 
+extern IMeetingService* g_meetingService;
+
 class PerUserVideoListener : public IZoomSDKRendererDelegate {
 public:
-    explicit PerUserVideoListener(uint32_t userId) : userId_(userId) {}
+    explicit PerUserVideoListener(uint32_t userId) : userId_(userId), frameLogCount_(0) {}
 
     void onRawDataFrameReceived(YUVRawDataI420* data) override {
         if (!data) return;
@@ -21,12 +25,11 @@ public:
         int height = data->GetStreamHeight();
         if (width <= 0 || height <= 0) return;
 
-        static int frameLogCount = 0;
-        if (frameLogCount < 5 || frameLogCount % 300 == 0) {
-            printf("[ZoomNative] Video frame: userId=%u %dx%d (frame #%d)\n", userId_, width, height, frameLogCount);
+        if (frameLogCount_ < 5 || frameLogCount_ % 300 == 0) {
+            printf("[ZoomNative] Video frame: userId=%u %dx%d (frame #%d)\n", userId_, width, height, frameLogCount_);
             fflush(stdout);
         }
-        frameLogCount++;
+        frameLogCount_++;
 
         int rgbaSize = width * height * 4;
         auto* rgbaData = new uint8_t[rgbaSize];
@@ -37,7 +40,6 @@ public:
 
         int yStride = width;
         int uStride = width / 2;
-        int vStride = width / 2;
 
         for (int j = 0; j < height; j++) {
             for (int i = 0; i < width; i++) {
@@ -74,6 +76,7 @@ public:
         printf("[ZoomNative] onRawDataStatusChanged: userId=%u status=%s\n", userId_, statusName);
         fflush(stdout);
     }
+
     void onRendererBeDestroyed() override {
         printf("[ZoomNative] onRendererBeDestroyed: userId=%u\n", userId_);
         fflush(stdout);
@@ -83,6 +86,7 @@ public:
 
 private:
     uint32_t userId_;
+    int frameLogCount_;
 };
 
 class AudioRawDataListener : public IZoomSDKAudioRawDataDelegate {
@@ -113,9 +117,62 @@ public:
     void onOneWayInterpreterAudioRawDataReceived(AudioRawData* data, const zchar_t* pLanguageName) override {}
 };
 
+class RecordingEventListener : public IMeetingRecordingCtrlEvent {
+public:
+    void onRecordingStatus(RecordingStatus status) override {
+        const char* statusName = "UNKNOWN";
+        switch (status) {
+            case Recording_Start: statusName = "Recording_Start"; break;
+            case Recording_Stop: statusName = "Recording_Stop"; break;
+            case Recording_Pause: statusName = "Recording_Pause"; break;
+            case Recording_DiskFull: statusName = "Recording_DiskFull"; break;
+            default: break;
+        }
+        printf("[ZoomNative] onRecordingStatus: %s (%d)\n", statusName, (int)status);
+        fflush(stdout);
+
+        if (status == Recording_Start) {
+            printf("[ZoomNative] Raw recording started — now subscribing raw data\n");
+            fflush(stdout);
+            ZoomAddon::Instance().OnRawRecordingStarted();
+        }
+    }
+
+    void onCloudRecordingStatus(RecordingStatus status) override {}
+    void onRecordPrivilegeChanged(bool bCanRec) override {
+        printf("[ZoomNative] onRecordPrivilegeChanged: canRecord=%d\n", bCanRec);
+        fflush(stdout);
+        if (bCanRec) {
+            ZoomAddon::Instance().OnRecordingPermissionGranted();
+        }
+    }
+    void onLocalRecordingPrivilegeRequestStatus(RequestLocalRecordingStatus status) override {
+        printf("[ZoomNative] onLocalRecordingPrivilegeRequestStatus: %d\n", (int)status);
+        fflush(stdout);
+    }
+    void onRequestLocalRecordingPrivilegeChanged(LocalRecordingRequestPrivilegeStatus status) override {
+        printf("[ZoomNative] onRequestLocalRecordingPrivilegeChanged: %d\n", (int)status);
+        fflush(stdout);
+    }
+    void onLocalRecordingPrivilegeChanged(bool bCanRec) override {
+        printf("[ZoomNative] onLocalRecordingPrivilegeChanged: canRecord=%d\n", bCanRec);
+        fflush(stdout);
+        if (bCanRec) {
+            ZoomAddon::Instance().OnRecordingPermissionGranted();
+        }
+    }
+    void onCustomizedLocalRecordingSourceNotification(ICustomizedLocalRecordingLayoutHelper* pHelper) override {}
+    void onCloudRecordingStorageFull(time_t gracePeriodDate) override {}
+    void onEnableAndStartSmartRecordingRequested() override {}
+    void onSmartRecordingEnableActionCallback(ISmartRecordingEnableActionHandler* handler) override {}
+    void onTranscodingStatusChanged(TranscodingStatus status) override {}
+};
+
 static AudioRawDataListener* g_audioListener = nullptr;
+static RecordingEventListener* g_recordingListener = nullptr;
 static std::map<uint32_t, std::pair<IZoomSDKRenderer*, PerUserVideoListener*>> g_videoRenderers;
 static bool g_rawDataActive = false;
+static bool g_rawRecordingStarted = false;
 
 void subscribeUserVideo(uint32_t userId) {
     if (g_videoRenderers.count(userId)) {
@@ -161,11 +218,109 @@ void unsubscribeAllVideo() {
     g_videoRenderers.clear();
 }
 
+bool ZoomAddon::StartRawRecording() {
+    if (g_rawRecordingStarted) {
+        printf("[ZoomNative] StartRawRecording: already started\n");
+        fflush(stdout);
+        return true;
+    }
+
+    if (!g_meetingService) {
+        printf("[ZoomNative] StartRawRecording: no meeting service\n");
+        fflush(stdout);
+        return false;
+    }
+
+    auto* recCtrl = g_meetingService->GetMeetingRecordingController();
+    if (!recCtrl) {
+        printf("[ZoomNative] StartRawRecording: GetMeetingRecordingController returned null\n");
+        fflush(stdout);
+        return false;
+    }
+
+    if (!g_recordingListener) {
+        g_recordingListener = new RecordingEventListener();
+        recCtrl->SetEvent(g_recordingListener);
+        printf("[ZoomNative] StartRawRecording: recording event listener set\n");
+        fflush(stdout);
+    }
+
+    auto err = recCtrl->StartRawRecording();
+    printf("[ZoomNative] StartRawRecording: result=%d\n", (int)err);
+    fflush(stdout);
+
+    if (err == SDKERR_SUCCESS) {
+        return true;
+    }
+
+    if (err == SDKERR_NO_PERMISSION) {
+        printf("[ZoomNative] StartRawRecording: no permission — requesting local recording privilege\n");
+        fflush(stdout);
+        auto reqErr = recCtrl->RequestLocalRecordingPrivilege();
+        printf("[ZoomNative] RequestLocalRecordingPrivilege: result=%d\n", (int)reqErr);
+        fflush(stdout);
+    } else {
+        printf("[ZoomNative] StartRawRecording: unexpected error %d — will retry via RetryVideoSubscriptions\n", (int)err);
+        fflush(stdout);
+        if (eventCallback_) {
+            int errCode = (int)err;
+            eventCallback_.NonBlockingCall([errCode](Napi::Env env, Napi::Function jsCallback) {
+                auto obj = Napi::Object::New(env);
+                obj.Set("type", Napi::String::New(env, "meeting-status"));
+                obj.Set("status", Napi::String::New(env, "RAW_RECORDING_ERROR"));
+                obj.Set("errorCode", Napi::Number::New(env, errCode));
+                jsCallback.Call({ obj });
+            });
+        }
+    }
+
+    return false;
+}
+
+void ZoomAddon::OnRecordingPermissionGranted() {
+    if (g_rawRecordingStarted) {
+        printf("[ZoomNative] OnRecordingPermissionGranted: already started, ignoring\n");
+        fflush(stdout);
+        return;
+    }
+    printf("[ZoomNative] Recording permission granted — attempting StartRawRecording\n");
+    fflush(stdout);
+    if (g_meetingService) {
+        auto* recCtrl = g_meetingService->GetMeetingRecordingController();
+        if (recCtrl) {
+            auto err = recCtrl->StartRawRecording();
+            printf("[ZoomNative] StartRawRecording after permission: result=%d\n", (int)err);
+            fflush(stdout);
+        }
+    }
+}
+
+void ZoomAddon::OnRawRecordingStarted() {
+    g_rawRecordingStarted = true;
+
+    if (eventCallback_) {
+        eventCallback_.NonBlockingCall([](Napi::Env env, Napi::Function jsCallback) {
+            auto obj = Napi::Object::New(env);
+            obj.Set("type", Napi::String::New(env, "meeting-status"));
+            obj.Set("status", Napi::String::New(env, "RAW_RECORDING_STARTED"));
+            jsCallback.Call({ obj });
+        });
+    }
+
+    StartRawDataCapture();
+}
+
 bool ZoomAddon::StartRawDataCapture() {
     if (g_rawDataActive) {
         printf("[ZoomNative] StartRawDataCapture: already active\n");
         fflush(stdout);
         return true;
+    }
+
+    if (!g_rawRecordingStarted) {
+        printf("[ZoomNative] StartRawDataCapture: raw recording not started yet — deferring\n");
+        fflush(stdout);
+        return false;
     }
 
     auto* rawDataHelper = GetAudioRawdataHelper();
@@ -181,9 +336,7 @@ bool ZoomAddon::StartRawDataCapture() {
     fflush(stdout);
 
     if (subErr != SDKERR_SUCCESS) {
-        printf("[ZoomNative] StartRawDataCapture: audio subscribe FAILED — raw data may not be permitted\n");
-        printf("[ZoomNative] Check: 1) Zoom Marketplace app has 'Raw Data' enabled\n");
-        printf("[ZoomNative]        2) Meeting SDK app type allows raw data access\n");
+        printf("[ZoomNative] StartRawDataCapture: audio subscribe FAILED\n");
         fflush(stdout);
         delete g_audioListener;
         g_audioListener = nullptr;
@@ -204,7 +357,20 @@ bool ZoomAddon::StartRawDataCapture() {
 }
 
 void ZoomAddon::RetryVideoSubscriptions() {
-    if (!g_rawDataActive) return;
+    if (!g_rawRecordingStarted) {
+        printf("[ZoomNative] RetryVideoSubscriptions: raw recording not started, trying StartRawRecording\n");
+        fflush(stdout);
+        StartRawRecording();
+        return;
+    }
+
+    if (!g_rawDataActive) {
+        printf("[ZoomNative] RetryVideoSubscriptions: raw data not active, trying StartRawDataCapture\n");
+        fflush(stdout);
+        StartRawDataCapture();
+        return;
+    }
+
     std::lock_guard<std::mutex> lock(mutex_);
     printf("[ZoomNative] RetryVideoSubscriptions: %zu participants\n", participants_.size());
     fflush(stdout);
@@ -251,7 +417,22 @@ void ZoomAddon::StopRawDataCapture() {
         g_audioListener = nullptr;
     }
 
+    if (g_meetingService && g_rawRecordingStarted) {
+        auto* recCtrl = g_meetingService->GetMeetingRecordingController();
+        if (recCtrl) {
+            recCtrl->StopRawRecording();
+            printf("[ZoomNative] StopRawRecording called\n");
+            fflush(stdout);
+        }
+    }
+
+    if (g_recordingListener) {
+        delete g_recordingListener;
+        g_recordingListener = nullptr;
+    }
+
     g_rawDataActive = false;
+    g_rawRecordingStarted = false;
 }
 
 #else
@@ -259,10 +440,15 @@ void ZoomAddon::StopRawDataCapture() {
 bool ZoomAddon::StartRawDataCapture() {
     return true;
 }
+bool ZoomAddon::StartRawRecording() {
+    return true;
+}
 
 void ZoomAddon::SubscribeParticipantVideo(uint32_t userId) {}
 void ZoomAddon::UnsubscribeParticipantVideo(uint32_t userId) {}
 void ZoomAddon::RetryVideoSubscriptions() {}
+void ZoomAddon::OnRecordingPermissionGranted() {}
+void ZoomAddon::OnRawRecordingStarted() {}
 void ZoomAddon::StopRawDataCapture() {}
 
 #endif

@@ -816,6 +816,10 @@
         log('Zoom SDK authenticated — ready to join meetings', 'success');
       });
 
+      window.zoomISO.onRawRecordingStarted(() => {
+        log('Raw recording started — capturing ISO video/audio feeds', 'success');
+      });
+
       window.zoomISO.getSettings().then(s => {
         state.settings = s;
         document.getElementById('outputDirDisplay').textContent = s.outputDir || './recordings';

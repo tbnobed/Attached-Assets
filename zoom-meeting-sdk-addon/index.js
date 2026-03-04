@@ -235,8 +235,7 @@ class ZoomMeetingBridge extends EventEmitter {
     switch (status) {
       case 'MEETING_STATUS_INMEETING':
         this.inMeeting = true;
-        console.log('[ZoomBridge] In meeting — starting raw capture and participant enumeration');
-        try { nativeAddon.startRawCapture(); } catch (e) { console.error('[ZoomBridge] startRawCapture error:', e.message); }
+        console.log('[ZoomBridge] In meeting — initiating raw recording and participant enumeration');
         this.emit('meeting-joined');
         setTimeout(() => this._enumerateExistingParticipants(), 500);
         setTimeout(() => this._enumerateExistingParticipants(), 2000);
@@ -253,6 +252,14 @@ class ZoomMeetingBridge extends EventEmitter {
         break;
       case 'MEETING_STATUS_RECONNECTING':
         this.emit('meeting-reconnecting');
+        break;
+      case 'RAW_RECORDING_STARTED':
+        console.log('[ZoomBridge] Raw recording started — video/audio capture active');
+        this.emit('raw-recording-started');
+        break;
+      case 'RAW_RECORDING_ERROR':
+        console.warn(`[ZoomBridge] Raw recording error (code=${data.errorCode}) — retries will continue`);
+        this.emit('raw-recording-error', { errorCode: data.errorCode });
         break;
       case 'AUTH_SUCCESS':
         this.authenticated = true;

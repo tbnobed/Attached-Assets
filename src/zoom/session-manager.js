@@ -73,6 +73,11 @@ class SessionManager extends EventEmitter {
         this.emit('reconnecting', { attempt: 1, maxAttempts: this.maxReconnectAttempts });
       });
 
+      this.zoomBridge.on('raw-recording-started', () => {
+        console.log('[SessionManager] Raw recording started — capturing video/audio');
+        this.emit('raw-recording-started');
+      });
+
       this.zoomBridge.on('auth-success', () => {
         console.log('[SessionManager] SDK authentication successful');
         this.emit('auth-success');

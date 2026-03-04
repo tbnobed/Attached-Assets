@@ -9,7 +9,7 @@
 
 using namespace ZOOMSDK;
 
-static IMeetingService* g_meetingService = nullptr;
+IMeetingService* g_meetingService = nullptr;
 
 class MeetingServiceEventListener : public IMeetingServiceEvent {
 public:
@@ -31,10 +31,10 @@ public:
         ZoomAddon::Instance().OnMeetingStatusChanged(statusStr);
 
         if (status == MEETING_STATUS_INMEETING) {
-            bool rawOk = ZoomAddon::Instance().StartRawDataCapture();
-            printf("[ZoomNative] StartRawDataCapture: %s\n", rawOk ? "OK" : "FAILED");
-            fflush(stdout);
             ZoomAddon::Instance().EnumerateParticipants();
+            bool rawOk = ZoomAddon::Instance().StartRawRecording();
+            printf("[ZoomNative] StartRawRecording: %s\n", rawOk ? "OK" : "PENDING (waiting for permission)");
+            fflush(stdout);
         }
     }
 

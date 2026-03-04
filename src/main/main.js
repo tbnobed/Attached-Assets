@@ -74,6 +74,10 @@ function initManagers() {
     sendToRenderer('auth-success', {});
   });
 
+  sessionManager.on('raw-recording-started', () => {
+    sendToRenderer('raw-recording-started', {});
+  });
+
   sessionManager.on('connection-error', (error) => {
     sendToRenderer('connection-error', { message: error.message || String(error) });
   });

@@ -96,4 +96,9 @@ contextBridge.exposeInMainWorld('zoomISO', {
     ipcRenderer.on('auth-success', handler);
     return () => ipcRenderer.removeListener('auth-success', handler);
   },
+  onRawRecordingStarted: (callback) => {
+    const handler = (_event, data) => callback(data);
+    ipcRenderer.on('raw-recording-started', handler);
+    return () => ipcRenderer.removeListener('raw-recording-started', handler);
+  },
 });

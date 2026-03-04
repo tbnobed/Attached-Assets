@@ -36,15 +36,19 @@ Electron desktop application for capturing isolated video/audio feeds from Zoom 
 - `scripts/fix-grandiose.js` - Patches grandiose for MSVC const-correctness
 
 ## Data Flow
-1. Native addon joins Zoom meeting, raw capture starts automatically when MEETING_STATUS_INMEETING
-2. C++ actively enumerates participants via GetParticipantsList() + onUserJoin callback (dual approach)
-3. JS bridge polls enumerateParticipants() at 0.5s, 2s, 5s, 10s after joining for reliability
-4. Per-participant I420 video frames -> converted to RGBA in C++ -> sent via ThreadSafeFunction to JS
-5. Per-participant PCM audio -> sent via ThreadSafeFunction to JS
-6. SessionManager receives frames -> routes to StreamHandler
-7. StreamHandler emits video-frame/audio-data events
-8. main.js routes to NDIManager (RGBA frames -> NDI sources) and RecorderManager (FFmpeg pipes)
-9. NDI send uses per-source locks (_videoSending/_audioSending) to prevent promise queue overflow
+1. Native addon joins Zoom meeting, MEETING_STATUS_INMEETING fires
+2. C++ calls StartRawRecording() on IMeetingRecordingController — if bot isn't host, requests recording privilege
+3. onRecordingStatus(Recording_Start) callback fires → OnRawRecordingStarted() → StartRawDataCapture()
+4. StartRawDataCapture subscribes audio (GetAudioRawdataHelper) + creates IZoomSDKRenderer per existing participant
+5. C++ actively enumerates participants via GetParticipantsList() + onUserJoin callback (dual approach)
+6. JS bridge polls enumerateParticipants() at 0.5s, 2s, 5s, 10s after joining for reliability
+7. RetryVideoSubscriptions at 3s/8s/15s cascades: StartRawRecording → StartRawDataCapture → subscribe missing
+8. Per-participant I420 video frames -> converted to RGBA in C++ -> sent via ThreadSafeFunction to JS
+9. Per-participant PCM audio -> sent via ThreadSafeFunction to JS
+10. SessionManager receives frames -> routes to StreamHandler
+11. StreamHandler emits video-frame/audio-data events
+12. main.js routes to NDIManager (RGBA frames -> NDI sources) and RecorderManager (FFmpeg pipes)
+13. NDI send uses per-source locks (_videoSending/_audioSending) to prevent promise queue overflow
 
 ## Dependencies
 - electron - Desktop app framework
@@ -112,3 +116,6 @@ npm start
 - `GetYBuffer()/GetUBuffer()/GetVBuffer()` return `char*`, need reinterpret_cast to unsigned char*
 - Audio helper: use `GetAudioRawdataHelper()` directly (not via GetRawdataAPIHelper)
 - Include `meeting_audio_interface.h` before `meeting_participants_ctrl_interface.h` for AudioType
+- Raw data requires `StartRawRecording()` on IMeetingRecordingController BEFORE createRenderer/audio subscribe
+- If bot lacks recording permission, call `RequestLocalRecordingPrivilege()` and wait for `onRecordPrivilegeChanged(true)` or `onLocalRecordingPrivilegeChanged(true)`
+- `onRecordingStatus(Recording_Start)` is the gate signal: only after this can renderers and audio subscriptions succeed

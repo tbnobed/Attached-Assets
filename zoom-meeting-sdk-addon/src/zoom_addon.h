@@ -42,8 +42,11 @@ public:
     bool JoinMeeting(const std::string& meetingId, const std::string& password, const std::string& displayName);
     bool LeaveMeeting();
     void EnumerateParticipants();
+    bool StartRawRecording();
     bool StartRawDataCapture();
     void RetryVideoSubscriptions();
+    void OnRecordingPermissionGranted();
+    void OnRawRecordingStarted();
     void StopRawDataCapture();
     void SubscribeParticipantVideo(uint32_t userId);
     void UnsubscribeParticipantVideo(uint32_t userId);
