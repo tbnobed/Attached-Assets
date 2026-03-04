@@ -91,4 +91,9 @@ contextBridge.exposeInMainWorld('zoomISO', {
     ipcRenderer.on('reconnect-failed', handler);
     return () => ipcRenderer.removeListener('reconnect-failed', handler);
   },
+  onAuthSuccess: (callback) => {
+    const handler = (_event, data) => callback(data);
+    ipcRenderer.on('auth-success', handler);
+    return () => ipcRenderer.removeListener('auth-success', handler);
+  },
 });

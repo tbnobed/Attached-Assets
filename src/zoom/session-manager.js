@@ -34,7 +34,10 @@ class SessionManager extends EventEmitter {
       });
 
       if (ok) {
+        console.log('[SessionManager] SDK initialized, authenticating...');
         this.zoomBridge.auth();
+      } else {
+        console.error('[SessionManager] SDK initialization failed');
       }
 
       this.zoomBridge.on('participant-joined', ({ userId, displayName }) => {
@@ -70,7 +73,13 @@ class SessionManager extends EventEmitter {
         this.emit('reconnecting', { attempt: 1, maxAttempts: this.maxReconnectAttempts });
       });
 
+      this.zoomBridge.on('auth-success', () => {
+        console.log('[SessionManager] SDK authentication successful');
+        this.emit('auth-success');
+      });
+
       this.zoomBridge.on('auth-failed', () => {
+        console.error('[SessionManager] SDK authentication FAILED');
         this.emit('connection-error', new Error('Zoom SDK authentication failed'));
       });
 
@@ -117,14 +126,26 @@ class SessionManager extends EventEmitter {
       throw new Error('Zoom Meeting SDK not available. Build the native addon first.');
     }
 
+    if (!this.zoomBridge.authenticated) {
+      throw new Error('SDK not authenticated yet. Wait for authentication to complete before joining.');
+    }
+
     this.meetingId = meetingId;
     this.meetingPassword = password || '';
 
-    return this.zoomBridge.joinMeeting(
+    console.log('[SessionManager] Attempting to join meeting:', meetingId);
+
+    const ok = this.zoomBridge.joinMeeting(
       meetingId,
       password || '',
       displayName || this.settings.botName || 'PlexISO'
     );
+
+    if (!ok) {
+      console.error('[SessionManager] joinMeeting() returned false — SDK state:', this.zoomBridge.getState());
+    }
+
+    return ok;
   }
 
   leaveMeeting() {

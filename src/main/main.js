@@ -70,6 +70,10 @@ function initManagers() {
     sendStatusUpdate();
   });
 
+  sessionManager.on('auth-success', () => {
+    sendToRenderer('auth-success', {});
+  });
+
   sessionManager.on('connection-error', (error) => {
     sendToRenderer('connection-error', { message: error.message || String(error) });
   });

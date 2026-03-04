@@ -114,7 +114,9 @@ void ZoomAddon::OnMeetingStatusChanged(const std::string& status) {
         });
     }
 
-    if (status == "MEETING_STATUS_INMEETING") {
+    if (status == "AUTH_SUCCESS") {
+        state_ = AddonState::Authenticated;
+    } else if (status == "MEETING_STATUS_INMEETING") {
         state_ = AddonState::InMeeting;
     } else if (status == "MEETING_STATUS_ENDED" || status == "MEETING_STATUS_FAILED") {
         state_ = AddonState::Authenticated;

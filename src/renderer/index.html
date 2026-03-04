@@ -700,7 +700,7 @@
       if (result.success) {
         log(`Join initiated for meeting ${meetingId}`, 'success');
       } else {
-        log(`Join failed: ${result.error}`, 'error');
+        log(`Join failed: ${result.error || result.message || 'Unknown error'}`, 'error');
       }
     });
 
@@ -810,6 +810,10 @@
 
       window.zoomISO.onNdiSourceDestroyed((info) => {
         log(`NDI source removed: ${info.displayName}`, 'warn');
+      });
+
+      window.zoomISO.onAuthSuccess(() => {
+        log('Zoom SDK authenticated — ready to join meetings', 'success');
       });
 
       window.zoomISO.getSettings().then(s => {
