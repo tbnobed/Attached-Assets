@@ -321,6 +321,12 @@ public:
     void onActiveSpeakerVideoUserChanged(unsigned int userid) override {}
     void onActiveVideoUserChanged(unsigned int userid) override {}
     void onUserVideoQualityChanged(VideoConnectionQuality quality, unsigned int userid) override {}
+    void onHostVideoOrderUpdated(IList<unsigned int>* lst) override {}
+    void onLocalVideoOrderUpdated(IList<unsigned int>* lst) override {}
+    void onFollowHostVideoOrderChanged(bool bFollow) override {}
+    void onVideoAlphaChannelStatusChanged(bool bEnabled) override {}
+    void onCameraControlRequestReceived(unsigned int userId, CameraControlRequestType reqType, ICameraControlRequestHandler* handler) override {}
+    void onCameraControlRequestResult(unsigned int userId, CameraControlRequestResult result) override {}
 };
 
 static MeetingVideoCtrlEventListener* g_videoCtrlListener = nullptr;
