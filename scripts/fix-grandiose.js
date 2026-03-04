@@ -30,7 +30,6 @@ const srcDir = path.join(grandioseDir, 'src');
 
 if (!fs.existsSync(srcDir)) {
   console.error('grandiose src directory not found. The package may be corrupt.');
-  console.error('Try: rm -rf node_modules/grandiose && node scripts/fix-grandiose.js');
   process.exit(1);
 }
 
@@ -46,30 +45,81 @@ for (const file of allFiles) {
   const filepath = path.join(srcDir, file);
   let content = fs.readFileSync(filepath, 'utf8');
   const original = content;
+  const lines = content.split('\n');
+  const newLines = [];
 
-  content = content.replace(/char\s*\*\s*msg,\s*int32_t\s*status/g, 'const char* msg, int32_t status');
+  for (let i = 0; i < lines.length; i++) {
+    let line = lines[i];
 
-  content = content.replace(
-    /(int32_t\s+rejectStatus\s*\([^)]*?)char\s*\*(\s*msg)/g,
-    '$1const char*$2'
-  );
+    if (line.includes('rejectStatus') && line.includes('char') && !line.includes('const char')) {
+      line = line.replace(/char\s*\*/g, 'const char *');
+      console.log('  [' + file + ':' + (i + 1) + '] Fixed: ' + line.trim());
+    }
 
-  content = content.replace(
-    /(rejectStatus\s*\([^)]*?)char\s*\*(\s*msg)/g,
-    '$1const char*$2'
-  );
+    if (line.includes('validColorFormat') && line.includes('char') && !line.includes('const char')) {
+      line = line.replace(/char\s*\*/g, 'const char *');
+      console.log('  [' + file + ':' + (i + 1) + '] Fixed: ' + line.trim());
+    }
 
-  if (content !== original) {
-    fs.writeFileSync(filepath, content, 'utf8');
-    console.log('  Patched: ' + file);
+    if (line.includes('validBandwidth') && line.includes('char') && !line.includes('const char')) {
+      line = line.replace(/char\s*\*/g, 'const char *');
+      console.log('  [' + file + ':' + (i + 1) + '] Fixed: ' + line.trim());
+    }
+
+    if (line.includes('validAudioFormat') && line.includes('char') && !line.includes('const char')) {
+      line = line.replace(/char\s*\*/g, 'const char *');
+      console.log('  [' + file + ':' + (i + 1) + '] Fixed: ' + line.trim());
+    }
+
+    if (line.includes('validFrameFormat') && line.includes('char') && !line.includes('const char')) {
+      line = line.replace(/char\s*\*/g, 'const char *');
+      console.log('  [' + file + ':' + (i + 1) + '] Fixed: ' + line.trim());
+    }
+
+    newLines.push(line);
+  }
+
+  const newContent = newLines.join('\n');
+  if (newContent !== original) {
+    fs.writeFileSync(filepath, newContent, 'utf8');
+    console.log('  Patched: ' + file + '\n');
     patched++;
-  } else {
-    console.log('  OK (no changes needed): ' + file);
   }
 }
 
 if (patched === 0) {
-  console.log('\nNo files needed patching (may already be fixed).\n');
+  console.log('  Regex approach found no matches. Trying broad replacement...\n');
+
+  for (const file of allFiles) {
+    const filepath = path.join(srcDir, file);
+    let content = fs.readFileSync(filepath, 'utf8');
+    const original = content;
+
+    content = content.replace(/,\s*char\s*\*\s*msg\s*,/g, ', const char *msg,');
+
+    content = content.replace(/,\s*char\s*\*\s*msg\s*\)/g, ', const char *msg)');
+
+    if (content !== original) {
+      fs.writeFileSync(filepath, content, 'utf8');
+      console.log('  Patched: ' + file);
+      patched++;
+    }
+  }
+}
+
+if (patched === 0) {
+  console.log('  Still no matches found. Dumping rejectStatus lines for debugging:\n');
+  for (const file of allFiles) {
+    const filepath = path.join(srcDir, file);
+    const content = fs.readFileSync(filepath, 'utf8');
+    const lines = content.split('\n');
+    for (let i = 0; i < lines.length; i++) {
+      if (lines[i].includes('rejectStatus') || lines[i].includes('char *') || lines[i].includes('char*')) {
+        console.log('  [' + file + ':' + (i+1) + '] ' + lines[i].trimEnd());
+      }
+    }
+  }
+  console.log('\n  Please share the output above so the patch can be updated.');
 } else {
   console.log('\nPatched ' + patched + ' file(s).\n');
 }

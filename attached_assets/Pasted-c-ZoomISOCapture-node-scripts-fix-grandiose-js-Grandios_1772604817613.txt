@@ -1,0 +1,333 @@
+c:\ZoomISOCapture>node scripts/fix-grandiose.js
+=== Grandiose NDI Fix Tool ===
+
+Step 1: Downloading grandiose (skipping compilation)...
+
+
+added 3 packages, and audited 88 packages in 475ms
+
+18 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+
+Step 2: Patching source files for MSVC const-correctness...
+
+  OK (no changes needed): grandiose.cc
+  OK (no changes needed): grandiose_find.cc
+  OK (no changes needed): grandiose_find.h
+  OK (no changes needed): grandiose_receive.cc
+  OK (no changes needed): grandiose_receive.h
+  OK (no changes needed): grandiose_send.cc
+  OK (no changes needed): grandiose_send.h
+  OK (no changes needed): grandiose_util.cc
+  OK (no changes needed): grandiose_util.h
+
+No files needed patching (may already be fixed).
+
+Step 3: Building native module...
+
+Need to install the following packages:
+node-gyp@12.2.0
+Ok to proceed? (y) y
+gyp info it worked if it ends with ok
+gyp info using node-gyp@12.2.0
+gyp info using node@24.14.0 | win32 | x64
+(node:50580) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+gyp info find Python using Python version 3.14.3 found at "C:\Python314\python.exe"
+
+gyp info find VS using VS2026 (18.3.11520.95) found at:
+gyp info find VS "C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools"
+gyp info find VS run with --verbose for detailed information
+gyp info spawn C:\Python314\python.exe
+gyp info spawn args [
+gyp info spawn args 'C:\\Users\\Debo\\AppData\\Local\\npm-cache\\_npx\\c463d28440264a05\\node_modules\\node-gyp\\gyp\\gyp_main.py',
+gyp info spawn args 'binding.gyp',
+gyp info spawn args '-f',
+gyp info spawn args 'msvs',
+gyp info spawn args '-I',
+gyp info spawn args 'c:\\ZoomISOCapture\\node_modules\\grandiose\\build\\config.gypi',
+gyp info spawn args '-I',
+gyp info spawn args 'C:\\Users\\Debo\\AppData\\Local\\npm-cache\\_npx\\c463d28440264a05\\node_modules\\node-gyp\\addon.gypi',
+gyp info spawn args '-I',
+gyp info spawn args 'C:\\Users\\Debo\\AppData\\Local\\node-gyp\\Cache\\24.14.0\\include\\node\\common.gypi',
+gyp info spawn args '-Dlibrary=shared_library',
+gyp info spawn args '-Dvisibility=default',
+gyp info spawn args '-Dnode_root_dir=C:\\Users\\Debo\\AppData\\Local\\node-gyp\\Cache\\24.14.0',
+gyp info spawn args '-Dnode_gyp_dir=C:\\Users\\Debo\\AppData\\Local\\npm-cache\\_npx\\c463d28440264a05\\node_modules\\node-gyp',
+gyp info spawn args '-Dnode_lib_file=C:\\\\Users\\\\Debo\\\\AppData\\\\Local\\\\node-gyp\\\\Cache\\\\24.14.0\\\\<(target_arch)\\\\node.lib',
+gyp info spawn args '-Dmodule_root_dir=c:\\ZoomISOCapture\\node_modules\\grandiose',
+gyp info spawn args '-Dnode_engine=v8',
+gyp info spawn args '--depth=.',
+gyp info spawn args '--no-parallel',
+gyp info spawn args '--generator-output',
+gyp info spawn args 'c:\\ZoomISOCapture\\node_modules\\grandiose\\build',
+gyp info spawn args '-Goutput_dir=.'
+gyp info spawn args ]
+gyp info spawn C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\MSBuild\Current\Bin\MSBuild.exe
+gyp info spawn args [
+gyp info spawn args 'build/binding.sln',
+gyp info spawn args '/clp:Verbosity=minimal',
+gyp info spawn args '/nologo',
+gyp info spawn args '/nodeReuse:false',
+gyp info spawn args '/p:Configuration=Release;Platform=x64'
+gyp info spawn args ]
+
+  Copying lib/win_x64/Processing.NDI.Lib.x64.dll to ..\build\Release
+          1 file(s) copied.
+  grandiose_util.cc
+  grandiose_find.cc
+c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(55,3): error C2664: 'int32_t rejectStatus(napi_env,carrier *,char *,int32_t)': cannot convert argument 3 from 'const char [63]' to 'char *' [c:\ZoomISOCapture\node_modules\gra
+ndiose\build\grandiose.vcxproj]
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(55,3):
+      Conversion from string literal loses const qualifier (see /Zc:strictStrings)
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_util.h(82,9):
+      see declaration of 'rejectStatus'
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(55,3):
+      while trying to match the argument list '(napi_env, findCarrier *, const char [63], int)'
+
+c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(59,3): error C2664: 'int32_t rejectStatus(napi_env,carrier *,char *,int32_t)': cannot convert argument 3 from 'const char [63]' to 'char *' [c:\ZoomISOCapture\node_modules\gra
+ndiose\build\grandiose.vcxproj]
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(59,3):
+      Conversion from string literal loses const qualifier (see /Zc:strictStrings)
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_util.h(82,9):
+      see declaration of 'rejectStatus'
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(59,3):
+      while trying to match the argument list '(napi_env, findCarrier *, const char [63], int)'
+
+c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(64,5): error C2664: 'int32_t rejectStatus(napi_env,carrier *,char *,int32_t)': cannot convert argument 3 from 'const char [63]' to 'char *' [c:\ZoomISOCapture\node_modules\gra
+ndiose\build\grandiose.vcxproj]
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(64,5):
+      Conversion from string literal loses const qualifier (see /Zc:strictStrings)
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_util.h(82,9):
+      see declaration of 'rejectStatus'
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(64,5):
+      while trying to match the argument list '(napi_env, findCarrier *, const char [63], int)'
+
+c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(66,5): error C2664: 'int32_t rejectStatus(napi_env,carrier *,char *,int32_t)': cannot convert argument 3 from 'const char [63]' to 'char *' [c:\ZoomISOCapture\node_modules\gra
+ndiose\build\grandiose.vcxproj]
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(66,5):
+      Conversion from string literal loses const qualifier (see /Zc:strictStrings)
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_util.h(82,9):
+      see declaration of 'rejectStatus'
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(66,5):
+      while trying to match the argument list '(napi_env, findCarrier *, const char [63], int)'
+
+c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(68,5): error C2664: 'int32_t rejectStatus(napi_env,carrier *,char *,int32_t)': cannot convert argument 3 from 'const char [63]' to 'char *' [c:\ZoomISOCapture\node_modules\gra
+ndiose\build\grandiose.vcxproj]
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(68,5):
+      Conversion from string literal loses const qualifier (see /Zc:strictStrings)
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_util.h(82,9):
+      see declaration of 'rejectStatus'
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(68,5):
+      while trying to match the argument list '(napi_env, findCarrier *, const char [63], int)'
+
+c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(70,5): error C2664: 'int32_t rejectStatus(napi_env,carrier *,char *,int32_t)': cannot convert argument 3 from 'const char [63]' to 'char *' [c:\ZoomISOCapture\node_modules\gra
+ndiose\build\grandiose.vcxproj]
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(70,5):
+      Conversion from string literal loses const qualifier (see /Zc:strictStrings)
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_util.h(82,9):
+      see declaration of 'rejectStatus'
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(70,5):
+      while trying to match the argument list '(napi_env, findCarrier *, const char [63], int)'
+
+c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(72,5): error C2664: 'int32_t rejectStatus(napi_env,carrier *,char *,int32_t)': cannot convert argument 3 from 'const char [63]' to 'char *' [c:\ZoomISOCapture\node_modules\gra
+ndiose\build\grandiose.vcxproj]
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(72,5):
+      Conversion from string literal loses const qualifier (see /Zc:strictStrings)
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_util.h(82,9):
+      see declaration of 'rejectStatus'
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(72,5):
+      while trying to match the argument list '(napi_env, findCarrier *, const char [63], int)'
+
+c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(75,5): error C2664: 'int32_t rejectStatus(napi_env,carrier *,char *,int32_t)': cannot convert argument 3 from 'const char [63]' to 'char *' [c:\ZoomISOCapture\node_modules\gra
+ndiose\build\grandiose.vcxproj]
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(75,5):
+      Conversion from string literal loses const qualifier (see /Zc:strictStrings)
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_util.h(82,9):
+      see declaration of 'rejectStatus'
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(75,5):
+      while trying to match the argument list '(napi_env, findCarrier *, const char [63], int)'
+
+c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(91,3): error C2664: 'int32_t rejectStatus(napi_env,carrier *,char *,int32_t)': cannot convert argument 3 from 'const char [63]' to 'char *' [c:\ZoomISOCapture\node_modules\gra
+ndiose\build\grandiose.vcxproj]
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(91,3):
+      Conversion from string literal loses const qualifier (see /Zc:strictStrings)
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_util.h(82,9):
+      see declaration of 'rejectStatus'
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(91,3):
+      while trying to match the argument list '(napi_env, findCarrier *, const char [63], int)'
+
+c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(102,3): error C2664: 'int32_t rejectStatus(napi_env,carrier *,char *,int32_t)': cannot convert argument 3 from 'const char [63]' to 'char *' [c:\ZoomISOCapture\node_modules\gr
+andiose\build\grandiose.vcxproj]
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(102,3):
+      Conversion from string literal loses const qualifier (see /Zc:strictStrings)
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_util.h(82,9):
+      see declaration of 'rejectStatus'
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(102,3):
+      while trying to match the argument list '(napi_env, findCarrier *, const char [63], int)'
+
+c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(105,5): error C2664: 'int32_t rejectStatus(napi_env,carrier *,char *,int32_t)': cannot convert argument 3 from 'const char [63]' to 'char *' [c:\ZoomISOCapture\node_modules\gr
+andiose\build\grandiose.vcxproj]
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(105,5):
+      Conversion from string literal loses const qualifier (see /Zc:strictStrings)
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_util.h(82,9):
+      see declaration of 'rejectStatus'
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(105,5):
+      while trying to match the argument list '(napi_env, findCarrier *, const char [63], int)'
+
+c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(111,9): error C2664: 'int32_t rejectStatus(napi_env,carrier *,char *,int32_t)': cannot convert argument 3 from 'const char [63]' to 'char *' [c:\ZoomISOCapture\node_modules\gr
+andiose\build\grandiose.vcxproj]
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(111,9):
+      Conversion from string literal loses const qualifier (see /Zc:strictStrings)
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_util.h(82,9):
+      see declaration of 'rejectStatus'
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(111,9):
+      while trying to match the argument list '(napi_env, findCarrier *, const char [63], int)'
+
+c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(114,11): error C2664: 'int32_t rejectStatus(napi_env,carrier *,char *,int32_t)': cannot convert argument 3 from 'const char [63]' to 'char *' [c:\ZoomISOCapture\node_modules\g
+randiose\build\grandiose.vcxproj]
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(114,11):
+      Conversion from string literal loses const qualifier (see /Zc:strictStrings)
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_util.h(82,9):
+      see declaration of 'rejectStatus'
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(114,11):
+      while trying to match the argument list '(napi_env, findCarrier *, const char [63], int)'
+
+c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(120,9): error C2664: 'int32_t rejectStatus(napi_env,carrier *,char *,int32_t)': cannot convert argument 3 from 'const char [63]' to 'char *' [c:\ZoomISOCapture\node_modules\gr
+andiose\build\grandiose.vcxproj]
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(120,9):
+      Conversion from string literal loses const qualifier (see /Zc:strictStrings)
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_util.h(82,9):
+      see declaration of 'rejectStatus'
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(120,9):
+      while trying to match the argument list '(napi_env, findCarrier *, const char [63], int)'
+
+c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(125,13): error C2664: 'int32_t rejectStatus(napi_env,carrier *,char *,int32_t)': cannot convert argument 3 from 'const char [63]' to 'char *' [c:\ZoomISOCapture\node_modules\g
+randiose\build\grandiose.vcxproj]
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(125,13):
+      Conversion from string literal loses const qualifier (see /Zc:strictStrings)
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_util.h(82,9):
+      see declaration of 'rejectStatus'
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(125,13):
+      while trying to match the argument list '(napi_env, findCarrier *, const char [63], int)'
+
+c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(129,13): error C2664: 'int32_t rejectStatus(napi_env,carrier *,char *,int32_t)': cannot convert argument 3 from 'const char [63]' to 'char *' [c:\ZoomISOCapture\node_modules\g
+randiose\build\grandiose.vcxproj]
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(129,13):
+      Conversion from string literal loses const qualifier (see /Zc:strictStrings)
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_util.h(82,9):
+      see declaration of 'rejectStatus'
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(129,13):
+      while trying to match the argument list '(napi_env, findCarrier *, const char [63], int)'
+
+c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(138,9): error C2664: 'int32_t rejectStatus(napi_env,carrier *,char *,int32_t)': cannot convert argument 3 from 'const char [63]' to 'char *' [c:\ZoomISOCapture\node_modules\gr
+andiose\build\grandiose.vcxproj]
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(138,9):
+      Conversion from string literal loses const qualifier (see /Zc:strictStrings)
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_util.h(82,9):
+      see declaration of 'rejectStatus'
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(138,9):
+      while trying to match the argument list '(napi_env, findCarrier *, const char [63], int)'
+
+c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(143,13): error C2664: 'int32_t rejectStatus(napi_env,carrier *,char *,int32_t)': cannot convert argument 3 from 'const char [63]' to 'char *' [c:\ZoomISOCapture\node_modules\g
+randiose\build\grandiose.vcxproj]
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(143,13):
+      Conversion from string literal loses const qualifier (see /Zc:strictStrings)
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_util.h(82,9):
+      see declaration of 'rejectStatus'
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(143,13):
+      while trying to match the argument list '(napi_env, findCarrier *, const char [63], int)'
+
+c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(147,13): error C2664: 'int32_t rejectStatus(napi_env,carrier *,char *,int32_t)': cannot convert argument 3 from 'const char [63]' to 'char *' [c:\ZoomISOCapture\node_modules\g
+randiose\build\grandiose.vcxproj]
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(147,13):
+      Conversion from string literal loses const qualifier (see /Zc:strictStrings)
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_util.h(82,9):
+      see declaration of 'rejectStatus'
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(147,13):
+      while trying to match the argument list '(napi_env, findCarrier *, const char [63], int)'
+
+c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(159,5): error C2664: 'int32_t rejectStatus(napi_env,carrier *,char *,int32_t)': cannot convert argument 3 from 'const char [63]' to 'char *' [c:\ZoomISOCapture\node_modules\gr
+andiose\build\grandiose.vcxproj]
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(159,5):
+      Conversion from string literal loses const qualifier (see /Zc:strictStrings)
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_util.h(82,9):
+      see declaration of 'rejectStatus'
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(159,5):
+      while trying to match the argument list '(napi_env, findCarrier *, const char [63], int)'
+
+c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(162,7): error C2664: 'int32_t rejectStatus(napi_env,carrier *,char *,int32_t)': cannot convert argument 3 from 'const char [63]' to 'char *' [c:\ZoomISOCapture\node_modules\gr
+andiose\build\grandiose.vcxproj]
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(162,7):
+      Conversion from string literal loses const qualifier (see /Zc:strictStrings)
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_util.h(82,9):
+      see declaration of 'rejectStatus'
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(162,7):
+      while trying to match the argument list '(napi_env, findCarrier *, const char [63], int)'
+
+c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(167,17): error C2664: 'int32_t rejectStatus(napi_env,carrier *,char *,int32_t)': cannot convert argument 3 from 'const char [63]' to 'char *' [c:\ZoomISOCapture\node_modules\g
+randiose\build\grandiose.vcxproj]
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(167,17):
+      Conversion from string literal loses const qualifier (see /Zc:strictStrings)
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_util.h(82,9):
+      see declaration of 'rejectStatus'
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(167,17):
+      while trying to match the argument list '(napi_env, findCarrier *, const char [63], int)'
+
+c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(171,3): error C2664: 'int32_t rejectStatus(napi_env,carrier *,char *,int32_t)': cannot convert argument 3 from 'const char [63]' to 'char *' [c:\ZoomISOCapture\node_modules\gr
+andiose\build\grandiose.vcxproj]
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(171,3):
+      Conversion from string literal loses const qualifier (see /Zc:strictStrings)
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_util.h(82,9):
+      see declaration of 'rejectStatus'
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(171,3):
+      while trying to match the argument list '(napi_env, findCarrier *, const char [63], int)'
+
+c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(174,3): error C2664: 'int32_t rejectStatus(napi_env,carrier *,char *,int32_t)': cannot convert argument 3 from 'const char [63]' to 'char *' [c:\ZoomISOCapture\node_modules\gr
+andiose\build\grandiose.vcxproj]
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(174,3):
+      Conversion from string literal loses const qualifier (see /Zc:strictStrings)
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_util.h(82,9):
+      see declaration of 'rejectStatus'
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(174,3):
+      while trying to match the argument list '(napi_env, findCarrier *, const char [63], int)'
+
+c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(176,3): error C2664: 'int32_t rejectStatus(napi_env,carrier *,char *,int32_t)': cannot convert argument 3 from 'const char [63]' to 'char *' [c:\ZoomISOCapture\node_modules\gr
+andiose\build\grandiose.vcxproj]
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(176,3):
+      Conversion from string literal loses const qualifier (see /Zc:strictStrings)
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_util.h(82,9):
+      see declaration of 'rejectStatus'
+      c:\ZoomISOCapture\node_modules\grandiose\src\grandiose_find.cc(176,3):
+      while trying to match the argument list '(napi_env, findCarrier *, const char [63], int)'
+
+gyp ERR! build error
+gyp ERR! stack Error: `C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\MSBuild\Current\Bin\MSBuild.exe` failed with exit code: 1
+gyp ERR! stack at ChildProcess.<anonymous> (C:\Users\Debo\AppData\Local\npm-cache\_npx\c463d28440264a05\node_modules\node-gyp\lib\build.js:219:23)
+gyp ERR! stack at ChildProcess.emit (node:events:508:28)
+gyp ERR! stack at ChildProcess._handle.onexit (node:internal/child_process:294:12)
+gyp ERR! System Windows_NT 10.0.26100
+gyp ERR! command "C:\\Program Files\\nodejs\\node.exe" "C:\\Users\\Debo\\AppData\\Local\\npm-cache\\_npx\\c463d28440264a05\\node_modules\\node-gyp\\bin\\node-gyp.js" "rebuild"
+gyp ERR! cwd c:\ZoomISOCapture\node_modules\grandiose
+gyp ERR! node -v v24.14.0
+gyp ERR! node-gyp -v v12.2.0
+gyp ERR! $npm_package_name grandiose
+gyp ERR! $npm_package_version 0.0.4
+gyp ERR! not ok
+
+=== BUILD FAILED ===
+
+Make sure you have ALL of the following installed:
+
+  1. NDI Tools          -> https://ndi.video/tools/
+  2. Visual Studio Build Tools with "Desktop development with C++"
+     -> https://visualstudio.microsoft.com/visual-cpp-build-tools/
+  3. Python 3.x         -> https://www.python.org/downloads/
+     (check "Add to PATH" during install)
+
+After installing those, run this script again:
+  node scripts/fix-grandiose.js
+
+c:\ZoomISOCapture>
