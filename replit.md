@@ -61,13 +61,42 @@ Electron desktop application for capturing isolated video/audio feeds from Zoom 
 - Generates JWT tokens server-side for guests (role=0, participant)
 - Has its own `package.json` — deployed independently on a Linux server
 
-## Building the Native Addon (Windows)
-1. `cd c:\ZoomISOCapture && npm install`
+## Quick Setup (Windows)
+One command does everything:
+```
+setup.bat "C:\path\to\zoom-sdk\x64"
+```
+Or via Node:
+```
+node scripts/setup.js "C:\path\to\zoom-sdk\x64"
+```
+Or via PowerShell:
+```
+.\setup.ps1 -ZoomSdkPath "C:\path\to\zoom-sdk\x64"
+```
+
+The setup script will:
+1. Check prerequisites (Node, Python, FFmpeg)
+2. `npm install` (root + addon)
+3. Copy Zoom SDK headers/libs/DLLs
+4. Build the native C++ addon
+5. Install and patch grandiose (NDI)
+6. Create `.env` template
+7. Create recordings directory
+
+After setup, edit `.env` with your ZOOM_SDK_KEY and ZOOM_SDK_SECRET, then:
+```
+npm start
+```
+
+## Manual Setup (Windows)
+1. `npm install`
 2. `cd zoom-meeting-sdk-addon && npm install`
 3. `node scripts/install-zoom-sdk.js "C:\path\to\zoom-sdk-x64"`
 4. `cd zoom-meeting-sdk-addon && npx node-gyp rebuild`
-5. Create `.env` with ZOOM_SDK_KEY and ZOOM_SDK_SECRET
-6. `npx electron . --no-sandbox --disable-gpu-sandbox`
+5. `node scripts/fix-grandiose.js`
+6. Create `.env` with ZOOM_SDK_KEY and ZOOM_SDK_SECRET
+7. `npm start`
 
 ## Zoom SDK v6.7.5 Notes
 - SDK lib: `sdk/lib/sdk.lib` (single file)
