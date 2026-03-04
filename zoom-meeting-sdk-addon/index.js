@@ -198,6 +198,16 @@ class ZoomMeetingBridge extends EventEmitter {
     });
   }
 
+  _retrySubscriptions() {
+    if (!addonAvailable || !this.inMeeting) return;
+    try {
+      console.log('[ZoomBridge] Retrying video/audio subscriptions...');
+      nativeAddon.retryVideoSubscriptions();
+    } catch (err) {
+      console.error('[ZoomBridge] Error retrying subscriptions:', err.message);
+    }
+  }
+
   _enumerateExistingParticipants() {
     if (!addonAvailable) return;
     try {
@@ -232,6 +242,9 @@ class ZoomMeetingBridge extends EventEmitter {
         setTimeout(() => this._enumerateExistingParticipants(), 2000);
         setTimeout(() => this._enumerateExistingParticipants(), 5000);
         setTimeout(() => this._enumerateExistingParticipants(), 10000);
+        setTimeout(() => this._retrySubscriptions(), 3000);
+        setTimeout(() => this._retrySubscriptions(), 8000);
+        setTimeout(() => this._retrySubscriptions(), 15000);
         break;
       case 'MEETING_STATUS_ENDED':
       case 'MEETING_STATUS_FAILED':

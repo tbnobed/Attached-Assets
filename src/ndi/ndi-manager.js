@@ -112,27 +112,24 @@ class NDIManager extends EventEmitter {
     source.framesSent++;
 
     if (source.mock || !source.sender) return;
-    if (source._videoSending) return;
 
-    source._videoSending = true;
-    source.sender.video({
-      xres: width,
-      yres: height,
-      frameRateN: this.settings.video.frameRate * 1000,
-      frameRateD: 1000,
-      pictureAspectRatio: width / height,
-      frameFormatType: 1,
-      fourCC: this.grandiose.FOURCC_RGBA,
-      lineStrideBytes: width * 4,
-      data: Buffer.from(frameBuffer),
-    }).then(() => {
-      source._videoSending = false;
-    }).catch((err) => {
-      source._videoSending = false;
+    try {
+      source.sender.video({
+        xres: width,
+        yres: height,
+        frameRateN: this.settings.video.frameRate * 1000,
+        frameRateD: 1000,
+        pictureAspectRatio: width / height,
+        frameFormatType: 1,
+        fourCC: this.grandiose.FOURCC_RGBA,
+        lineStrideBytes: width * 4,
+        data: frameBuffer,
+      });
+    } catch (err) {
       if (source.framesSent % 300 === 1) {
         console.error(`[NDI] Error sending video for ${source.displayName}:`, err.message);
       }
-    });
+    }
   }
 
   sendAudioData(userId, audioBuffer, sampleRate, channels) {
@@ -140,23 +137,20 @@ class NDIManager extends EventEmitter {
     if (!source || !source.active) return;
 
     if (source.mock || !source.sender) return;
-    if (source._audioSending) return;
 
     const ch = channels || this.settings.audio.channels;
     const sr = sampleRate || this.settings.audio.sampleRate;
 
-    source._audioSending = true;
-    source.sender.audio({
-      sampleRate: sr,
-      noChannels: ch,
-      noSamples: audioBuffer.length / (2 * ch),
-      data: Buffer.from(audioBuffer),
-    }).then(() => {
-      source._audioSending = false;
-    }).catch((err) => {
-      source._audioSending = false;
+    try {
+      source.sender.audio({
+        sampleRate: sr,
+        noChannels: ch,
+        noSamples: audioBuffer.length / (2 * ch),
+        data: audioBuffer,
+      });
+    } catch (err) {
       console.error(`[NDI] Error sending audio for ${source.displayName}:`, err.message);
-    });
+    }
   }
 
   toggleSource(userId, active) {

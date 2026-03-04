@@ -180,6 +180,15 @@ bool ZoomAddon::StartRawDataCapture() {
     printf("[ZoomNative] StartRawDataCapture: audio subscribe result=%d\n", (int)subErr);
     fflush(stdout);
 
+    if (subErr != SDKERR_SUCCESS) {
+        printf("[ZoomNative] StartRawDataCapture: audio subscribe FAILED — raw data may not be permitted\n");
+        printf("[ZoomNative] Check: 1) Zoom Marketplace app has 'Raw Data' enabled\n");
+        printf("[ZoomNative]        2) Meeting SDK app type allows raw data access\n");
+        fflush(stdout);
+        delete g_audioListener;
+        g_audioListener = nullptr;
+    }
+
     g_rawDataActive = true;
 
     {
@@ -192,6 +201,32 @@ bool ZoomAddon::StartRawDataCapture() {
     }
 
     return true;
+}
+
+void ZoomAddon::RetryVideoSubscriptions() {
+    if (!g_rawDataActive) return;
+    std::lock_guard<std::mutex> lock(mutex_);
+    printf("[ZoomNative] RetryVideoSubscriptions: %zu participants\n", participants_.size());
+    fflush(stdout);
+    for (const auto& [userId, info] : participants_) {
+        if (g_videoRenderers.count(userId) == 0) {
+            subscribeUserVideo(userId);
+        }
+    }
+
+    if (!g_audioListener) {
+        auto* rawDataHelper = GetAudioRawdataHelper();
+        if (rawDataHelper) {
+            g_audioListener = new AudioRawDataListener();
+            auto subErr = rawDataHelper->subscribe(g_audioListener);
+            printf("[ZoomNative] RetryVideoSubscriptions: audio re-subscribe result=%d\n", (int)subErr);
+            fflush(stdout);
+            if (subErr != SDKERR_SUCCESS) {
+                delete g_audioListener;
+                g_audioListener = nullptr;
+            }
+        }
+    }
 }
 
 void ZoomAddon::SubscribeParticipantVideo(uint32_t userId) {
@@ -227,6 +262,7 @@ bool ZoomAddon::StartRawDataCapture() {
 
 void ZoomAddon::SubscribeParticipantVideo(uint32_t userId) {}
 void ZoomAddon::UnsubscribeParticipantVideo(uint32_t userId) {}
+void ZoomAddon::RetryVideoSubscriptions() {}
 void ZoomAddon::StopRawDataCapture() {}
 
 #endif

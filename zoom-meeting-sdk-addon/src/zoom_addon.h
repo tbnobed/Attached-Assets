@@ -43,6 +43,7 @@ public:
     bool LeaveMeeting();
     void EnumerateParticipants();
     bool StartRawDataCapture();
+    void RetryVideoSubscriptions();
     void StopRawDataCapture();
     void SubscribeParticipantVideo(uint32_t userId);
     void UnsubscribeParticipantVideo(uint32_t userId);

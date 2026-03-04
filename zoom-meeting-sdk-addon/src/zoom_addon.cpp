@@ -178,6 +178,12 @@ static Napi::Value StartRawCapture(const Napi::CallbackInfo& info) {
     return Napi::Boolean::New(env, ok);
 }
 
+static Napi::Value RetryVideoSubscriptions(const Napi::CallbackInfo& info) {
+    Napi::Env env = info.Env();
+    ZoomAddon::Instance().RetryVideoSubscriptions();
+    return env.Undefined();
+}
+
 static Napi::Value OnVideoFrame(const Napi::CallbackInfo& info) {
     Napi::Env env = info.Env();
     if (info.Length() < 1 || !info[0].IsFunction()) {
@@ -267,6 +273,7 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
     exports.Set("joinMeeting", Napi::Function::New(env, JoinMeeting));
     exports.Set("leaveMeeting", Napi::Function::New(env, LeaveMeeting));
     exports.Set("startRawCapture", Napi::Function::New(env, StartRawCapture));
+    exports.Set("retryVideoSubscriptions", Napi::Function::New(env, RetryVideoSubscriptions));
     exports.Set("onVideoFrame", Napi::Function::New(env, OnVideoFrame));
     exports.Set("onAudioFrame", Napi::Function::New(env, OnAudioFrame));
     exports.Set("onEvent", Napi::Function::New(env, OnEvent));

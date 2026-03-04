@@ -3,6 +3,7 @@
 #ifdef _WIN32
 #include <windows.h>
 #include "zoom_sdk.h"
+#include "zoom_sdk_def.h"
 #include "auth_service_interface.h"
 
 using namespace ZOOMSDK;
@@ -31,10 +32,18 @@ bool ZoomAddon::Initialize(const ZoomConfig& config) {
     config_ = config;
 
     InitParam initParam;
+    memset(&initParam, 0, sizeof(initParam));
     initParam.strWebDomain = L"https://zoom.us";
     initParam.enableLogByDefault = true;
+    initParam.rawdataOpts = static_cast<RawDataMemoryMode>(0);
+
+    printf("[ZoomNative] Initializing SDK with rawdataOpts=%d\n", (int)initParam.rawdataOpts);
+    fflush(stdout);
 
     SDKError err = InitSDK(initParam);
+    printf("[ZoomNative] InitSDK result=%d\n", (int)err);
+    fflush(stdout);
+
     if (err != SDKERR_SUCCESS) {
         state_ = AddonState::Error;
         return false;
