@@ -35,9 +35,9 @@ bool ZoomAddon::Initialize(const ZoomConfig& config) {
     memset(&initParam, 0, sizeof(initParam));
     initParam.strWebDomain = L"https://zoom.us";
     initParam.enableLogByDefault = true;
-    initParam.rawdataOpts = static_cast<RawDataMemoryMode>(0);
+    memset(&initParam.rawdataOpts, 0, sizeof(initParam.rawdataOpts));
 
-    printf("[ZoomNative] Initializing SDK with rawdataOpts=%d\n", (int)initParam.rawdataOpts);
+    printf("[ZoomNative] Initializing SDK (rawdata opts zeroed)\n");
     fflush(stdout);
 
     SDKError err = InitSDK(initParam);
