@@ -146,12 +146,19 @@ class NDIManager extends EventEmitter {
       const noSamples = Math.floor(audioBuffer.length / (bytesPerSample * ch));
       if (noSamples <= 0) return;
 
+      const floatBuf = Buffer.alloc(noSamples * ch * 4);
+      for (let i = 0; i < noSamples * ch; i++) {
+        const int16 = audioBuffer.readInt16LE(i * 2);
+        floatBuf.writeFloatLE(int16 / 32768.0, i * 4);
+      }
+
       source.sender.audio({
+        fourCC: 0x00000001,
         sampleRate: sr,
         noChannels: ch,
         noSamples: noSamples,
-        channelStrideBytes: noSamples * bytesPerSample,
-        data: audioBuffer,
+        channelStrideBytes: noSamples * 4,
+        data: floatBuf,
       });
     } catch (err) {
       if (!source._audioErrorLogged) {
