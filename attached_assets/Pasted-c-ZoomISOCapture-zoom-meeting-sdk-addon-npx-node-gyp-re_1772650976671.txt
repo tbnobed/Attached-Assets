@@ -1,0 +1,122 @@
+c:\ZoomISOCapture\zoom-meeting-sdk-addon>npx node-gyp rebuild
+gyp info it worked if it ends with ok
+gyp info using node-gyp@10.3.1
+gyp info using node@24.14.0 | win32 | x64
+(node:26008) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+gyp info find Python using Python version 3.14.3 found at "C:\Python314\python.exe"
+
+gyp info find VS using VS2022 (17.12.35514.174) found at:
+gyp info find VS "C:\Program Files\Microsoft Visual Studio\2022\Community"
+gyp info find VS run with --verbose for detailed information
+gyp info spawn C:\Python314\python.exe
+gyp info spawn args [
+gyp info spawn args 'c:\\ZoomISOCapture\\zoom-meeting-sdk-addon\\node_modules\\node-gyp\\gyp\\gyp_main.py',
+gyp info spawn args 'binding.gyp',
+gyp info spawn args '-f',
+gyp info spawn args 'msvs',
+gyp info spawn args '-I',
+gyp info spawn args 'c:\\ZoomISOCapture\\zoom-meeting-sdk-addon\\build\\config.gypi',
+gyp info spawn args '-I',
+gyp info spawn args 'c:\\ZoomISOCapture\\zoom-meeting-sdk-addon\\node_modules\\node-gyp\\addon.gypi',
+gyp info spawn args '-I',
+gyp info spawn args 'C:\\Users\\Debo\\AppData\\Local\\node-gyp\\Cache\\24.14.0\\include\\node\\common.gypi',
+gyp info spawn args '-Dlibrary=shared_library',
+gyp info spawn args '-Dvisibility=default',
+gyp info spawn args '-Dnode_root_dir=C:\\Users\\Debo\\AppData\\Local\\node-gyp\\Cache\\24.14.0',
+gyp info spawn args '-Dnode_gyp_dir=c:\\ZoomISOCapture\\zoom-meeting-sdk-addon\\node_modules\\node-gyp',
+gyp info spawn args '-Dnode_lib_file=C:\\\\Users\\\\Debo\\\\AppData\\\\Local\\\\node-gyp\\\\Cache\\\\24.14.0\\\\<(target_arch)\\\\node.lib',
+gyp info spawn args '-Dmodule_root_dir=c:\\ZoomISOCapture\\zoom-meeting-sdk-addon',
+gyp info spawn args '-Dnode_engine=v8',
+gyp info spawn args '--depth=.',
+gyp info spawn args '--no-parallel',
+gyp info spawn args '--generator-output',
+gyp info spawn args 'c:\\ZoomISOCapture\\zoom-meeting-sdk-addon\\build',
+gyp info spawn args '-Goutput_dir=.'
+gyp info spawn args ]
+gyp info spawn C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe
+gyp info spawn args [
+gyp info spawn args 'build\\binding.sln',
+gyp info spawn args '/clp:Verbosity=minimal',
+gyp info spawn args '/nologo',
+gyp info spawn args '/p:Configuration=Release;Platform=x64'
+gyp info spawn args ]
+
+  Copying c:\ZoomISOCapture\zoom-meeting-sdk-addon/sdk/bin/sdk.dll to c:\ZoomISOCapture\zoom-meeting-sdk-addon\build\Release
+          1 file(s) copied.
+  zoom_addon.cpp
+  zoom_auth.cpp
+  zoom_meeting.cpp
+  zoom_rawdata.cpp
+c:\ZoomISOCapture\zoom-meeting-sdk-addon\src\zoom_rawdata.cpp(27,31): error C2440: 'initializing': cannot convert from 'char *' to 'const uint8_t *' [c:\ZoomISOCapture\zoom-meeting-sdk-addon\bu
+ild\zoom_meeting_sdk.vcxproj]
+      c:\ZoomISOCapture\zoom-meeting-sdk-addon\src\zoom_rawdata.cpp(27,31):
+      Types pointed to are unrelated; conversion requires reinterpret_cast, C-style cast or parenthesized function-style cast
+
+c:\ZoomISOCapture\zoom-meeting-sdk-addon\src\zoom_rawdata.cpp(28,31): error C2440: 'initializing': cannot convert from 'char *' to 'const uint8_t *' [c:\ZoomISOCapture\zoom-meeting-sdk-addon\bu
+ild\zoom_meeting_sdk.vcxproj]
+      c:\ZoomISOCapture\zoom-meeting-sdk-addon\src\zoom_rawdata.cpp(28,31):
+      Types pointed to are unrelated; conversion requires reinterpret_cast, C-style cast or parenthesized function-style cast
+
+c:\ZoomISOCapture\zoom-meeting-sdk-addon\src\zoom_rawdata.cpp(29,31): error C2440: 'initializing': cannot convert from 'char *' to 'const uint8_t *' [c:\ZoomISOCapture\zoom-meeting-sdk-addon\bu
+ild\zoom_meeting_sdk.vcxproj]
+      c:\ZoomISOCapture\zoom-meeting-sdk-addon\src\zoom_rawdata.cpp(29,31):
+      Types pointed to are unrelated; conversion requires reinterpret_cast, C-style cast or parenthesized function-style cast
+
+c:\ZoomISOCapture\zoom-meeting-sdk-addon\src\zoom_rawdata.cpp(85,10): error C3668: 'AudioRawDataListener::onShareAudioRawDataReceived': method with override specifier 'override' did not overrid
+e any base class methods [c:\ZoomISOCapture\zoom-meeting-sdk-addon\build\zoom_meeting_sdk.vcxproj]
+c:\ZoomISOCapture\zoom-meeting-sdk-addon\src\zoom_rawdata.cpp(131,27): error C3861: 'GetRawdataAPIHelper': identifier not found [c:\ZoomISOCapture\zoom-meeting-sdk-addon\build\zoom_meeting_sdk.
+vcxproj]
+c:\ZoomISOCapture\zoom-meeting-sdk-addon\src\zoom_rawdata.cpp(131,25): error C3535: cannot deduce type for 'auto *' from 'unknown-type' [c:\ZoomISOCapture\zoom-meeting-sdk-addon\build\zoom_meet
+ing_sdk.vcxproj]
+c:\ZoomISOCapture\zoom-meeting-sdk-addon\src\zoom_rawdata.cpp(134,27): error C2259: 'AudioRawDataListener': cannot instantiate abstract class [c:\ZoomISOCapture\zoom-meeting-sdk-addon\build\zoo
+m_meeting_sdk.vcxproj]
+      c:\ZoomISOCapture\zoom-meeting-sdk-addon\src\zoom_rawdata.cpp(69,7):
+      see declaration of 'AudioRawDataListener'
+      c:\ZoomISOCapture\zoom-meeting-sdk-addon\src\zoom_rawdata.cpp(134,27):
+      due to following members:
+      c:\ZoomISOCapture\zoom-meeting-sdk-addon\src\zoom_rawdata.cpp(134,27):
+      'void ZOOMSDK::IZoomSDKAudioRawDataDelegate::onShareAudioRawDataReceived(AudioRawData *,uint32_t)': is abstract
+      c:\ZoomISOCapture\zoom-meeting-sdk-addon\sdk\h\rawdata\rawdata_audio_helper_interface.h(18,15):
+      see declaration of 'ZOOMSDK::IZoomSDKAudioRawDataDelegate::onShareAudioRawDataReceived'
+      c:\ZoomISOCapture\zoom-meeting-sdk-addon\src\zoom_rawdata.cpp(134,27):
+      'void ZOOMSDK::IZoomSDKAudioRawDataDelegate::onOneWayInterpreterAudioRawDataReceived(AudioRawData *,const zchar_t *)': is abstract
+      c:\ZoomISOCapture\zoom-meeting-sdk-addon\sdk\h\rawdata\rawdata_audio_helper_interface.h(24,15):
+      see declaration of 'ZOOMSDK::IZoomSDKAudioRawDataDelegate::onOneWayInterpreterAudioRawDataReceived'
+
+c:\ZoomISOCapture\zoom-meeting-sdk-addon\src\zoom_rawdata.cpp(134,47): error C2259: 'AudioRawDataListener': cannot instantiate abstract class [c:\ZoomISOCapture\zoom-meeting-sdk-addon\build\zoo
+m_meeting_sdk.vcxproj]
+      c:\ZoomISOCapture\zoom-meeting-sdk-addon\src\zoom_rawdata.cpp(69,7):
+      see declaration of 'AudioRawDataListener'
+      c:\ZoomISOCapture\zoom-meeting-sdk-addon\src\zoom_rawdata.cpp(134,47):
+      due to following members:
+      c:\ZoomISOCapture\zoom-meeting-sdk-addon\src\zoom_rawdata.cpp(134,47):
+      'void ZOOMSDK::IZoomSDKAudioRawDataDelegate::onShareAudioRawDataReceived(AudioRawData *,uint32_t)': is abstract
+      c:\ZoomISOCapture\zoom-meeting-sdk-addon\sdk\h\rawdata\rawdata_audio_helper_interface.h(18,15):
+      see declaration of 'ZOOMSDK::IZoomSDKAudioRawDataDelegate::onShareAudioRawDataReceived'
+      c:\ZoomISOCapture\zoom-meeting-sdk-addon\src\zoom_rawdata.cpp(134,47):
+      'void ZOOMSDK::IZoomSDKAudioRawDataDelegate::onOneWayInterpreterAudioRawDataReceived(AudioRawData *,const zchar_t *)': is abstract
+      c:\ZoomISOCapture\zoom-meeting-sdk-addon\sdk\h\rawdata\rawdata_audio_helper_interface.h(24,15):
+      see declaration of 'ZOOMSDK::IZoomSDKAudioRawDataDelegate::onOneWayInterpreterAudioRawDataReceived'
+
+c:\ZoomISOCapture\zoom-meeting-sdk-addon\src\zoom_rawdata.cpp(136,9): error C3536: 'audioHelper': cannot be used before it is initialized [c:\ZoomISOCapture\zoom-meeting-sdk-addon\build\zoom_me
+eting_sdk.vcxproj]
+c:\ZoomISOCapture\zoom-meeting-sdk-addon\src\zoom_rawdata.cpp(166,31): error C3861: 'GetRawdataAPIHelper': identifier not found [c:\ZoomISOCapture\zoom-meeting-sdk-addon\build\zoom_meeting_sdk.
+vcxproj]
+c:\ZoomISOCapture\zoom-meeting-sdk-addon\src\zoom_rawdata.cpp(166,29): error C3535: cannot deduce type for 'auto *' from 'unknown-type' [c:\ZoomISOCapture\zoom-meeting-sdk-addon\build\zoom_meet
+ing_sdk.vcxproj]
+c:\ZoomISOCapture\zoom-meeting-sdk-addon\src\zoom_rawdata.cpp(169,17): error C3536: 'audioHelper': cannot be used before it is initialized [c:\ZoomISOCapture\zoom-meeting-sdk-addon\build\zoom_m
+eeting_sdk.vcxproj]
+gyp ERR! build error
+gyp ERR! stack Error: `C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe` failed with exit code: 1
+gyp ERR! stack at ChildProcess.<anonymous> (c:\ZoomISOCapture\zoom-meeting-sdk-addon\node_modules\node-gyp\lib\build.js:216:23)
+gyp ERR! stack at ChildProcess.emit (node:events:508:28)
+gyp ERR! stack at ChildProcess._handle.onexit (node:internal/child_process:294:12)
+gyp ERR! System Windows_NT 10.0.26100
+gyp ERR! command "C:\\Program Files\\nodejs\\node.exe" "c:\\ZoomISOCapture\\zoom-meeting-sdk-addon\\node_modules\\node-gyp\\bin\\node-gyp.js" "rebuild"
+gyp ERR! cwd c:\ZoomISOCapture\zoom-meeting-sdk-addon
+gyp ERR! node -v v24.14.0
+gyp ERR! node-gyp -v v10.3.1
+gyp ERR! not ok
+
+c:\ZoomISOCapture\zoom-meeting-sdk-addon>
