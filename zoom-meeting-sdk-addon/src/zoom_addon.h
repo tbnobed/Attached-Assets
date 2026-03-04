@@ -39,7 +39,7 @@ public:
 
     bool Initialize(const ZoomConfig& config);
     bool Authenticate();
-    bool JoinMeeting(const std::string& meetingId, const std::string& password, const std::string& displayName);
+    bool JoinMeeting(const std::string& meetingId, const std::string& password, const std::string& displayName, const std::string& appPrivilegeToken = "");
     bool LeaveMeeting();
     void EnumerateParticipants();
     bool StartRawRecording();
@@ -68,6 +68,7 @@ private:
     ZoomConfig config_;
     std::map<uint32_t, ParticipantInfo> participants_;
     mutable std::mutex mutex_;
+    std::wstring appPrivilegeToken_;
 
     Napi::ThreadSafeFunction videoCallback_;
     Napi::ThreadSafeFunction audioCallback_;

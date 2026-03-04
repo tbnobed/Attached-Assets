@@ -21,6 +21,7 @@ Electron desktop application for capturing isolated video/audio feeds from Zoom 
 - `src/zoom/session-manager.js` - Zoom session lifecycle, bridges native addon to stream handler
 - `src/zoom/stream-handler.js` - Routes per-participant video/audio frames
 - `src/zoom/jwt-generator.js` - JWT token generation (no external deps)
+- `src/zoom/recording-token.js` - Fetches local recording join token via Zoom REST API (Server-to-Server OAuth)
 - `src/ndi/ndi-manager.js` - NDI source creation/destruction
 - `src/recorder/recorder-manager.js` - FFmpeg spawn and pipe management
 - `src/config/settings.js` - Environment variable loader
@@ -57,8 +58,11 @@ Electron desktop application for capturing isolated video/audio feeds from Zoom 
 - ffmpeg - System dependency for recording
 
 ## Environment Variables
-- `ZOOM_SDK_KEY` - Zoom Meeting SDK key
-- `ZOOM_SDK_SECRET` - Zoom Meeting SDK secret
+- `ZOOM_SDK_KEY` - Zoom Meeting SDK key (App Credentials)
+- `ZOOM_SDK_SECRET` - Zoom Meeting SDK secret (App Credentials)
+- `ZOOM_ACCOUNT_ID` - Zoom Server-to-Server OAuth Account ID (for local recording token)
+- `ZOOM_CLIENT_ID` - Zoom Server-to-Server OAuth Client ID (for local recording token)
+- `ZOOM_CLIENT_SECRET` - Zoom Server-to-Server OAuth Client Secret (for local recording token)
 - `ZOOM_MEETING_BOT_NAME` - Display name when joining meetings (default: PlexISO)
 - `DEFAULT_OUTPUT_DIR` - Recording output directory (default: ./recordings)
 

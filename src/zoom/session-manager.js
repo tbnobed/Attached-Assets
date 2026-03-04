@@ -1,5 +1,6 @@
 const EventEmitter = require('events');
 const { generateJWT } = require('./jwt-generator');
+const { getLocalRecordingToken } = require('./recording-token');
 
 class SessionManager extends EventEmitter {
   constructor(settings) {
@@ -126,7 +127,7 @@ class SessionManager extends EventEmitter {
     );
   }
 
-  joinMeeting(meetingId, password, displayName) {
+  async joinMeeting(meetingId, password, displayName) {
     if (!this.zoomBridge) {
       throw new Error('Zoom Meeting SDK not available. Build the native addon first.');
     }
@@ -138,12 +139,29 @@ class SessionManager extends EventEmitter {
     this.meetingId = meetingId;
     this.meetingPassword = password || '';
 
+    let appPrivilegeToken = '';
+    const { zoomAccountId, zoomClientId, zoomClientSecret } = this.settings;
+    if (zoomAccountId && zoomClientId && zoomClientSecret) {
+      try {
+        appPrivilegeToken = await getLocalRecordingToken(
+          meetingId, zoomAccountId, zoomClientId, zoomClientSecret
+        );
+        console.log('[SessionManager] Local recording privilege token obtained');
+      } catch (err) {
+        console.warn('[SessionManager] Could not get local recording token:', err.message);
+        console.warn('[SessionManager] Joining without pre-authorized recording — host may need to grant permission');
+      }
+    } else {
+      console.log('[SessionManager] No ZOOM_ACCOUNT_ID/CLIENT_ID/CLIENT_SECRET — joining without recording token');
+    }
+
     console.log('[SessionManager] Attempting to join meeting:', meetingId);
 
     const ok = this.zoomBridge.joinMeeting(
       meetingId,
       password || '',
-      displayName || this.settings.botName || 'PlexISO'
+      displayName || this.settings.botName || 'PlexISO',
+      appPrivilegeToken
     );
 
     if (!ok) {

@@ -98,7 +98,7 @@ class ZoomMeetingBridge extends EventEmitter {
     return `${signingInput}.${signature}`;
   }
 
-  joinMeeting(meetingId, password, displayName) {
+  joinMeeting(meetingId, password, displayName, appPrivilegeToken) {
     if (!addonAvailable) {
       console.warn('[ZoomMeetingSDK] Stub mode: joinMeeting() skipped');
       this.inMeeting = true;
@@ -106,7 +106,10 @@ class ZoomMeetingBridge extends EventEmitter {
     }
 
     const cleanId = meetingId.replace(/[\s-]/g, '');
-    return nativeAddon.joinMeeting(cleanId, password, displayName || 'PlexISO');
+    if (appPrivilegeToken) {
+      console.log('[ZoomBridge] Joining with app_privilege_token (local recording pre-authorized)');
+    }
+    return nativeAddon.joinMeeting(cleanId, password, displayName || 'PlexISO', appPrivilegeToken || '');
   }
 
   leaveMeeting() {

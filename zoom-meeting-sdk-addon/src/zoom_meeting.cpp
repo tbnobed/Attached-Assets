@@ -32,8 +32,8 @@ public:
 
         if (status == MEETING_STATUS_INMEETING) {
             ZoomAddon::Instance().EnumerateParticipants();
-            bool rawOk = ZoomAddon::Instance().StartRawRecording();
-            printf("[ZoomNative] StartRawRecording: %s\n", rawOk ? "OK" : "PENDING (waiting for permission)");
+            bool rawOk = ZoomAddon::Instance().StartRawDataCapture();
+            printf("[ZoomNative] StartRawDataCapture: %s\n", rawOk ? "OK" : "FAILED (will retry)");
             fflush(stdout);
         }
     }
@@ -120,7 +120,7 @@ public:
 static MeetingServiceEventListener* g_meetingListener = nullptr;
 static ParticipantsEventListener* g_participantsListener = nullptr;
 
-bool ZoomAddon::JoinMeeting(const std::string& meetingId, const std::string& password, const std::string& displayName) {
+bool ZoomAddon::JoinMeeting(const std::string& meetingId, const std::string& password, const std::string& displayName, const std::string& appPrivilegeToken) {
     if (state_ != AddonState::Authenticated) return false;
 
     SDKError err = CreateMeetingService(&g_meetingService);
@@ -152,7 +152,21 @@ bool ZoomAddon::JoinMeeting(const std::string& meetingId, const std::string& pas
     param.isAudioOff = true;
     param.isDirectShareDesktop = false;
 
+    if (!appPrivilegeToken.empty()) {
+        appPrivilegeToken_.assign(appPrivilegeToken.begin(), appPrivilegeToken.end());
+        param.app_privilege_token = appPrivilegeToken_.c_str();
+        printf("[ZoomNative] JoinMeeting: app_privilege_token set (len=%zu)\n", appPrivilegeToken.size());
+        fflush(stdout);
+    } else {
+        appPrivilegeToken_.clear();
+        param.app_privilege_token = nullptr;
+        printf("[ZoomNative] JoinMeeting: no app_privilege_token\n");
+        fflush(stdout);
+    }
+
     err = g_meetingService->Join(joinParam);
+    printf("[ZoomNative] JoinMeeting: Join result=%d\n", (int)err);
+    fflush(stdout);
     return err == SDKERR_SUCCESS;
 }
 
@@ -235,7 +249,7 @@ bool ZoomAddon::LeaveMeeting() {
 
 #else
 
-bool ZoomAddon::JoinMeeting(const std::string& meetingId, const std::string& password, const std::string& displayName) {
+bool ZoomAddon::JoinMeeting(const std::string& meetingId, const std::string& password, const std::string& displayName, const std::string& appPrivilegeToken) {
     state_ = AddonState::InMeeting;
     return true;
 }

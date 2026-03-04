@@ -22,6 +22,9 @@ loadEnv();
 const settings = {
   zoomSdkKey: process.env.ZOOM_SDK_KEY || '',
   zoomSdkSecret: process.env.ZOOM_SDK_SECRET || '',
+  zoomAccountId: process.env.ZOOM_ACCOUNT_ID || '',
+  zoomClientId: process.env.ZOOM_CLIENT_ID || '',
+  zoomClientSecret: process.env.ZOOM_CLIENT_SECRET || '',
   defaultOutputDir: process.env.DEFAULT_OUTPUT_DIR || path.join(__dirname, '..', '..', 'recordings'),
   sessionName: process.env.SESSION_NAME || 'PlexStudioSession',
   sessionPassword: process.env.SESSION_PASSWORD || '',

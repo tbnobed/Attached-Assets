@@ -161,8 +161,9 @@ static Napi::Value JoinMeeting(const Napi::CallbackInfo& info) {
     std::string meetingId = info[0].As<Napi::String>().Utf8Value();
     std::string password = info[1].As<Napi::String>().Utf8Value();
     std::string displayName = info.Length() > 2 ? info[2].As<Napi::String>().Utf8Value() : "PlexISO";
+    std::string appPrivilegeToken = info.Length() > 3 ? info[3].As<Napi::String>().Utf8Value() : "";
 
-    bool ok = ZoomAddon::Instance().JoinMeeting(meetingId, password, displayName);
+    bool ok = ZoomAddon::Instance().JoinMeeting(meetingId, password, displayName, appPrivilegeToken);
     return Napi::Boolean::New(env, ok);
 }
 

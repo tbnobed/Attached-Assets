@@ -44,9 +44,9 @@ function setupIpcHandlers(ipcMain, context) {
     }
   });
 
-  ipcMain.handle('join-meeting', (_event, meetingId, password, displayName) => {
+  ipcMain.handle('join-meeting', async (_event, meetingId, password, displayName) => {
     try {
-      const ok = sessionManager.joinMeeting(meetingId, password, displayName);
+      const ok = await sessionManager.joinMeeting(meetingId, password, displayName);
       return {
         success: ok,
         meetingId,
