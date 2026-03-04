@@ -22,60 +22,75 @@ public:
     void onRawDataFrameReceived(YUVRawDataI420* data) override {
         if (!data) return;
 
-        int width = data->GetStreamWidth();
-        int height = data->GetStreamHeight();
-        if (width <= 0 || height <= 0) return;
+        unsigned int width = data->GetStreamWidth();
+        unsigned int height = data->GetStreamHeight();
+        if (width == 0 || height == 0) return;
 
-        if (data->CanAddRef()) {
-            data->AddRef();
+        unsigned int yuvSize = width * height * 3 / 2;
+
+        const char* rawBuf = data->GetBuffer();
+        unsigned int rawLen = data->GetBufferLen();
+
+        const unsigned char* yPlane = nullptr;
+        const unsigned char* uPlane = nullptr;
+        const unsigned char* vPlane = nullptr;
+
+        uint8_t* localCopy = nullptr;
+
+        if (rawBuf && rawLen >= yuvSize) {
+            localCopy = new uint8_t[yuvSize];
+            memcpy(localCopy, rawBuf, yuvSize);
+            yPlane = localCopy;
+            uPlane = localCopy + (width * height);
+            vPlane = localCopy + (width * height) + (width * height / 4);
+        } else {
+            const char* yBuf = data->GetYBuffer();
+            const char* uBuf = data->GetUBuffer();
+            const char* vBuf = data->GetVBuffer();
+
+            if (yBuf && uBuf && vBuf) {
+                localCopy = new uint8_t[yuvSize];
+                memcpy(localCopy, yBuf, width * height);
+                memcpy(localCopy + width * height, uBuf, width * height / 4);
+                memcpy(localCopy + width * height + width * height / 4, vBuf, width * height / 4);
+                yPlane = localCopy;
+                uPlane = localCopy + (width * height);
+                vPlane = localCopy + (width * height) + (width * height / 4);
+            }
         }
 
-        const unsigned char* yPlane = reinterpret_cast<const unsigned char*>(data->GetYBuffer());
-        const unsigned char* uPlane = reinterpret_cast<const unsigned char*>(data->GetUBuffer());
-        const unsigned char* vPlane = reinterpret_cast<const unsigned char*>(data->GetVBuffer());
-
-        if (!yPlane || !uPlane || !vPlane) {
-            const unsigned char* rawBuf = reinterpret_cast<const unsigned char*>(data->GetBuffer());
-            unsigned int rawLen = data->GetBufferLen();
-
+        if (!yPlane) {
             if (frameLogCount_ < 5) {
-                printf("[ZoomNative] Video frame: userId=%u %dx%d Y/U/V null, GetBuffer=%p len=%u\n",
-                       userId_, width, height, (void*)rawBuf, rawLen);
+                printf("[ZoomNative] Video frame: userId=%u %ux%u NO DATA — GetBuffer=%p len=%u, Y=%p U=%p V=%p canAddRef=%d isLimited=%d\n",
+                       userId_, width, height,
+                       (void*)rawBuf, rawLen,
+                       (void*)data->GetYBuffer(), (void*)data->GetUBuffer(), (void*)data->GetVBuffer(),
+                       (int)data->CanAddRef(), (int)data->IsLimitedI420());
                 fflush(stdout);
             }
-
-            unsigned int expectedI420 = (unsigned int)(width * height * 3 / 2);
-            if (rawBuf && rawLen >= expectedI420) {
-                yPlane = rawBuf;
-                uPlane = rawBuf + (width * height);
-                vPlane = rawBuf + (width * height) + (width * height / 4);
-            } else {
-                if (frameLogCount_ < 3) {
-                    printf("[ZoomNative] Video frame: userId=%u skipping — no usable buffer\n", userId_);
-                    fflush(stdout);
-                }
-                frameLogCount_++;
-                if (data->CanAddRef()) data->Release();
-                return;
-            }
+            frameLogCount_++;
+            delete[] localCopy;
+            return;
         }
 
         if (frameLogCount_ < 5 || frameLogCount_ % 300 == 0) {
-            printf("[ZoomNative] Video frame: userId=%u %dx%d (frame #%d)\n", userId_, width, height, frameLogCount_);
+            printf("[ZoomNative] Video frame: userId=%u %ux%u (frame #%d) src=%s\n",
+                   userId_, width, height, frameLogCount_,
+                   (rawBuf && rawLen >= yuvSize) ? "GetBuffer" : "Y/U/V planes");
             fflush(stdout);
         }
         frameLogCount_++;
 
-        int bgraSize = width * height * 4;
+        unsigned int bgraSize = width * height * 4;
         auto* bgraData = new uint8_t[bgraSize];
 
-        int yStride = width;
-        int uStride = width / 2;
+        unsigned int yStride = width;
+        unsigned int uStride = width / 2;
 
-        for (int j = 0; j < height; j++) {
-            for (int i = 0; i < width; i++) {
-                int yIdx = j * yStride + i;
-                int uvIdx = (j / 2) * uStride + (i / 2);
+        for (unsigned int j = 0; j < height; j++) {
+            for (unsigned int i = 0; i < width; i++) {
+                unsigned int yIdx = j * yStride + i;
+                unsigned int uvIdx = (j / 2) * uStride + (i / 2);
 
                 int y = yPlane[yIdx];
                 int u = uPlane[uvIdx] - 128;
@@ -85,7 +100,7 @@ public:
                 int g = y - (int)(0.344 * u) - (int)(0.714 * v);
                 int b = y + (int)(1.772 * u);
 
-                int idx = (j * width + i) * 4;
+                unsigned int idx = (j * width + i) * 4;
                 bgraData[idx + 0] = (uint8_t)(b < 0 ? 0 : (b > 255 ? 255 : b));
                 bgraData[idx + 1] = (uint8_t)(g < 0 ? 0 : (g > 255 ? 255 : g));
                 bgraData[idx + 2] = (uint8_t)(r < 0 ? 0 : (r > 255 ? 255 : r));
@@ -95,8 +110,7 @@ public:
 
         ZoomAddon::Instance().OnVideoFrame(userId_, bgraData, width, height);
         delete[] bgraData;
-
-        if (data->CanAddRef()) data->Release();
+        delete[] localCopy;
     }
 
     void onRawDataStatusChanged(RawDataStatus status) override {
