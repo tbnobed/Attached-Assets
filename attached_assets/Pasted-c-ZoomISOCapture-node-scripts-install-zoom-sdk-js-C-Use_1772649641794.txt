@@ -1,0 +1,95 @@
+c:\ZoomISOCapture>node scripts/install-zoom-sdk.js "C:\Users\Debo\Downloads\zoom-sdk-windows\zoom-sdk-windows-6.7.5.30939\x64"
+=== Installing Zoom Meeting SDK ===
+
+Copying headers...
+  62 header files copied
+
+Copying libraries...
+  1 library files copied
+
+Copying binaries...
+  144 binary files copied
+
+=== SDK installed successfully ===
+Location: c:\ZoomISOCapture\zoom-meeting-sdk-addon\sdk
+
+Next step: rebuild the addon:
+  cd zoom-meeting-sdk-addon
+  npx node-gyp rebuild
+
+c:\ZoomISOCapture>cd zoom-meeting-sdk-addon
+
+c:\ZoomISOCapture\zoom-meeting-sdk-addon>npx node-gyp rebuild
+gyp info it worked if it ends with ok
+gyp info using node-gyp@12.2.0
+gyp info using node@24.14.0 | win32 | x64
+(node:46368) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+gyp info find Python using Python version 3.14.3 found at "C:\Python314\python.exe"
+
+gyp info find VS using VS2026 (18.3.11520.95) found at:
+gyp info find VS "C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools"
+gyp info find VS run with --verbose for detailed information
+gyp info spawn C:\Python314\python.exe
+gyp info spawn args [
+gyp info spawn args 'C:\\Users\\Debo\\AppData\\Local\\npm-cache\\_npx\\c463d28440264a05\\node_modules\\node-gyp\\gyp\\gyp_main.py',
+gyp info spawn args 'binding.gyp',
+gyp info spawn args '-f',
+gyp info spawn args 'msvs',
+gyp info spawn args '-I',
+gyp info spawn args 'c:\\ZoomISOCapture\\zoom-meeting-sdk-addon\\build\\config.gypi',
+gyp info spawn args '-I',
+gyp info spawn args 'C:\\Users\\Debo\\AppData\\Local\\npm-cache\\_npx\\c463d28440264a05\\node_modules\\node-gyp\\addon.gypi',
+gyp info spawn args '-I',
+gyp info spawn args 'C:\\Users\\Debo\\AppData\\Local\\node-gyp\\Cache\\24.14.0\\include\\node\\common.gypi',
+gyp info spawn args '-Dlibrary=shared_library',
+gyp info spawn args '-Dvisibility=default',
+gyp info spawn args '-Dnode_root_dir=C:\\Users\\Debo\\AppData\\Local\\node-gyp\\Cache\\24.14.0',
+gyp info spawn args '-Dnode_gyp_dir=C:\\Users\\Debo\\AppData\\Local\\npm-cache\\_npx\\c463d28440264a05\\node_modules\\node-gyp',
+gyp info spawn args '-Dnode_lib_file=C:\\\\Users\\\\Debo\\\\AppData\\\\Local\\\\node-gyp\\\\Cache\\\\24.14.0\\\\<(target_arch)\\\\node.lib',
+gyp info spawn args '-Dmodule_root_dir=c:\\ZoomISOCapture\\zoom-meeting-sdk-addon',
+gyp info spawn args '-Dnode_engine=v8',
+gyp info spawn args '--depth=.',
+gyp info spawn args '--no-parallel',
+gyp info spawn args '--generator-output',
+gyp info spawn args 'c:\\ZoomISOCapture\\zoom-meeting-sdk-addon\\build',
+gyp info spawn args '-Goutput_dir=.'
+gyp info spawn args ]
+node:internal/modules/cjs/loader:1459
+  throw err;
+  ^
+
+Error: Cannot find module 'node-addon-api'
+Require stack:
+- c:\ZoomISOCapture\zoom-meeting-sdk-addon\[eval]
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1456:15)
+    at defaultResolveImpl (node:internal/modules/cjs/loader:1066:19)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1071:22)
+    at Module._load (node:internal/modules/cjs/loader:1242:25)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1556:12)
+    at require (node:internal/modules/helpers:152:16)
+    at [eval]:1:1
+    at runScriptInThisContext (node:internal/vm:219:10)
+    at node:internal/process/execution:451:12 {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [ 'c:\\ZoomISOCapture\\zoom-meeting-sdk-addon\\[eval]' ]
+}
+
+Node.js v24.14.0
+gyp: Call to 'node -p "require('node-addon-api').include"' returned exit status 1 while in binding.gyp. while trying to load binding.gyp
+gyp ERR! configure error
+gyp ERR! stack Error: `gyp` failed with exit code: 1
+gyp ERR! stack at ChildProcess.<anonymous> (C:\Users\Debo\AppData\Local\npm-cache\_npx\c463d28440264a05\node_modules\node-gyp\lib\configure.js:317:18)
+gyp ERR! stack at ChildProcess.emit (node:events:508:28)
+gyp ERR! stack at ChildProcess._handle.onexit (node:internal/child_process:294:12)
+gyp ERR! System Windows_NT 10.0.26100
+gyp ERR! command "C:\\Program Files\\nodejs\\node.exe" "C:\\Users\\Debo\\AppData\\Local\\npm-cache\\_npx\\c463d28440264a05\\node_modules\\node-gyp\\bin\\node-gyp.js" "rebuild"
+gyp ERR! cwd c:\ZoomISOCapture\zoom-meeting-sdk-addon
+gyp ERR! node -v v24.14.0
+gyp ERR! node-gyp -v v12.2.0
+gyp ERR! $npm_package_name zoom-meeting-sdk-addon
+gyp ERR! $npm_package_version 1.0.0
+gyp ERR! not ok
+
+c:\ZoomISOCapture\zoom-meeting-sdk-addon>
