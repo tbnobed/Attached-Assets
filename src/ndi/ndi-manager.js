@@ -119,6 +119,7 @@ class NDIManager extends EventEmitter {
         yres: height,
         frameRateN: this.settings.video.frameRate * 1000,
         frameRateD: 1000,
+        pictureAspectRatio: width / height,
         fourCC: this.grandiose.FOURCC_RGBA,
         data: frameBuffer,
         lineStrideBytes: width * 4,
