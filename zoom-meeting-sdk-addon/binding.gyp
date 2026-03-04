@@ -18,20 +18,13 @@
       "conditions": [
         ["OS=='win'", {
           "libraries": [
-            "<(module_root_dir)/sdk/lib/x64/sdk.lib"
+            "<(module_root_dir)/sdk/lib/sdk.lib"
           ],
           "copies": [
             {
               "destination": "<(module_root_dir)/build/Release",
               "files": [
-                "<(module_root_dir)/sdk/bin/x64/sdk.dll",
-                "<(module_root_dir)/sdk/bin/x64/ssb_sdk.dll",
-                "<(module_root_dir)/sdk/bin/x64/zVideoApp.dll",
-                "<(module_root_dir)/sdk/bin/x64/tp.dll",
-                "<(module_root_dir)/sdk/bin/x64/turbojpeg.dll",
-                "<(module_root_dir)/sdk/bin/x64/mfAdapter.dll",
-                "<(module_root_dir)/sdk/bin/x64/cares.dll",
-                "<(module_root_dir)/sdk/bin/x64/UIBase.dll"
+                "<(module_root_dir)/sdk/bin/sdk.dll"
               ]
             }
           ]
