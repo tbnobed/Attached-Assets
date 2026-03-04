@@ -21,7 +21,7 @@ public:
     void onLogout() override {}
     void onZoomIdentityExpired() override {}
     void onZoomAuthIdentityExpired() override {}
-    void onNotificationServiceStatus(SDKNotificationServiceStatus status) override {}
+    void onNotificationServiceStatus(SDKNotificationServiceStatus status, SDKNotificationServiceError error) override {}
 };
 
 static AuthServiceEventListener* g_authListener = nullptr;
