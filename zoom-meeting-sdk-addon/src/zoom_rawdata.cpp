@@ -26,18 +26,38 @@ public:
         int height = data->GetStreamHeight();
         if (width <= 0 || height <= 0) return;
 
+        if (data->CanAddRef()) {
+            data->AddRef();
+        }
+
         const unsigned char* yPlane = reinterpret_cast<const unsigned char*>(data->GetYBuffer());
         const unsigned char* uPlane = reinterpret_cast<const unsigned char*>(data->GetUBuffer());
         const unsigned char* vPlane = reinterpret_cast<const unsigned char*>(data->GetVBuffer());
 
         if (!yPlane || !uPlane || !vPlane) {
-            if (frameLogCount_ < 3) {
-                printf("[ZoomNative] Video frame: userId=%u %dx%d null YUV buffer (Y=%p U=%p V=%p)\n",
-                       userId_, width, height, (void*)yPlane, (void*)uPlane, (void*)vPlane);
+            const unsigned char* rawBuf = reinterpret_cast<const unsigned char*>(data->GetBuffer());
+            unsigned int rawLen = data->GetBufferLen();
+
+            if (frameLogCount_ < 5) {
+                printf("[ZoomNative] Video frame: userId=%u %dx%d Y/U/V null, GetBuffer=%p len=%u\n",
+                       userId_, width, height, (void*)rawBuf, rawLen);
                 fflush(stdout);
             }
-            frameLogCount_++;
-            return;
+
+            unsigned int expectedI420 = (unsigned int)(width * height * 3 / 2);
+            if (rawBuf && rawLen >= expectedI420) {
+                yPlane = rawBuf;
+                uPlane = rawBuf + (width * height);
+                vPlane = rawBuf + (width * height) + (width * height / 4);
+            } else {
+                if (frameLogCount_ < 3) {
+                    printf("[ZoomNative] Video frame: userId=%u skipping — no usable buffer\n", userId_);
+                    fflush(stdout);
+                }
+                frameLogCount_++;
+                if (data->CanAddRef()) data->Release();
+                return;
+            }
         }
 
         if (frameLogCount_ < 5 || frameLogCount_ % 300 == 0) {
@@ -75,6 +95,8 @@ public:
 
         ZoomAddon::Instance().OnVideoFrame(userId_, bgraData, width, height);
         delete[] bgraData;
+
+        if (data->CanAddRef()) data->Release();
     }
 
     void onRawDataStatusChanged(RawDataStatus status) override {
