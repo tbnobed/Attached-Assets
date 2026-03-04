@@ -8,7 +8,7 @@ Electron desktop application for capturing isolated video/audio feeds from Zoom 
 - **Main Process** (`src/main/`): Session management, NDI output, FFmpeg recording, IPC handlers
 - **Renderer** (`src/renderer/`): Dashboard UI with participant grid, meeting join controls, activity log
 - **Zoom Integration** (`src/zoom/`): Session manager wrapping the native Meeting SDK addon, stream handler, JWT generator
-- **Native Addon** (`zoom-meeting-sdk-addon/`): C++ N-API wrapper around the Zoom Meeting SDK for Windows, providing raw data callbacks (video I420, audio PCM) per participant
+- **Native Addon** (`zoom-meeting-sdk-addon/`): C++ N-API wrapper around the Zoom Meeting SDK v6.7.5 for Windows, providing raw data callbacks (video I420, audio PCM) per participant
 - **NDI** (`src/ndi/`): NDI source management via grandiose (graceful fallback if unavailable)
 - **Recorder** (`src/recorder/`): FFmpeg-based per-participant MP4 recording
 - **Config** (`src/config/`): Settings loader from environment variables
@@ -26,15 +26,17 @@ Electron desktop application for capturing isolated video/audio feeds from Zoom 
 - `src/config/settings.js` - Environment variable loader
 - `zoom-meeting-sdk-addon/index.js` - JS bridge for the native C++ addon
 - `zoom-meeting-sdk-addon/src/zoom_addon.cpp` - N-API entry point
-- `zoom-meeting-sdk-addon/src/zoom_auth.cpp` - SDK init/auth
+- `zoom-meeting-sdk-addon/src/zoom_addon.h` - Shared header (ZoomAddon singleton, structs, enums)
+- `zoom-meeting-sdk-addon/src/zoom_auth.cpp` - SDK init/auth (JWT-based)
 - `zoom-meeting-sdk-addon/src/zoom_meeting.cpp` - Meeting join/leave, participant events
 - `zoom-meeting-sdk-addon/src/zoom_rawdata.cpp` - Raw data capture (I420->RGBA video, PCM audio)
 - `zoom-meeting-sdk-addon/binding.gyp` - Build config for node-gyp
-- `scripts/setup-meeting-sdk.js` - Setup script for SDK file placement
+- `scripts/install-zoom-sdk.js` - Copies SDK files from download to addon directory
+- `scripts/scan-zoom-sdk.js` - Lists SDK headers/libs/bins for debugging
 - `scripts/fix-grandiose.js` - Patches grandiose for MSVC const-correctness
 
 ## Data Flow
-1. Native addon joins Zoom meeting, calls StartRawRecording()
+1. Native addon joins Zoom meeting, raw capture starts automatically when MEETING_STATUS_INMEETING
 2. Per-participant I420 video frames -> converted to RGBA in C++ -> sent via ThreadSafeFunction to JS
 3. Per-participant PCM audio -> sent via ThreadSafeFunction to JS
 4. SessionManager receives frames -> routes to StreamHandler
@@ -52,26 +54,29 @@ Electron desktop application for capturing isolated video/audio feeds from Zoom 
 - `ZOOM_SDK_SECRET` - Zoom Meeting SDK secret
 - `ZOOM_MEETING_BOT_NAME` - Display name when joining meetings (default: PlexISO)
 - `DEFAULT_OUTPUT_DIR` - Recording output directory (default: ./recordings)
-- `SESSION_NAME` - Default session name (used for Video SDK fallback)
-- `SESSION_PASSWORD` - Optional session password
 
 ## Guest Portal (`guest-portal/`)
 - Standalone Express server for remote guests to join sessions via browser (Video SDK mode)
 - Serves a web page using the Zoom Video SDK for Web (CDN-loaded)
 - Generates JWT tokens server-side for guests (role=0, participant)
 - Has its own `package.json` — deployed independently on a Linux server
-- Key files: `guest-portal/server.js`, `guest-portal/public/index.html`, `guest-portal/public/app.js`, `guest-portal/public/styles.css`
-
-## Running
-- Desktop App: `npm start` (runs `electron .`)
-- Guest Portal: `cd guest-portal && npm install && npm start` (runs on port 3000)
-- VNC Workflow: `npx electron . --no-sandbox --disable-gpu-sandbox` (Replit dev)
 
 ## Building the Native Addon (Windows)
-1. Run `node scripts/setup-meeting-sdk.js` to create directory structure
-2. Download Zoom Meeting SDK from marketplace.zoom.us
-3. Copy SDK headers to `zoom-meeting-sdk-addon/sdk/h/`
-4. Copy .lib to `zoom-meeting-sdk-addon/sdk/lib/x64/`
-5. Copy .dll files to `zoom-meeting-sdk-addon/sdk/bin/x64/`
-6. `cd zoom-meeting-sdk-addon && npm install`
-7. `npx node-gyp rebuild --target=<electron-version> --arch=x64 --dist-url=https://electronjs.org/headers`
+1. `cd c:\ZoomISOCapture && npm install`
+2. `cd zoom-meeting-sdk-addon && npm install`
+3. `node scripts/install-zoom-sdk.js "C:\path\to\zoom-sdk-x64"`
+4. `cd zoom-meeting-sdk-addon && npx node-gyp rebuild`
+5. Create `.env` with ZOOM_SDK_KEY and ZOOM_SDK_SECRET
+6. `npx electron . --no-sandbox --disable-gpu-sandbox`
+
+## Zoom SDK v6.7.5 Notes
+- SDK lib: `sdk/lib/sdk.lib` (single file)
+- SDK DLLs: 92+ DLLs in `sdk/bin/`
+- `IAuthServiceEvent::onNotificationServiceStatus` takes two params (status, error)
+- `IMeetingServiceEvent` requires: onMeetingTopicChanged, onMeetingFullToWatchLiveStream, onUserNetworkStatusChanged, onAppSignalPanelUpdated
+- `IMeetingParticipantsCtrlEvent` requires: onUserNamesChanged (replaces onUserNameChanged), onBotAuthorizerRelationChanged, onVirtualNameTagStatusChanged, onVirtualNameTagRosterInfoUpdated, onCreateCompanionRelation, onRemoveCompanionRelation, onGrantCoOwnerPrivilegeChanged
+- `IZoomSDKAudioRawDataDelegate::onShareAudioRawDataReceived` takes (AudioRawData*, uint32_t)
+- `IZoomSDKAudioRawDataDelegate::onOneWayInterpreterAudioRawDataReceived` is new abstract method
+- `GetYBuffer()/GetUBuffer()/GetVBuffer()` return `char*`, need reinterpret_cast to unsigned char*
+- Audio helper: use `GetAudioRawdataHelper()` directly (not via GetRawdataAPIHelper)
+- Include `meeting_audio_interface.h` before `meeting_participants_ctrl_interface.h` for AudioType
