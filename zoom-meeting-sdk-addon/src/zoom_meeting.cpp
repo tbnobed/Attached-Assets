@@ -4,6 +4,7 @@
 #include <windows.h>
 #include "zoom_sdk.h"
 #include "meeting_service_interface.h"
+#include "meeting_service_components/meeting_audio_interface.h"
 #include "meeting_service_components/meeting_participants_ctrl_interface.h"
 
 using namespace ZOOMSDK;
@@ -36,6 +37,10 @@ public:
     void onMeetingParameterNotification(const MeetingParameter* param) override {}
     void onSuspendParticipantsActivities() override {}
     void onAICompanionActiveChangeNotice(bool bActive) override {}
+    void onMeetingTopicChanged(const zchar_t* sTopic) override {}
+    void onMeetingFullToWatchLiveStream(const zchar_t* sLiveStreamUrl) override {}
+    void onUserNetworkStatusChanged(MeetingComponentType component, ConnectionQuality quality, unsigned int userId, bool bNotGood) override {}
+    void onAppSignalPanelUpdated(IMeetingAppSignalHandler* pHandler) override {}
 };
 
 class ParticipantsEventListener : public IMeetingParticipantsCtrlEvent {
@@ -73,7 +78,6 @@ public:
 
     void onHostChangeNotification(unsigned int userId) override {}
     void onLowOrRaiseHandStatusChanged(bool bLow, unsigned int userId) override {}
-    void onUserNameChanged(unsigned int userId, const zchar_t* userName) override {}
     void onCoHostChangeNotification(unsigned int userId, bool isCoHost) override {}
     void onInvalidReclaimHostkey() override {}
     void onAllHandsLowered() override {}
@@ -88,6 +92,12 @@ public:
     void onParticipantProfilePictureStatusChange(bool bHidden) override {}
     void onFocusModeStateChanged(bool bEnabled) override {}
     void onFocusModeShareTypeChanged(FocusModeShareType type) override {}
+    void onUserNamesChanged(IList<unsigned int>* lstUserID) override {}
+    void onBotAuthorizerRelationChanged(unsigned int userId) override {}
+    void onVirtualNameTagStatusChanged(bool bEnabled, unsigned int userId) override {}
+    void onVirtualNameTagRosterInfoUpdated(unsigned int userId) override {}
+    void onCreateCompanionRelation(unsigned int userId, unsigned int companionId) override {}
+    void onRemoveCompanionRelation(unsigned int userId) override {}
 };
 
 static MeetingServiceEventListener* g_meetingListener = nullptr;
