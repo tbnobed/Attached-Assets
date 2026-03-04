@@ -1,11 +1,14 @@
 #include "zoom_addon.h"
 
 #ifdef _WIN32
+#include <windows.h>
 #include "zoom_sdk.h"
 #include "meeting_service_interface.h"
-#include "meeting_participants_ctrl_interface.h"
+#include "meeting_service_components/meeting_participants_ctrl_interface.h"
 
 using namespace ZOOMSDK;
+
+static IMeetingService* g_meetingService = nullptr;
 
 class MeetingServiceEventListener : public IMeetingServiceEvent {
 public:
@@ -37,23 +40,31 @@ public:
 
 class ParticipantsEventListener : public IMeetingParticipantsCtrlEvent {
 public:
-    void onUserJoin(IList<unsigned int>* lstUserID, const zchar_t* strUserList) override {
+    void onUserJoin(IList<unsigned int>* lstUserID, const zchar_t* strUserList = nullptr) override {
         if (!lstUserID) return;
         for (int i = 0; i < lstUserID->GetCount(); i++) {
             unsigned int userId = lstUserID->GetItem(i);
-            auto* pCtrl = GetMeetingService()->GetMeetingParticipantsController();
-            if (pCtrl) {
-                auto* info = pCtrl->GetUserByUserID(userId);
-                if (info) {
-                    std::wstring wName(info->GetUserName());
-                    std::string name(wName.begin(), wName.end());
-                    ZoomAddon::Instance().OnParticipantJoined(userId, name);
+            if (g_meetingService) {
+                auto* pCtrl = g_meetingService->GetMeetingParticipantsController();
+                if (pCtrl) {
+                    auto* info = pCtrl->GetUserByUserID(userId);
+                    if (info) {
+                        const zchar_t* wName = info->GetUserName();
+                        std::string name;
+                        if (wName) {
+                            std::wstring ws(wName);
+                            name.assign(ws.begin(), ws.end());
+                        } else {
+                            name = "Participant";
+                        }
+                        ZoomAddon::Instance().OnParticipantJoined(userId, name);
+                    }
                 }
             }
         }
     }
 
-    void onUserLeft(IList<unsigned int>* lstUserID, const zchar_t* strUserList) override {
+    void onUserLeft(IList<unsigned int>* lstUserID, const zchar_t* strUserList = nullptr) override {
         if (!lstUserID) return;
         for (int i = 0; i < lstUserID->GetCount(); i++) {
             ZoomAddon::Instance().OnParticipantLeft(lstUserID->GetItem(i));
@@ -79,13 +90,8 @@ public:
     void onFocusModeShareTypeChanged(FocusModeShareType type) override {}
 };
 
-static IMeetingService* g_meetingService = nullptr;
 static MeetingServiceEventListener* g_meetingListener = nullptr;
 static ParticipantsEventListener* g_participantsListener = nullptr;
-
-IMeetingService* GetMeetingService() {
-    return g_meetingService;
-}
 
 bool ZoomAddon::JoinMeeting(const std::string& meetingId, const std::string& password, const std::string& displayName) {
     if (state_ != AddonState::Authenticated) return false;

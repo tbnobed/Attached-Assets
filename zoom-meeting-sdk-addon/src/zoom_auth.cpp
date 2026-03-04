@@ -1,6 +1,7 @@
 #include "zoom_addon.h"
 
 #ifdef _WIN32
+#include <windows.h>
 #include "zoom_sdk.h"
 #include "auth_service_interface.h"
 
@@ -16,11 +17,11 @@ public:
         }
     }
 
+    void onLoginReturnWithReason(LOGINSTATUS ret, IAccountInfo* pAccountInfo, LoginFailReason reason) override {}
     void onLogout() override {}
     void onZoomIdentityExpired() override {}
     void onZoomAuthIdentityExpired() override {}
     void onNotificationServiceStatus(SDKNotificationServiceStatus status) override {}
-    void onNotificationServiceStatus(SDKNotificationServiceStatus status, SDKNotificationServiceError error) override {}
 };
 
 static AuthServiceEventListener* g_authListener = nullptr;

@@ -1,9 +1,11 @@
 #include "zoom_addon.h"
 
 #ifdef _WIN32
+#include <windows.h>
 #include "zoom_sdk.h"
+#include "zoom_sdk_raw_data_def.h"
 #include "rawdata/zoom_rawdata_api.h"
-#include "rawdata/rawdata_video_source_helper_interface.h"
+#include "rawdata/rawdata_renderer_interface.h"
 #include "rawdata/rawdata_audio_helper_interface.h"
 
 using namespace ZOOMSDK;
@@ -26,13 +28,9 @@ public:
         const uint8_t* uPlane = data->GetUBuffer();
         const uint8_t* vPlane = data->GetVBuffer();
 
-        int yStride = data->GetYStride();
-        int uStride = data->GetUStride();
-        int vStride = data->GetVStride();
-
-        if (yStride <= 0) yStride = width;
-        if (uStride <= 0) uStride = width / 2;
-        if (vStride <= 0) vStride = width / 2;
+        int yStride = width;
+        int uStride = width / 2;
+        int vStride = width / 2;
 
         for (int j = 0; j < height; j++) {
             for (int i = 0; i < width; i++) {
