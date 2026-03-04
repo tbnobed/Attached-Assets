@@ -1,5 +1,5 @@
 @echo off
-setlocal
+setlocal EnableDelayedExpansion
 
 echo.
 echo =============================================
@@ -8,44 +8,50 @@ echo =============================================
 echo.
 
 where node >nul 2>&1
-if %ERRORLEVEL% neq 0 (
-    echo [FAIL] Node.js is not installed or not on PATH.
-    echo        Download from https://nodejs.org
-    pause
-    exit /b 1
-)
+if %ERRORLEVEL% neq 0 goto :nonode
 
-if "%~1"=="" (
-    echo Usage:
-    echo   setup.bat "C:\path\to\zoom-sdk\x64"
-    echo.
-    echo The path should point to the x64 folder inside the extracted Zoom SDK,
-    echo containing h\, lib\, and bin\ subfolders.
-    echo.
-    set /p SDK_PATH="Enter Zoom SDK x64 path (or press Enter to skip): "
-) else (
-    set "SDK_PATH=%~1"
-)
+if "%~1"=="" goto :noparam
+set "SDK_PATH=%~1"
+goto :runsetup
 
-if "%SDK_PATH%"=="" (
-    echo.
-    echo Running setup without Zoom SDK (stub mode)...
-    powershell -ExecutionPolicy Bypass -File "%~dp0setup.ps1"
-) else (
-    echo.
-    echo Running setup with SDK at: %SDK_PATH%
-    powershell -ExecutionPolicy Bypass -File "%~dp0setup.ps1" -ZoomSdkPath "%SDK_PATH%"
-)
+:noparam
+echo The path should point to the x64 folder inside the extracted Zoom SDK.
+echo.
+set /p SDK_PATH="Enter Zoom SDK x64 path, or press Enter to skip: "
+if "!SDK_PATH!"=="" goto :runsetup_nosdk
+goto :runsetup
 
-if %ERRORLEVEL% equ 0 (
-    echo.
-    set /p LAUNCH="Launch the app now? (Y/N): "
-    if /i "%LAUNCH%"=="Y" (
-        echo.
-        echo Starting Zoom ISO Capture...
-        cd /d "%~dp0"
-        npx electron . --no-sandbox --disable-gpu-sandbox
-    )
-)
+:runsetup_nosdk
+echo.
+echo Running setup without Zoom SDK...
+node scripts/setup.js
+goto :checklaunch
 
+:runsetup
+echo.
+echo Running setup with SDK at: !SDK_PATH!
+node scripts/setup.js "!SDK_PATH!"
+goto :checklaunch
+
+:checklaunch
+if %ERRORLEVEL% neq 0 goto :done
+echo.
+set /p LAUNCH="Launch the app now? [Y/N]: "
+if /i "!LAUNCH!"=="Y" goto :launch
+goto :done
+
+:launch
+echo.
+echo Starting Zoom ISO Capture...
+cd /d "%~dp0"
+npx electron . --no-sandbox --disable-gpu-sandbox
+goto :done
+
+:nonode
+echo [FAIL] Node.js is not installed or not on PATH.
+echo        Download from https://nodejs.org
+goto :done
+
+:done
+echo.
 pause
