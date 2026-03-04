@@ -114,6 +114,7 @@ class NDIManager extends EventEmitter {
     if (source.mock || !source.sender) return;
 
     try {
+      const fourCC = this.grandiose.FOURCC_BGRA || this.grandiose.FOURCC_RGBA || 0x42475241;
       source.sender.video({
         xres: width,
         yres: height,
@@ -121,13 +122,14 @@ class NDIManager extends EventEmitter {
         frameRateD: 1000,
         pictureAspectRatio: width / height,
         frameFormatType: 1,
-        fourCC: this.grandiose.FOURCC_RGBA,
+        fourCC: fourCC,
         lineStrideBytes: width * 4,
         data: frameBuffer,
       });
     } catch (err) {
-      if (source.framesSent % 300 === 1) {
+      if (!source._videoErrorLogged) {
         console.error(`[NDI] Error sending video for ${source.displayName}:`, err.message);
+        source._videoErrorLogged = true;
       }
     }
   }

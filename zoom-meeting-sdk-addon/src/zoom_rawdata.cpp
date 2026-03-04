@@ -26,18 +26,28 @@ public:
         int height = data->GetStreamHeight();
         if (width <= 0 || height <= 0) return;
 
+        const unsigned char* yPlane = reinterpret_cast<const unsigned char*>(data->GetYBuffer());
+        const unsigned char* uPlane = reinterpret_cast<const unsigned char*>(data->GetUBuffer());
+        const unsigned char* vPlane = reinterpret_cast<const unsigned char*>(data->GetVBuffer());
+
+        if (!yPlane || !uPlane || !vPlane) {
+            if (frameLogCount_ < 3) {
+                printf("[ZoomNative] Video frame: userId=%u %dx%d null YUV buffer (Y=%p U=%p V=%p)\n",
+                       userId_, width, height, (void*)yPlane, (void*)uPlane, (void*)vPlane);
+                fflush(stdout);
+            }
+            frameLogCount_++;
+            return;
+        }
+
         if (frameLogCount_ < 5 || frameLogCount_ % 300 == 0) {
             printf("[ZoomNative] Video frame: userId=%u %dx%d (frame #%d)\n", userId_, width, height, frameLogCount_);
             fflush(stdout);
         }
         frameLogCount_++;
 
-        int rgbaSize = width * height * 4;
-        auto* rgbaData = new uint8_t[rgbaSize];
-
-        const unsigned char* yPlane = reinterpret_cast<const unsigned char*>(data->GetYBuffer());
-        const unsigned char* uPlane = reinterpret_cast<const unsigned char*>(data->GetUBuffer());
-        const unsigned char* vPlane = reinterpret_cast<const unsigned char*>(data->GetVBuffer());
+        int bgraSize = width * height * 4;
+        auto* bgraData = new uint8_t[bgraSize];
 
         int yStride = width;
         int uStride = width / 2;
@@ -55,16 +65,16 @@ public:
                 int g = y - (int)(0.344 * u) - (int)(0.714 * v);
                 int b = y + (int)(1.772 * u);
 
-                int rgbaIdx = (j * width + i) * 4;
-                rgbaData[rgbaIdx + 0] = (uint8_t)(r < 0 ? 0 : (r > 255 ? 255 : r));
-                rgbaData[rgbaIdx + 1] = (uint8_t)(g < 0 ? 0 : (g > 255 ? 255 : g));
-                rgbaData[rgbaIdx + 2] = (uint8_t)(b < 0 ? 0 : (b > 255 ? 255 : b));
-                rgbaData[rgbaIdx + 3] = 255;
+                int idx = (j * width + i) * 4;
+                bgraData[idx + 0] = (uint8_t)(b < 0 ? 0 : (b > 255 ? 255 : b));
+                bgraData[idx + 1] = (uint8_t)(g < 0 ? 0 : (g > 255 ? 255 : g));
+                bgraData[idx + 2] = (uint8_t)(r < 0 ? 0 : (r > 255 ? 255 : r));
+                bgraData[idx + 3] = 255;
             }
         }
 
-        ZoomAddon::Instance().OnVideoFrame(userId_, rgbaData, width, height);
-        delete[] rgbaData;
+        ZoomAddon::Instance().OnVideoFrame(userId_, bgraData, width, height);
+        delete[] bgraData;
     }
 
     void onRawDataStatusChanged(RawDataStatus status) override {
