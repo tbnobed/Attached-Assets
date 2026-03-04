@@ -24,9 +24,9 @@ public:
         int rgbaSize = width * height * 4;
         auto* rgbaData = new uint8_t[rgbaSize];
 
-        const uint8_t* yPlane = data->GetYBuffer();
-        const uint8_t* uPlane = data->GetUBuffer();
-        const uint8_t* vPlane = data->GetVBuffer();
+        const unsigned char* yPlane = reinterpret_cast<const unsigned char*>(data->GetYBuffer());
+        const unsigned char* uPlane = reinterpret_cast<const unsigned char*>(data->GetUBuffer());
+        const unsigned char* vPlane = reinterpret_cast<const unsigned char*>(data->GetVBuffer());
 
         int yStride = width;
         int uStride = width / 2;
@@ -82,7 +82,8 @@ public:
         );
     }
 
-    void onShareAudioRawDataReceived(AudioRawData* data) override {}
+    void onShareAudioRawDataReceived(AudioRawData* data, uint32_t node_id) override {}
+    void onOneWayInterpreterAudioRawDataReceived(AudioRawData* data, const zchar_t* pLanguageName) override {}
 };
 
 static AudioRawDataListener* g_audioListener = nullptr;
@@ -128,14 +129,11 @@ void unsubscribeAllVideo() {
 bool ZoomAddon::StartRawDataCapture() {
     if (g_rawDataActive) return true;
 
-    auto* rawDataHelper = GetRawdataAPIHelper();
+    auto* rawDataHelper = GetAudioRawdataHelper();
     if (!rawDataHelper) return false;
 
     g_audioListener = new AudioRawDataListener();
-    auto* audioHelper = rawDataHelper->GetAudioRawdataHelper();
-    if (audioHelper) {
-        audioHelper->subscribe(g_audioListener);
-    }
+    rawDataHelper->subscribe(g_audioListener);
 
     g_rawDataActive = true;
 
@@ -163,12 +161,9 @@ void ZoomAddon::StopRawDataCapture() {
     unsubscribeAllVideo();
 
     if (g_audioListener) {
-        auto* rawDataHelper = GetRawdataAPIHelper();
+        auto* rawDataHelper = GetAudioRawdataHelper();
         if (rawDataHelper) {
-            auto* audioHelper = rawDataHelper->GetAudioRawdataHelper();
-            if (audioHelper) {
-                audioHelper->unSubscribe();
-            }
+            rawDataHelper->unSubscribe();
         }
         delete g_audioListener;
         g_audioListener = nullptr;
