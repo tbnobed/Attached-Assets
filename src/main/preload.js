@@ -4,6 +4,8 @@ contextBridge.exposeInMainWorld('zoomISO', {
   getStatus: () => ipcRenderer.invoke('get-status'),
   getSettings: () => ipcRenderer.invoke('get-settings'),
 
+  joinMeeting: (meetingId, password, displayName) => ipcRenderer.invoke('join-meeting', meetingId, password, displayName),
+  leaveMeeting: () => ipcRenderer.invoke('leave-meeting'),
   joinSession: (sessionName, password) => ipcRenderer.invoke('join-session', sessionName, password),
   leaveSession: () => ipcRenderer.invoke('leave-session'),
   generateToken: (sessionName) => ipcRenderer.invoke('generate-token', sessionName),

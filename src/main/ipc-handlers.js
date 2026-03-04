@@ -31,6 +31,7 @@ function setupIpcHandlers(ipcMain, context) {
       maxParticipants: settings.maxParticipants,
       video: settings.video,
       audio: settings.audio,
+      zoomAvailable: sessionManager.isZoomAvailable(),
     };
   });
 
@@ -41,6 +42,28 @@ function setupIpcHandlers(ipcMain, context) {
     } catch (err) {
       return { success: false, error: err.message };
     }
+  });
+
+  ipcMain.handle('join-meeting', (_event, meetingId, password, displayName) => {
+    try {
+      const ok = sessionManager.joinMeeting(meetingId, password, displayName);
+      return {
+        success: ok,
+        meetingId,
+        message: ok ? 'Joining meeting...' : 'Failed to initiate join',
+      };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  });
+
+  ipcMain.handle('leave-meeting', () => {
+    streamHandler.stopAll();
+    recorderManager.stopAll();
+    ndiManager.destroyAll();
+    sessionManager.leaveMeeting();
+    sendStatusUpdate();
+    return { success: true };
   });
 
   ipcMain.handle('join-session', (_event, sessionName, password) => {
@@ -54,7 +77,7 @@ function setupIpcHandlers(ipcMain, context) {
         success: true,
         token,
         sessionName: sessionManager.sessionName,
-        message: 'Session token generated. Use this in the renderer to connect via Zoom Video SDK.',
+        message: 'Session token generated.',
       };
     } catch (err) {
       return { success: false, error: err.message };
@@ -65,8 +88,7 @@ function setupIpcHandlers(ipcMain, context) {
     streamHandler.stopAll();
     recorderManager.stopAll();
     ndiManager.destroyAll();
-    sessionManager.setConnected(false);
-    sessionManager.participants.clear();
+    sessionManager.leaveMeeting();
     sendStatusUpdate();
     return { success: true };
   });

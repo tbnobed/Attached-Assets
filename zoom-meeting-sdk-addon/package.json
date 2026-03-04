@@ -1,0 +1,13 @@
+{
+  "name": "zoom-meeting-sdk-addon",
+  "version": "1.0.0",
+  "description": "Native Node.js addon wrapping the Zoom Meeting SDK C++ for raw data capture",
+  "main": "index.js",
+  "scripts": {
+    "build": "node-gyp rebuild --target=34.3.0 --arch=x64 --dist-url=https://electronjs.org/headers"
+  },
+  "dependencies": {
+    "node-addon-api": "^7.1.0",
+    "node-gyp": "^10.2.0"
+  }
+}

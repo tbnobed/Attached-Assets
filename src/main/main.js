@@ -41,6 +41,8 @@ function initManagers() {
   ndiManager = new NDIManager(settings);
   recorderManager = new RecorderManager(settings);
 
+  sessionManager.setStreamHandler(streamHandler);
+
   const outputDir = ensureOutputDir();
   recorderManager.setOutputDir(outputDir);
 
@@ -81,7 +83,7 @@ function initManagers() {
   });
 
   sessionManager.on('reconnect-attempt', (info) => {
-    console.log(`[Main] Reconnect attempt ${info.attempt} with new token`);
+    console.log(`[Main] Reconnect attempt ${info.attempt}`);
     sendToRenderer('reconnecting', { attempt: info.attempt, maxAttempts: sessionManager.maxReconnectAttempts });
   });
 

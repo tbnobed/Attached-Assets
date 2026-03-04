@@ -433,10 +433,11 @@
 
     <div class="toolbar">
       <div class="toolbar-group">
-        <span class="toolbar-label">Session</span>
-        <input type="text" id="sessionNameInput" placeholder="Session name" />
-        <button class="primary" id="btnJoinSession">Join Session</button>
-        <button class="danger" id="btnLeaveSession" disabled>Leave</button>
+        <span class="toolbar-label">Meeting</span>
+        <input type="text" id="meetingIdInput" placeholder="Meeting ID" style="width:160px" />
+        <input type="text" id="meetingPasswordInput" placeholder="Passcode" style="width:120px" />
+        <button class="primary" id="btnJoinMeeting">Join Meeting</button>
+        <button class="danger" id="btnLeaveMeeting" disabled>Leave</button>
       </div>
 
       <div class="toolbar-divider"></div>
@@ -479,6 +480,10 @@
           <span class="config-label">SDK Credentials</span>
           <span class="config-value" id="sdkStatusDisplay">Checking...</span>
         </div>
+        <div class="config-row">
+          <span class="config-label">Meeting SDK</span>
+          <span class="config-value" id="zoomSdkStatusDisplay">Checking...</span>
+        </div>
       </div>
 
       <div class="section-title">Participant Feeds (<span id="feedCount">0</span>)</div>
@@ -489,7 +494,7 @@
             <path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
           </svg>
           <h3>No Participants</h3>
-          <p>Join a Zoom Video SDK session or add simulated participants to begin capturing isolated feeds.</p>
+          <p>Join a Zoom meeting by entering a Meeting ID and passcode, or add simulated participants to test.</p>
         </div>
       </div>
 
@@ -550,8 +555,8 @@
       const badge = document.getElementById('connectionBadge');
       badge.className = `status-badge ${connected ? 'connected' : 'disconnected'}`;
       badge.innerHTML = `<div class="status-dot ${connected ? 'on' : 'off'}"></div><span>${connected ? 'Connected' : 'Disconnected'}</span>`;
-      document.getElementById('btnJoinSession').disabled = connected;
-      document.getElementById('btnLeaveSession').disabled = !connected;
+      document.getElementById('btnJoinMeeting').disabled = connected;
+      document.getElementById('btnLeaveMeeting').disabled = !connected;
     }
 
     function renderParticipants() {
@@ -614,7 +619,7 @@
           <path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
         </svg>
         <h3>No Participants</h3>
-        <p>Join a Zoom Video SDK session or add simulated participants to begin capturing isolated feeds.</p>
+        <p>Join a Zoom meeting by entering a Meeting ID and passcode, or add simulated participants to test.</p>
       `;
       return div;
     }
@@ -683,23 +688,28 @@
       log(`Removed ${p?.displayName || userId}`, 'warn');
     }
 
-    document.getElementById('btnJoinSession').addEventListener('click', async () => {
-      const sessionName = document.getElementById('sessionNameInput').value.trim();
-      const result = await window.zoomISO.joinSession(sessionName || undefined);
+    document.getElementById('btnJoinMeeting').addEventListener('click', async () => {
+      const meetingId = document.getElementById('meetingIdInput').value.trim();
+      const password = document.getElementById('meetingPasswordInput').value.trim();
+      if (!meetingId) {
+        log('Enter a Meeting ID to join', 'error');
+        return;
+      }
+      log(`Joining meeting ${meetingId}...`, 'info');
+      const result = await window.zoomISO.joinMeeting(meetingId, password);
       if (result.success) {
-        updateConnectionUI(true);
-        log(`Connected to session: ${result.sessionName}`, 'success');
+        log(`Join initiated for meeting ${meetingId}`, 'success');
       } else {
-        log(`Connection failed: ${result.error}`, 'error');
+        log(`Join failed: ${result.error}`, 'error');
       }
     });
 
-    document.getElementById('btnLeaveSession').addEventListener('click', async () => {
-      await window.zoomISO.leaveSession();
+    document.getElementById('btnLeaveMeeting').addEventListener('click', async () => {
+      await window.zoomISO.leaveMeeting();
       updateConnectionUI(false);
       state.participants.clear();
       renderParticipants();
-      log('Left session', 'warn');
+      log('Left meeting', 'warn');
     });
 
     document.getElementById('btnRecordAll').addEventListener('click', async () => {
@@ -804,9 +814,9 @@
 
       window.zoomISO.getSettings().then(s => {
         state.settings = s;
-        document.getElementById('sessionNameInput').value = s.sessionName || '';
         document.getElementById('outputDirDisplay').textContent = s.outputDir || './recordings';
         document.getElementById('ndiStatusDisplay').textContent = s.ndiAvailable ? 'Available (grandiose loaded)' : 'Unavailable (grandiose not installed)';
+        document.getElementById('zoomSdkStatusDisplay').textContent = s.zoomAvailable ? 'Available (native addon loaded)' : 'Unavailable (native addon not built)';
         document.getElementById('sdkStatusDisplay').textContent = s.hasCredentials ? 'Configured' : 'Not configured - set ZOOM_SDK_KEY and ZOOM_SDK_SECRET in .env';
         log('Application initialized', 'success');
       });

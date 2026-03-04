@@ -1,0 +1,55 @@
+Yes, exactly. The app Replit built is a solid foundation — the Electron shell, the UI, the NDI/FFmpeg routing logic — all of that carries over. The only thing that needs to swap out is the Zoom SDK underneath it.
+Here's the core difference:
+Video SDKMeeting SDKGuest joins viaCustom app/session you controlStandard zoom.us invite linkRaw per-participant streams✅ Yes✅ Yes (Raw Data mode)Works in Electron on Windows✅✅ (via native C++ bindings)Guest needs special software✅ Yes❌ No — standard Zoom client
+The catch with the Meeting SDK in Electron is that it's a native C++ SDK, so it can't be imported like a normal npm package. It needs to be bridged into Node.js/Electron using either:
+
+node-addon-api / N-API — write a native .node addon that wraps the C++ SDK and exposes it to your Electron renderer
+Prebuilt community wrappers — a few exist on GitHub though none are officially supported by Zoom
+
+
+Updated Prompt for Replit
+Here's what to give Replit to update the existing app:
+
+Update the existing Electron app to use the Zoom Meeting SDK instead of the Video SDK, with per-participant raw data capture.
+The existing Electron app structure, UI, FFmpeg recording pipeline, and NDI output logic should be preserved. Only the Zoom integration layer needs to be replaced.
+The core change:
+Remove the @zoom/videosdk dependency entirely. Replace it with a native Node.js addon that wraps the Zoom Meeting SDK for Windows (C++ SDK), giving access to raw per-participant audio and video streams inside a standard zoom.us meeting.
+How it should work:
+
+The app joins a standard Zoom meeting using a Meeting ID + passcode (the same link a guest would receive via a normal Zoom invite). The app joins silently as a bot participant — no visible Zoom UI window needed.
+Once joined as host or co-host, the app calls StartRawRecording() to enable the Raw Data pipeline. This does NOT trigger Zoom's built-in recording — it simply opens the raw data callbacks.
+The app subscribes to per-participant raw data callbacks:
+
+onVideoRawDataReceived → delivers I420/YUV420 raw video frames per participant
+onIndividualAudioRawDataReceived → delivers PCM 16LE raw audio per participant
+
+
+Each participant's raw frames and audio are piped into the existing FFmpeg pipeline for ISO recording and/or NDI output — exactly as the current app handles streams, just with a different source.
+
+Native SDK bridge:
+Since the Zoom Meeting SDK for Windows is a C++ SDK, it must be wrapped as a native Node.js addon using node-addon-api (N-API). Create a zoom-meeting-sdk-addon folder in the project with:
+
+binding.gyp — build config pointing to the Zoom Meeting SDK headers and .lib files
+zoom_addon.cpp — N-API wrapper that:
+
+Exposes joinMeeting(meetingId, password, displayName) to JavaScript
+Exposes leaveMeeting() to JavaScript
+Fires JavaScript callbacks for onParticipantVideoFrame(userId, i420Buffer, width, height)
+Fires JavaScript callbacks for onParticipantAudioFrame(userId, pcmBuffer, sampleRate, channels)
+
+
+Built using node-gyp targeting the Electron version's Node ABI
+
+Meeting SDK credentials:
+Add to .env:
+ZOOM_MEETING_SDK_KEY=your_key
+ZOOM_MEETING_SDK_SECRET=your_secret
+ZOOM_MEETING_BOT_NAME=PlexISO
+JWT token generation for Meeting SDK auth should be handled in the Node.js main process before calling joinMeeting().
+What does NOT change:
+
+The Electron app shell and window structure
+The React dashboard UI and participant roster display
+The FFmpeg ISO recording pipeline (just swap the input source to the new raw frame callbacks)
+The NDI output logic (same swap — feed it I420 frames from the new callbacks)
+The .env config structure (just add the new Meeting SDK keys)

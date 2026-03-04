@@ -25,6 +25,7 @@ const settings = {
   defaultOutputDir: process.env.DEFAULT_OUTPUT_DIR || path.join(__dirname, '..', '..', 'recordings'),
   sessionName: process.env.SESSION_NAME || 'PlexStudioSession',
   sessionPassword: process.env.SESSION_PASSWORD || '',
+  botName: process.env.ZOOM_MEETING_BOT_NAME || 'PlexISO',
 
   video: {
     targetWidth: 1920,
