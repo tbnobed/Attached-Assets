@@ -98,6 +98,7 @@ public:
     void onVirtualNameTagRosterInfoUpdated(unsigned int userId) override {}
     void onCreateCompanionRelation(unsigned int userId, unsigned int companionId) override {}
     void onRemoveCompanionRelation(unsigned int userId) override {}
+    void onGrantCoOwnerPrivilegeChanged(bool bGranted) override {}
 };
 
 static MeetingServiceEventListener* g_meetingListener = nullptr;
