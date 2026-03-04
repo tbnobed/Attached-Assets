@@ -1,0 +1,97 @@
+c:\ZoomISOCapture>rmdir /s /q c:\ZoomISOCapture\node_modules\grandiose
+
+c:\ZoomISOCapture>node scripts/fix-grandiose.js
+=== Grandiose NDI Fix Tool ===
+
+Step 1: Downloading grandiose (skipping compilation)...
+
+
+added 1 package, and audited 88 packages in 719ms
+
+18 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+
+Step 2: Applying targeted patches for MSVC const-correctness...
+
+  [grandiose_util.h] Fixed: napi_status checkArgs(napi_env env, napi_callback_info info, char* met...
+  [grandiose_util.h] Fixed: int32_t rejectStatus(napi_env env, carrier* c, char* file, int32_t lin...
+  Patched grandiose_util.h (2 fixes)
+
+  [grandiose_util.cc] Fixed: napi_status checkArgs(napi_env env, napi_callback_info info, char* met...
+  [grandiose_util.cc] Fixed: int32_t rejectStatus(napi_env env, carrier* c, char* file, int32_t lin...
+  Patched grandiose_util.cc (2 fixes)
+
+  [grandiose_receive.cc] Fixed: char* resourceName, napi_async_execute_callback execute,...
+  Patched grandiose_receive.cc (1 fixes)
+
+
+Total fixes applied: 5
+
+Step 3: Building native module...
+
+gyp info it worked if it ends with ok
+gyp info using node-gyp@12.2.0
+gyp info using node@24.14.0 | win32 | x64
+(node:19512) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+gyp info find Python using Python version 3.14.3 found at "C:\Python314\python.exe"
+
+gyp info find VS using VS2026 (18.3.11520.95) found at:
+gyp info find VS "C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools"
+gyp info find VS run with --verbose for detailed information
+gyp info spawn C:\Python314\python.exe
+gyp info spawn args [
+gyp info spawn args 'C:\\Users\\Debo\\AppData\\Local\\npm-cache\\_npx\\c463d28440264a05\\node_modules\\node-gyp\\gyp\\gyp_main.py',
+gyp info spawn args 'binding.gyp',
+gyp info spawn args '-f',
+gyp info spawn args 'msvs',
+gyp info spawn args '-I',
+gyp info spawn args 'c:\\ZoomISOCapture\\node_modules\\grandiose\\build\\config.gypi',
+gyp info spawn args '-I',
+gyp info spawn args 'C:\\Users\\Debo\\AppData\\Local\\npm-cache\\_npx\\c463d28440264a05\\node_modules\\node-gyp\\addon.gypi',
+gyp info spawn args '-I',
+gyp info spawn args 'C:\\Users\\Debo\\AppData\\Local\\node-gyp\\Cache\\24.14.0\\include\\node\\common.gypi',
+gyp info spawn args '-Dlibrary=shared_library',
+gyp info spawn args '-Dvisibility=default',
+gyp info spawn args '-Dnode_root_dir=C:\\Users\\Debo\\AppData\\Local\\node-gyp\\Cache\\24.14.0',
+gyp info spawn args '-Dnode_gyp_dir=C:\\Users\\Debo\\AppData\\Local\\npm-cache\\_npx\\c463d28440264a05\\node_modules\\node-gyp',
+gyp info spawn args '-Dnode_lib_file=C:\\\\Users\\\\Debo\\\\AppData\\\\Local\\\\node-gyp\\\\Cache\\\\24.14.0\\\\<(target_arch)\\\\node.lib',
+gyp info spawn args '-Dmodule_root_dir=c:\\ZoomISOCapture\\node_modules\\grandiose',
+gyp info spawn args '-Dnode_engine=v8',
+gyp info spawn args '--depth=.',
+gyp info spawn args '--no-parallel',
+gyp info spawn args '--generator-output',
+gyp info spawn args 'c:\\ZoomISOCapture\\node_modules\\grandiose\\build',
+gyp info spawn args '-Goutput_dir=.'
+gyp info spawn args ]
+gyp info spawn C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\MSBuild\Current\Bin\MSBuild.exe
+gyp info spawn args [
+gyp info spawn args 'build/binding.sln',
+gyp info spawn args '/clp:Verbosity=minimal',
+gyp info spawn args '/nologo',
+gyp info spawn args '/nodeReuse:false',
+gyp info spawn args '/p:Configuration=Release;Platform=x64'
+gyp info spawn args ]
+
+  Copying lib/win_x64/Processing.NDI.Lib.x64.dll to ..\build\Release
+          1 file(s) copied.
+  grandiose_util.cc
+  grandiose_find.cc
+  grandiose_send.cc
+  grandiose_receive.cc
+  grandiose.cc
+  win_delay_load_hook.cc
+     Creating library c:\ZoomISOCapture\node_modules\grandiose\build\Release\grandiose.lib and object c:\ZoomISOCapture\node_modules\grandiose\build\Release\grandiose.exp
+  Generating code
+  Previous IPDB not found, fall back to full compilation.
+  All 181 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  Finished generating code
+  grandiose.vcxproj -> c:\ZoomISOCapture\node_modules\grandiose\build\Release\\grandiose.node
+gyp info ok
+
+=== SUCCESS: grandiose built successfully! ===
+NDI output is now available in Zoom ISO Capture.
+
+c:\ZoomISOCapture>
