@@ -28,17 +28,49 @@ public:
 static AuthServiceEventListener* g_authListener = nullptr;
 static IAuthService* g_authService = nullptr;
 
+static HWND g_hiddenHwnd = nullptr;
+
+static void CreateHiddenWindow() {
+    WNDCLASSW wc = {};
+    wc.lpfnWndProc = DefWindowProcW;
+    wc.hInstance = GetModuleHandle(nullptr);
+    wc.lpszClassName = L"ZoomSDKHiddenWindow";
+    RegisterClassW(&wc);
+
+    g_hiddenHwnd = CreateWindowW(
+        L"ZoomSDKHiddenWindow",
+        L"ZoomSDK",
+        WS_OVERLAPPEDWINDOW,
+        0, 0, 1, 1,
+        nullptr, nullptr,
+        GetModuleHandle(nullptr),
+        nullptr
+    );
+
+    if (g_hiddenHwnd) {
+        printf("[ZoomNative] Hidden HWND created: %p\n", (void*)g_hiddenHwnd);
+    } else {
+        printf("[ZoomNative] WARNING: Failed to create hidden HWND (err=%lu)\n", GetLastError());
+    }
+    fflush(stdout);
+}
+
 bool ZoomAddon::Initialize(const ZoomConfig& config) {
     config_ = config;
+
+    CreateHiddenWindow();
 
     InitParam initParam;
     memset(&initParam, 0, sizeof(initParam));
     initParam.strWebDomain = L"https://zoom.us";
     initParam.enableLogByDefault = true;
+    initParam.hResInstance = GetModuleHandle(nullptr);
+    initParam.uiWindowIconSmallID = 0;
+    initParam.uiWindowIconBigID = 0;
 
-    initParam.rawdataOpts.enableRawdataIntermediateMode = true;
+    initParam.rawdataOpts.enableRawdataIntermediateMode = false;
 
-    printf("[ZoomNative] Initializing SDK (rawdata intermediate mode ENABLED)\n");
+    printf("[ZoomNative] Initializing SDK (rawdata intermediate mode DISABLED, hResInstance set)\n");
     fflush(stdout);
 
     SDKError err = InitSDK(initParam);
@@ -93,6 +125,13 @@ void ZoomAddon::Cleanup() {
     }
 
     ZOOMSDK::CleanUPSDK();
+
+    if (g_hiddenHwnd) {
+        DestroyWindow(g_hiddenHwnd);
+        g_hiddenHwnd = nullptr;
+        UnregisterClassW(L"ZoomSDKHiddenWindow", GetModuleHandle(nullptr));
+    }
+
     state_ = AddonState::Uninitialized;
     participants_.clear();
 }
