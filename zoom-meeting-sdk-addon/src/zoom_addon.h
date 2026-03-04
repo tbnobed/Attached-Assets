@@ -41,6 +41,7 @@ public:
     bool Authenticate();
     bool JoinMeeting(const std::string& meetingId, const std::string& password, const std::string& displayName);
     bool LeaveMeeting();
+    void EnumerateParticipants();
     bool StartRawDataCapture();
     void StopRawDataCapture();
     void SubscribeParticipantVideo(uint32_t userId);

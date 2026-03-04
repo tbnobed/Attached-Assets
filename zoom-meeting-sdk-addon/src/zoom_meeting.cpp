@@ -26,10 +26,15 @@ public:
             case MEETING_STATUS_FAILED: statusStr = "MEETING_STATUS_FAILED"; break;
             default: statusStr = "MEETING_STATUS_UNKNOWN"; break;
         }
+        printf("[ZoomNative] Meeting status: %s (result=%d)\n", statusStr.c_str(), iResult);
+        fflush(stdout);
         ZoomAddon::Instance().OnMeetingStatusChanged(statusStr);
 
         if (status == MEETING_STATUS_INMEETING) {
-            ZoomAddon::Instance().StartRawDataCapture();
+            bool rawOk = ZoomAddon::Instance().StartRawDataCapture();
+            printf("[ZoomNative] StartRawDataCapture: %s\n", rawOk ? "OK" : "FAILED");
+            fflush(stdout);
+            ZoomAddon::Instance().EnumerateParticipants();
         }
     }
 
@@ -46,7 +51,13 @@ public:
 class ParticipantsEventListener : public IMeetingParticipantsCtrlEvent {
 public:
     void onUserJoin(IList<unsigned int>* lstUserID, const zchar_t* strUserList = nullptr) override {
-        if (!lstUserID) return;
+        if (!lstUserID) {
+            printf("[ZoomNative] onUserJoin: lstUserID is null\n");
+            fflush(stdout);
+            return;
+        }
+        printf("[ZoomNative] onUserJoin: %d users\n", lstUserID->GetCount());
+        fflush(stdout);
         for (int i = 0; i < lstUserID->GetCount(); i++) {
             unsigned int userId = lstUserID->GetItem(i);
             if (g_meetingService) {
@@ -62,7 +73,12 @@ public:
                         } else {
                             name = "Participant";
                         }
+                        printf("[ZoomNative] onUserJoin: userId=%u name=%s\n", userId, name.c_str());
+                        fflush(stdout);
                         ZoomAddon::Instance().OnParticipantJoined(userId, name);
+                    } else {
+                        printf("[ZoomNative] onUserJoin: GetUserByUserID(%u) returned null\n", userId);
+                        fflush(stdout);
                     }
                 }
             }
@@ -140,6 +156,58 @@ bool ZoomAddon::JoinMeeting(const std::string& meetingId, const std::string& pas
     return err == SDKERR_SUCCESS;
 }
 
+void ZoomAddon::EnumerateParticipants() {
+    printf("[ZoomNative] EnumerateParticipants called\n");
+    fflush(stdout);
+    if (!g_meetingService) {
+        printf("[ZoomNative] EnumerateParticipants: no meeting service\n");
+        fflush(stdout);
+        return;
+    }
+    auto* pCtrl = g_meetingService->GetMeetingParticipantsController();
+    if (!pCtrl) {
+        printf("[ZoomNative] EnumerateParticipants: no participant controller\n");
+        fflush(stdout);
+        return;
+    }
+
+    auto* lstUserID = pCtrl->GetParticipantsList();
+    if (!lstUserID) {
+        printf("[ZoomNative] EnumerateParticipants: GetParticipantsList returned null\n");
+        fflush(stdout);
+        return;
+    }
+
+    printf("[ZoomNative] EnumerateParticipants: %d participants in SDK list\n", lstUserID->GetCount());
+    fflush(stdout);
+
+    for (int i = 0; i < lstUserID->GetCount(); i++) {
+        unsigned int userId = lstUserID->GetItem(i);
+
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            if (participants_.count(userId)) {
+                printf("[ZoomNative] EnumerateParticipants: userId=%u already known\n", userId);
+                fflush(stdout);
+                continue;
+            }
+        }
+
+        auto* info = pCtrl->GetUserByUserID(userId);
+        std::string name = "Participant";
+        if (info) {
+            const zchar_t* wName = info->GetUserName();
+            if (wName) {
+                std::wstring ws(wName);
+                name.assign(ws.begin(), ws.end());
+            }
+        }
+        printf("[ZoomNative] EnumerateParticipants: new userId=%u name=%s\n", userId, name.c_str());
+        fflush(stdout);
+        OnParticipantJoined(userId, name);
+    }
+}
+
 bool ZoomAddon::LeaveMeeting() {
     if (!g_meetingService) return false;
 
@@ -171,6 +239,8 @@ bool ZoomAddon::JoinMeeting(const std::string& meetingId, const std::string& pas
     state_ = AddonState::InMeeting;
     return true;
 }
+
+void ZoomAddon::EnumerateParticipants() {}
 
 bool ZoomAddon::LeaveMeeting() {
     state_ = AddonState::Authenticated;

@@ -21,6 +21,13 @@ public:
         int height = data->GetStreamHeight();
         if (width <= 0 || height <= 0) return;
 
+        static int frameLogCount = 0;
+        if (frameLogCount < 5 || frameLogCount % 300 == 0) {
+            printf("[ZoomNative] Video frame: userId=%u %dx%d (frame #%d)\n", userId_, width, height, frameLogCount);
+            fflush(stdout);
+        }
+        frameLogCount++;
+
         int rgbaSize = width * height * 4;
         auto* rgbaData = new uint8_t[rgbaSize];
 
@@ -57,8 +64,20 @@ public:
         delete[] rgbaData;
     }
 
-    void onRawDataStatusChanged(RawDataStatus status) override {}
-    void onRendererBeDestroyed() override {}
+    void onRawDataStatusChanged(RawDataStatus status) override {
+        const char* statusName = "UNKNOWN";
+        switch (status) {
+            case RawData_On: statusName = "RawData_On"; break;
+            case RawData_Off: statusName = "RawData_Off"; break;
+            default: break;
+        }
+        printf("[ZoomNative] onRawDataStatusChanged: userId=%u status=%s\n", userId_, statusName);
+        fflush(stdout);
+    }
+    void onRendererBeDestroyed() override {
+        printf("[ZoomNative] onRendererBeDestroyed: userId=%u\n", userId_);
+        fflush(stdout);
+    }
 
     uint32_t GetUserId() const { return userId_; }
 
@@ -72,6 +91,14 @@ public:
 
     void onOneWayAudioRawDataReceived(AudioRawData* data, uint32_t node_id) override {
         if (!data) return;
+
+        static int audioLogCount = 0;
+        if (audioLogCount < 5 || audioLogCount % 1000 == 0) {
+            printf("[ZoomNative] Audio frame: nodeId=%u len=%d sr=%d ch=%d (frame #%d)\n",
+                   node_id, data->GetBufferLen(), data->GetSampleRate(), data->GetChannelNum(), audioLogCount);
+            fflush(stdout);
+        }
+        audioLogCount++;
 
         ZoomAddon::Instance().OnAudioFrame(
             node_id,
@@ -91,16 +118,24 @@ static std::map<uint32_t, std::pair<IZoomSDKRenderer*, PerUserVideoListener*>> g
 static bool g_rawDataActive = false;
 
 void subscribeUserVideo(uint32_t userId) {
-    if (g_videoRenderers.count(userId)) return;
+    if (g_videoRenderers.count(userId)) {
+        printf("[ZoomNative] subscribeUserVideo: userId=%u already subscribed\n", userId);
+        fflush(stdout);
+        return;
+    }
 
     auto* listener = new PerUserVideoListener(userId);
     IZoomSDKRenderer* renderer = nullptr;
     auto err = createRenderer(&renderer, listener);
     if (err == SDKERR_SUCCESS && renderer) {
-        renderer->setRawDataResolution(ZoomSDKResolution_1080P);
-        renderer->subscribe(userId, RAW_DATA_TYPE_VIDEO);
+        auto resErr = renderer->setRawDataResolution(ZoomSDKResolution_1080P);
+        auto subErr = renderer->subscribe(userId, RAW_DATA_TYPE_VIDEO);
         g_videoRenderers[userId] = { renderer, listener };
+        printf("[ZoomNative] subscribeUserVideo: userId=%u renderer created (res=%d sub=%d)\n", userId, (int)resErr, (int)subErr);
+        fflush(stdout);
     } else {
+        printf("[ZoomNative] subscribeUserVideo: userId=%u FAILED (err=%d renderer=%p)\n", userId, (int)err, (void*)renderer);
+        fflush(stdout);
         delete listener;
     }
 }
@@ -127,18 +162,30 @@ void unsubscribeAllVideo() {
 }
 
 bool ZoomAddon::StartRawDataCapture() {
-    if (g_rawDataActive) return true;
+    if (g_rawDataActive) {
+        printf("[ZoomNative] StartRawDataCapture: already active\n");
+        fflush(stdout);
+        return true;
+    }
 
     auto* rawDataHelper = GetAudioRawdataHelper();
-    if (!rawDataHelper) return false;
+    if (!rawDataHelper) {
+        printf("[ZoomNative] StartRawDataCapture: GetAudioRawdataHelper returned null\n");
+        fflush(stdout);
+        return false;
+    }
 
     g_audioListener = new AudioRawDataListener();
-    rawDataHelper->subscribe(g_audioListener);
+    auto subErr = rawDataHelper->subscribe(g_audioListener);
+    printf("[ZoomNative] StartRawDataCapture: audio subscribe result=%d\n", (int)subErr);
+    fflush(stdout);
 
     g_rawDataActive = true;
 
     {
         std::lock_guard<std::mutex> lock(mutex_);
+        printf("[ZoomNative] StartRawDataCapture: subscribing video for %zu existing participants\n", participants_.size());
+        fflush(stdout);
         for (const auto& [userId, info] : participants_) {
             subscribeUserVideo(userId);
         }

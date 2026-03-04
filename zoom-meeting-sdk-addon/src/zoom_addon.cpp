@@ -62,6 +62,8 @@ void ZoomAddon::OnAudioFrame(uint32_t userId, const uint8_t* data, int length, i
 }
 
 void ZoomAddon::OnParticipantJoined(uint32_t userId, const std::string& name) {
+    printf("[ZoomNative] OnParticipantJoined: userId=%u name=%s\n", userId, name.c_str());
+    fflush(stdout);
     {
         std::lock_guard<std::mutex> lock(mutex_);
         participants_[userId] = { userId, name, false, false };
@@ -218,6 +220,12 @@ static Napi::Value OnEvent(const Napi::CallbackInfo& info) {
     return env.Undefined();
 }
 
+static Napi::Value EnumerateParticipants(const Napi::CallbackInfo& info) {
+    Napi::Env env = info.Env();
+    ZoomAddon::Instance().EnumerateParticipants();
+    return env.Undefined();
+}
+
 static Napi::Value GetParticipants(const Napi::CallbackInfo& info) {
     Napi::Env env = info.Env();
     auto participants = ZoomAddon::Instance().GetParticipants();
@@ -262,6 +270,7 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
     exports.Set("onVideoFrame", Napi::Function::New(env, OnVideoFrame));
     exports.Set("onAudioFrame", Napi::Function::New(env, OnAudioFrame));
     exports.Set("onEvent", Napi::Function::New(env, OnEvent));
+    exports.Set("enumerateParticipants", Napi::Function::New(env, EnumerateParticipants));
     exports.Set("getParticipants", Napi::Function::New(env, GetParticipants));
     exports.Set("getState", Napi::Function::New(env, GetState));
     exports.Set("cleanup", Napi::Function::New(env, CleanupSDK));

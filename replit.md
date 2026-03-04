@@ -37,11 +37,14 @@ Electron desktop application for capturing isolated video/audio feeds from Zoom 
 
 ## Data Flow
 1. Native addon joins Zoom meeting, raw capture starts automatically when MEETING_STATUS_INMEETING
-2. Per-participant I420 video frames -> converted to RGBA in C++ -> sent via ThreadSafeFunction to JS
-3. Per-participant PCM audio -> sent via ThreadSafeFunction to JS
-4. SessionManager receives frames -> routes to StreamHandler
-5. StreamHandler emits video-frame/audio-data events
-6. main.js routes to NDIManager (RGBA frames -> NDI sources) and RecorderManager (FFmpeg pipes)
+2. C++ actively enumerates participants via GetParticipantsList() + onUserJoin callback (dual approach)
+3. JS bridge polls enumerateParticipants() at 0.5s, 2s, 5s, 10s after joining for reliability
+4. Per-participant I420 video frames -> converted to RGBA in C++ -> sent via ThreadSafeFunction to JS
+5. Per-participant PCM audio -> sent via ThreadSafeFunction to JS
+6. SessionManager receives frames -> routes to StreamHandler
+7. StreamHandler emits video-frame/audio-data events
+8. main.js routes to NDIManager (RGBA frames -> NDI sources) and RecorderManager (FFmpeg pipes)
+9. NDI send uses per-source locks (_videoSending/_audioSending) to prevent promise queue overflow
 
 ## Dependencies
 - electron - Desktop app framework

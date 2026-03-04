@@ -116,6 +116,7 @@ class ZoomMeetingBridge extends EventEmitter {
     }
     const ok = nativeAddon.leaveMeeting();
     this.inMeeting = false;
+    this._knownParticipants = new Set();
     return ok;
   }
 
@@ -172,12 +173,17 @@ class ZoomMeetingBridge extends EventEmitter {
     });
 
     nativeAddon.onEvent((event) => {
+      console.log('[ZoomBridge] Event:', event.type, event.status || '', event.displayName || '', event.userId || '');
       switch (event.type) {
         case 'participant-joined':
-          this.emit('participant-joined', {
-            userId: event.userId,
-            displayName: event.displayName,
-          });
+          if (!this._knownParticipants) this._knownParticipants = new Set();
+          if (!this._knownParticipants.has(event.userId)) {
+            this._knownParticipants.add(event.userId);
+            this.emit('participant-joined', {
+              userId: event.userId,
+              displayName: event.displayName,
+            });
+          }
           break;
         case 'participant-left':
           this.emit('participant-left', {
@@ -192,11 +198,40 @@ class ZoomMeetingBridge extends EventEmitter {
     });
   }
 
+  _enumerateExistingParticipants() {
+    if (!addonAvailable) return;
+    try {
+      nativeAddon.enumerateParticipants();
+
+      const participants = nativeAddon.getParticipants();
+      console.log('[ZoomBridge] Enumerating existing participants:', participants.length);
+      for (const p of participants) {
+        if (!this._knownParticipants) this._knownParticipants = new Set();
+        if (!this._knownParticipants.has(p.userId)) {
+          this._knownParticipants.add(p.userId);
+          console.log('[ZoomBridge] Found participant:', p.displayName, '(id:', p.userId, ')');
+          this.emit('participant-joined', {
+            userId: p.userId,
+            displayName: p.displayName,
+          });
+        }
+      }
+    } catch (err) {
+      console.error('[ZoomBridge] Error enumerating participants:', err.message);
+    }
+  }
+
   _handleMeetingStatus(status) {
     switch (status) {
       case 'MEETING_STATUS_INMEETING':
         this.inMeeting = true;
+        console.log('[ZoomBridge] In meeting — starting raw capture and participant enumeration');
+        try { nativeAddon.startRawCapture(); } catch (e) { console.error('[ZoomBridge] startRawCapture error:', e.message); }
         this.emit('meeting-joined');
+        setTimeout(() => this._enumerateExistingParticipants(), 500);
+        setTimeout(() => this._enumerateExistingParticipants(), 2000);
+        setTimeout(() => this._enumerateExistingParticipants(), 5000);
+        setTimeout(() => this._enumerateExistingParticipants(), 10000);
         break;
       case 'MEETING_STATUS_ENDED':
       case 'MEETING_STATUS_FAILED':
