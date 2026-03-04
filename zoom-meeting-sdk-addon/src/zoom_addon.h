@@ -4,6 +4,7 @@
 #include <napi.h>
 #include <string>
 #include <map>
+#include <set>
 #include <mutex>
 #include <functional>
 
