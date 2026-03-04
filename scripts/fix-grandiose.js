@@ -33,9 +33,12 @@ if (!fs.existsSync(srcDir)) {
   process.exit(1);
 }
 
-console.log('Step 2: Patching source files for MSVC const-correctness...\n');
+console.log('Step 2: Patching ALL source files for MSVC const-correctness...\n');
+console.log('  Strategy: Replace every "char *" with "const char *" in function');
+console.log('  signatures and declarations across all .h, .cc, and .cpp files.\n');
 
 let patched = 0;
+let totalFixes = 0;
 
 const allFiles = fs.readdirSync(srcDir).filter(f =>
   f.endsWith('.cc') || f.endsWith('.cpp') || f.endsWith('.h')
@@ -47,33 +50,22 @@ for (const file of allFiles) {
   const original = content;
   const lines = content.split('\n');
   const newLines = [];
+  let fileFixes = 0;
 
   for (let i = 0; i < lines.length; i++) {
     let line = lines[i];
 
-    if (line.includes('rejectStatus') && line.includes('char') && !line.includes('const char')) {
-      line = line.replace(/char\s*\*/g, 'const char *');
-      console.log('  [' + file + ':' + (i + 1) + '] Fixed: ' + line.trim());
-    }
-
-    if (line.includes('validColorFormat') && line.includes('char') && !line.includes('const char')) {
-      line = line.replace(/char\s*\*/g, 'const char *');
-      console.log('  [' + file + ':' + (i + 1) + '] Fixed: ' + line.trim());
-    }
-
-    if (line.includes('validBandwidth') && line.includes('char') && !line.includes('const char')) {
-      line = line.replace(/char\s*\*/g, 'const char *');
-      console.log('  [' + file + ':' + (i + 1) + '] Fixed: ' + line.trim());
-    }
-
-    if (line.includes('validAudioFormat') && line.includes('char') && !line.includes('const char')) {
-      line = line.replace(/char\s*\*/g, 'const char *');
-      console.log('  [' + file + ':' + (i + 1) + '] Fixed: ' + line.trim());
-    }
-
-    if (line.includes('validFrameFormat') && line.includes('char') && !line.includes('const char')) {
-      line = line.replace(/char\s*\*/g, 'const char *');
-      console.log('  [' + file + ':' + (i + 1) + '] Fixed: ' + line.trim());
+    if (line.includes('char') && !line.includes('const char') && !line.includes('unsigned char') && !line.includes('//')) {
+      const hasCharStar = /\bchar\s*\*/.test(line);
+      if (hasCharStar) {
+        const newLine = line.replace(/\bchar\s*\*/g, 'const char *');
+        if (newLine !== line) {
+          console.log('  [' + file + ':' + (i + 1) + '] ' + line.trim());
+          console.log('    -> ' + newLine.trim());
+          line = newLine;
+          fileFixes++;
+        }
+      }
     }
 
     newLines.push(line);
@@ -82,47 +74,15 @@ for (const file of allFiles) {
   const newContent = newLines.join('\n');
   if (newContent !== original) {
     fs.writeFileSync(filepath, newContent, 'utf8');
-    console.log('  Patched: ' + file + '\n');
+    console.log('  Patched ' + file + ' (' + fileFixes + ' fixes)\n');
     patched++;
+    totalFixes += fileFixes;
+  } else {
+    console.log('  ' + file + ' - no changes needed');
   }
 }
 
-if (patched === 0) {
-  console.log('  Regex approach found no matches. Trying broad replacement...\n');
-
-  for (const file of allFiles) {
-    const filepath = path.join(srcDir, file);
-    let content = fs.readFileSync(filepath, 'utf8');
-    const original = content;
-
-    content = content.replace(/,\s*char\s*\*\s*msg\s*,/g, ', const char *msg,');
-
-    content = content.replace(/,\s*char\s*\*\s*msg\s*\)/g, ', const char *msg)');
-
-    if (content !== original) {
-      fs.writeFileSync(filepath, content, 'utf8');
-      console.log('  Patched: ' + file);
-      patched++;
-    }
-  }
-}
-
-if (patched === 0) {
-  console.log('  Still no matches found. Dumping rejectStatus lines for debugging:\n');
-  for (const file of allFiles) {
-    const filepath = path.join(srcDir, file);
-    const content = fs.readFileSync(filepath, 'utf8');
-    const lines = content.split('\n');
-    for (let i = 0; i < lines.length; i++) {
-      if (lines[i].includes('rejectStatus') || lines[i].includes('char *') || lines[i].includes('char*')) {
-        console.log('  [' + file + ':' + (i+1) + '] ' + lines[i].trimEnd());
-      }
-    }
-  }
-  console.log('\n  Please share the output above so the patch can be updated.');
-} else {
-  console.log('\nPatched ' + patched + ' file(s).\n');
-}
+console.log('\nPatched ' + patched + ' file(s) with ' + totalFixes + ' total fixes.\n');
 
 console.log('Step 3: Building native module...\n');
 
