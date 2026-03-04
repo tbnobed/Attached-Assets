@@ -42,22 +42,22 @@ class SessionManager extends EventEmitter {
       }
 
       this.zoomBridge.on('participant-joined', ({ userId, displayName }) => {
-        this.addParticipant({ userId: String(userId), displayName });
+        this.addParticipant({ userId, displayName });
       });
 
       this.zoomBridge.on('participant-left', ({ userId }) => {
-        this.removeParticipant(String(userId));
+        this.removeParticipant(userId);
       });
 
       this.zoomBridge.on('video-frame', ({ userId, frameData }) => {
         if (this.streamHandler) {
-          this.streamHandler.handleVideoFrame(String(userId), frameData);
+          this.streamHandler.handleVideoFrame(userId, frameData);
         }
       });
 
       this.zoomBridge.on('audio-frame', ({ userId, audioData }) => {
         if (this.streamHandler) {
-          this.streamHandler.handleAudioData(String(userId), audioData);
+          this.streamHandler.handleAudioData(userId, audioData);
         }
       });
 

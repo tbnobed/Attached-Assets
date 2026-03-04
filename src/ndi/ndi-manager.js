@@ -142,14 +142,22 @@ class NDIManager extends EventEmitter {
     const sr = sampleRate || this.settings.audio.sampleRate;
 
     try {
+      const bytesPerSample = 2;
+      const noSamples = Math.floor(audioBuffer.length / (bytesPerSample * ch));
+      if (noSamples <= 0) return;
+
       source.sender.audio({
         sampleRate: sr,
         noChannels: ch,
-        noSamples: audioBuffer.length / (2 * ch),
+        noSamples: noSamples,
+        channelStrideBytes: noSamples * bytesPerSample,
         data: audioBuffer,
       });
     } catch (err) {
-      console.error(`[NDI] Error sending audio for ${source.displayName}:`, err.message);
+      if (!source._audioErrorLogged) {
+        console.error(`[NDI] Error sending audio for ${source.displayName}:`, err.message);
+        source._audioErrorLogged = true;
+      }
     }
   }
 
