@@ -1,0 +1,24 @@
+{
+  "name": "zoom-iso-capture",
+  "version": "1.0.0",
+  "description": "Zoom Video SDK ISO Capture for broadcast production - isolated video/audio feeds with NDI output and local recording",
+  "main": "src/main/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron .",
+    "build:renderer": "vite build --config src/renderer/vite.config.js",
+    "preview": "vite preview --config src/renderer/vite.config.js"
+  },
+  "keywords": [
+    "zoom",
+    "iso",
+    "ndi",
+    "broadcast",
+    "electron"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "electron": "^40.6.1",
+    "jsonwebtoken": "^9.0.3"
+  }
+}
