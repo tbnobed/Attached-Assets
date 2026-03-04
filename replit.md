@@ -119,3 +119,5 @@ npm start
 - Raw data requires `StartRawRecording()` on IMeetingRecordingController BEFORE createRenderer/audio subscribe
 - If bot lacks recording permission, call `RequestLocalRecordingPrivilege()` and wait for `onRecordPrivilegeChanged(true)` or `onLocalRecordingPrivilegeChanged(true)`
 - `onRecordingStatus(Recording_Start)` is the gate signal: only after this can renderers and audio subscriptions succeed
+- `IMeetingRecordingCtrlEvent` v6.7.5 requires: onRecordingStatus, onCloudRecordingStatus, onRecordPrivilegeChanged, onLocalRecordingPrivilegeRequestStatus, onRequestCloudRecordingResponse, onLocalRecordingPrivilegeRequested(handler*), onStartCloudRecordingRequested(handler*), onCustomizedLocalRecordingSourceNotification, onCloudRecordingStorageFull, onRecording2MP4Done, onRecording2MP4Processing, onEnableAndStartSmartRecordingRequested(handler*), onSmartRecordingEnableActionCallback(handler*)
+- `IMeetingRecordingCtrlEvent` v6.7.5 does NOT have: onRequestLocalRecordingPrivilegeChanged, onLocalRecordingPrivilegeChanged, onTranscodingStatusChanged

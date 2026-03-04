@@ -150,22 +150,18 @@ public:
         printf("[ZoomNative] onLocalRecordingPrivilegeRequestStatus: %d\n", (int)status);
         fflush(stdout);
     }
-    void onRequestLocalRecordingPrivilegeChanged(LocalRecordingRequestPrivilegeStatus status) override {
-        printf("[ZoomNative] onRequestLocalRecordingPrivilegeChanged: %d\n", (int)status);
+    void onRequestCloudRecordingResponse(RequestStartCloudRecordingStatus status) override {}
+    void onLocalRecordingPrivilegeRequested(IRequestLocalRecordingPrivilegeHandler* handler) override {
+        printf("[ZoomNative] onLocalRecordingPrivilegeRequested\n");
         fflush(stdout);
     }
-    void onLocalRecordingPrivilegeChanged(bool bCanRec) override {
-        printf("[ZoomNative] onLocalRecordingPrivilegeChanged: canRecord=%d\n", bCanRec);
-        fflush(stdout);
-        if (bCanRec) {
-            ZoomAddon::Instance().OnRecordingPermissionGranted();
-        }
-    }
+    void onStartCloudRecordingRequested(IRequestStartCloudRecordingHandler* handler) override {}
     void onCustomizedLocalRecordingSourceNotification(ICustomizedLocalRecordingLayoutHelper* pHelper) override {}
     void onCloudRecordingStorageFull(time_t gracePeriodDate) override {}
-    void onEnableAndStartSmartRecordingRequested() override {}
+    void onRecording2MP4Done(bool bSuccess, int iResult, const zchar_t* szPath) override {}
+    void onRecording2MP4Processing(int iPercentage) override {}
+    void onEnableAndStartSmartRecordingRequested(IRequestEnableAndStartSmartRecordingHandler* handler) override {}
     void onSmartRecordingEnableActionCallback(ISmartRecordingEnableActionHandler* handler) override {}
-    void onTranscodingStatusChanged(TranscodingStatus status) override {}
 };
 
 static AudioRawDataListener* g_audioListener = nullptr;
