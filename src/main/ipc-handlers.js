@@ -148,8 +148,8 @@ function setupIpcHandlers(ipcMain, context) {
     return { success: true };
   });
 
-  ipcMain.handle('start-test-pattern', () => {
-    ndiManager.startTestPattern();
+  ipcMain.handle('start-test-pattern', async () => {
+    await ndiManager.startTestPattern();
     sendStatusUpdate();
     return { success: true };
   });

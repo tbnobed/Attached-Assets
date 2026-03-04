@@ -46,8 +46,8 @@ function initManagers() {
   const outputDir = ensureOutputDir();
   recorderManager.setOutputDir(outputDir);
 
-  sessionManager.on('participant-joined', (participant) => {
-    ndiManager.createSource(participant.userId, participant.displayName, participant.isoIndex);
+  sessionManager.on('participant-joined', async (participant) => {
+    await ndiManager.createSource(participant.userId, participant.displayName, participant.isoIndex);
     sendToRenderer('participant-joined', participant);
     sendStatusUpdate();
   });

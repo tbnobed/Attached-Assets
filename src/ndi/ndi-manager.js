@@ -16,11 +16,17 @@ class NDIManager extends EventEmitter {
   _init() {
     try {
       this.grandiose = require('grandiose');
+      if (typeof this.grandiose.send !== 'function') {
+        console.warn('[NDI] grandiose loaded but send() not available — install rse/grandiose fork');
+        console.warn('[NDI] Run: npm install github:rse/grandiose');
+        this.available = false;
+        return;
+      }
       this.available = true;
       console.log('[NDI] grandiose loaded successfully - NDI output available');
     } catch (err) {
       console.warn('[NDI] grandiose not available - NDI output disabled');
-      console.warn('[NDI] Install NDI SDK and run: npm install grandiose');
+      console.warn('[NDI] Install NDI SDK and run: npm install github:rse/grandiose');
       this.available = false;
     }
   }
@@ -29,51 +35,40 @@ class NDIManager extends EventEmitter {
     return this.available;
   }
 
-  createSource(userId, displayName, isoIndex) {
+  async createSource(userId, displayName, isoIndex) {
     const safeName = displayName.replace(/[^a-zA-Z0-9_-]/g, '_');
-    const videoSourceName = `${this.prefix}_ISO${isoIndex}_${safeName}_Video`;
-    const audioSourceName = `${this.prefix}_ISO${isoIndex}_${safeName}_Audio`;
+    const sourceName = `${this.prefix}_ISO${isoIndex}_${safeName}`;
 
     if (!this.available) {
       const mockSource = {
         userId,
         displayName,
         isoIndex,
-        videoSourceName,
-        audioSourceName,
-        videoSender: null,
-        audioSender: null,
+        sourceName,
+        sender: null,
         active: true,
         mock: true,
         createdAt: Date.now(),
         framesSent: 0,
       };
       this.sources.set(userId, mockSource);
-      this.emit('source-created', { userId, videoSourceName, audioSourceName, mock: true });
+      this.emit('source-created', { userId, sourceName, mock: true });
       return mockSource;
     }
 
     try {
-      const videoSender = new this.grandiose.Send({
-        name: videoSourceName,
-        clockVideo: true,
-        clockAudio: false,
-      });
-
-      const audioSender = new this.grandiose.Send({
-        name: audioSourceName,
+      const sender = await this.grandiose.send({
+        name: sourceName,
         clockVideo: false,
-        clockAudio: true,
+        clockAudio: false,
       });
 
       const source = {
         userId,
         displayName,
         isoIndex,
-        videoSourceName,
-        audioSourceName,
-        videoSender,
-        audioSender,
+        sourceName,
+        sender,
         active: true,
         mock: false,
         createdAt: Date.now(),
@@ -81,8 +76,8 @@ class NDIManager extends EventEmitter {
       };
 
       this.sources.set(userId, source);
-      this.emit('source-created', { userId, videoSourceName, audioSourceName, mock: false });
-      console.log(`[NDI] Created sources: ${videoSourceName}, ${audioSourceName}`);
+      this.emit('source-created', { userId, sourceName, mock: false });
+      console.log(`[NDI] Created source: ${sourceName}`);
       return source;
     } catch (err) {
       console.error(`[NDI] Failed to create source for ${displayName}:`, err);
@@ -97,8 +92,9 @@ class NDIManager extends EventEmitter {
 
     if (!source.mock) {
       try {
-        if (source.videoSender) source.videoSender.destroy();
-        if (source.audioSender) source.audioSender.destroy();
+        if (source.sender && typeof source.sender.destroy === 'function') {
+          source.sender.destroy();
+        }
       } catch (err) {
         console.error(`[NDI] Error destroying source for ${source.displayName}:`, err);
       }
@@ -106,7 +102,7 @@ class NDIManager extends EventEmitter {
 
     this.sources.delete(userId);
     this.emit('source-destroyed', { userId, displayName: source.displayName });
-    console.log(`[NDI] Destroyed sources for ${source.displayName}`);
+    console.log(`[NDI] Destroyed source for ${source.displayName}`);
   }
 
   sendVideoFrame(userId, frameBuffer, width, height) {
@@ -115,21 +111,22 @@ class NDIManager extends EventEmitter {
 
     source.framesSent++;
 
-    if (source.mock || !source.videoSender) return;
+    if (source.mock || !source.sender) return;
 
     try {
-      source.videoSender.send({
-        type: 'video',
+      source.sender.video({
         xres: width,
         yres: height,
         frameRateN: this.settings.video.frameRate * 1000,
         frameRateD: 1000,
-        fourCC: 'RGBA',
+        fourCC: this.grandiose.FOURCC_RGBA,
         data: frameBuffer,
         lineStrideBytes: width * 4,
       });
     } catch (err) {
-      console.error(`[NDI] Error sending video for ${source.displayName}:`, err);
+      if (source.framesSent % 300 === 1) {
+        console.error(`[NDI] Error sending video for ${source.displayName}:`, err.message);
+      }
     }
   }
 
@@ -137,18 +134,20 @@ class NDIManager extends EventEmitter {
     const source = this.sources.get(userId);
     if (!source || !source.active) return;
 
-    if (source.mock || !source.audioSender) return;
+    if (source.mock || !source.sender) return;
+
+    const ch = channels || this.settings.audio.channels;
+    const sr = sampleRate || this.settings.audio.sampleRate;
 
     try {
-      source.audioSender.send({
-        type: 'audio',
-        sampleRate: sampleRate || this.settings.audio.sampleRate,
-        channels: channels || this.settings.audio.channels,
-        samples: audioBuffer.length / (2 * (channels || 1)),
+      source.sender.audio({
+        sampleRate: sr,
+        noChannels: ch,
+        noSamples: audioBuffer.length / (2 * ch),
         data: audioBuffer,
       });
     } catch (err) {
-      console.error(`[NDI] Error sending audio for ${source.displayName}:`, err);
+      console.error(`[NDI] Error sending audio for ${source.displayName}:`, err.message);
     }
   }
 
@@ -160,7 +159,7 @@ class NDIManager extends EventEmitter {
     }
   }
 
-  startTestPattern() {
+  async startTestPattern() {
     if (this.testPatternActive) return;
     this.testPatternActive = true;
 
@@ -170,7 +169,7 @@ class NDIManager extends EventEmitter {
 
     for (let i = 0; i < 8; i++) {
       const testId = `test_${i + 1}`;
-      this.createSource(testId, `TestPattern_${i + 1}`, i + 1);
+      await this.createSource(testId, `TestPattern_${i + 1}`, i + 1);
     }
 
     let frameCount = 0;
@@ -231,8 +230,7 @@ class NDIManager extends EventEmitter {
       sources[userId] = {
         displayName: source.displayName,
         isoIndex: source.isoIndex,
-        videoSourceName: source.videoSourceName,
-        audioSourceName: source.audioSourceName,
+        sourceName: source.sourceName,
         active: source.active,
         mock: source.mock,
         framesSent: source.framesSent,
