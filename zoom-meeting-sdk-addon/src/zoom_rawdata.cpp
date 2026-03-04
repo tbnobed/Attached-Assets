@@ -9,6 +9,7 @@
 #include "rawdata/rawdata_audio_helper_interface.h"
 #include "meeting_service_interface.h"
 #include "meeting_service_components/meeting_recording_interface.h"
+#include "meeting_service_components/meeting_audio_interface.h"
 
 using namespace ZOOMSDK;
 
@@ -325,13 +326,22 @@ bool ZoomAddon::StartRawDataCapture() {
     printf("[ZoomNative] StartRawDataCapture: attempting audio subscribe + video renderers\n");
     fflush(stdout);
 
+    if (g_meetingService) {
+        auto* audioCtrl = g_meetingService->GetMeetingAudioController();
+        if (audioCtrl) {
+            auto joinErr = audioCtrl->JoinVoip();
+            printf("[ZoomNative] StartRawDataCapture: JoinVoip result=%d\n", (int)joinErr);
+            fflush(stdout);
+        }
+    }
+
     g_audioListener = new AudioRawDataListener();
     SDKError subErr = SDKERR_WRONG_USAGE;
 
     auto* rawDataHelper = GetAudioRawdataHelper();
     if (rawDataHelper) {
         subErr = rawDataHelper->subscribe(g_audioListener);
-        printf("[ZoomNative] StartRawDataCapture: GetAudioRawdataHelper()->subscribe result=%d\n", (int)subErr);
+        printf("[ZoomNative] StartRawDataCapture: audio subscribe result=%d\n", (int)subErr);
         fflush(stdout);
     } else {
         printf("[ZoomNative] StartRawDataCapture: GetAudioRawdataHelper returned null\n");
@@ -339,27 +349,7 @@ bool ZoomAddon::StartRawDataCapture() {
     }
 
     if (subErr != SDKERR_SUCCESS) {
-        printf("[ZoomNative] StartRawDataCapture: trying GetRawdataAPIHelper path for audio\n");
-        fflush(stdout);
-        auto* apiHelper = GetRawdataAPIHelper();
-        if (apiHelper) {
-            auto* audioHelper2 = apiHelper->GetAudioRawdataHelper();
-            if (audioHelper2) {
-                subErr = audioHelper2->subscribe(g_audioListener);
-                printf("[ZoomNative] StartRawDataCapture: apiHelper->GetAudioRawdataHelper()->subscribe result=%d\n", (int)subErr);
-                fflush(stdout);
-            } else {
-                printf("[ZoomNative] StartRawDataCapture: apiHelper->GetAudioRawdataHelper returned null\n");
-                fflush(stdout);
-            }
-        } else {
-            printf("[ZoomNative] StartRawDataCapture: GetRawdataAPIHelper returned null\n");
-            fflush(stdout);
-        }
-    }
-
-    if (subErr != SDKERR_SUCCESS) {
-        printf("[ZoomNative] StartRawDataCapture: all audio subscribe attempts FAILED (last err=%d)\n", (int)subErr);
+        printf("[ZoomNative] StartRawDataCapture: audio subscribe FAILED (err=%d) — will retry\n", (int)subErr);
         fflush(stdout);
         delete g_audioListener;
         g_audioListener = nullptr;
@@ -413,25 +403,17 @@ void ZoomAddon::RetryVideoSubscriptions() {
         auto* rawDataHelper = GetAudioRawdataHelper();
         if (rawDataHelper) {
             subErr = rawDataHelper->subscribe(g_audioListener);
-            printf("[ZoomNative] RetryVideoSubscriptions: GetAudioRawdataHelper subscribe=%d\n", (int)subErr);
+            printf("[ZoomNative] RetryVideoSubscriptions: audio subscribe=%d\n", (int)subErr);
             fflush(stdout);
-        }
-        if (subErr != SDKERR_SUCCESS) {
-            auto* apiHelper = GetRawdataAPIHelper();
-            if (apiHelper) {
-                auto* ah2 = apiHelper->GetAudioRawdataHelper();
-                if (ah2) {
-                    subErr = ah2->subscribe(g_audioListener);
-                    printf("[ZoomNative] RetryVideoSubscriptions: apiHelper audio subscribe=%d\n", (int)subErr);
-                    fflush(stdout);
-                }
-            }
         }
         if (subErr != SDKERR_SUCCESS) {
             printf("[ZoomNative] RetryVideoSubscriptions: audio subscribe FAILED (err=%d)\n", (int)subErr);
             fflush(stdout);
             delete g_audioListener;
             g_audioListener = nullptr;
+        } else {
+            printf("[ZoomNative] RetryVideoSubscriptions: audio subscribe SUCCESS\n");
+            fflush(stdout);
         }
     }
 }
