@@ -313,6 +313,12 @@ bool ZoomAddon::StartRawDataCapture() {
         return true;
     }
 
+    if (!g_rawRecordingStarted) {
+        printf("[ZoomNative] StartRawDataCapture: raw recording not started yet — deferring\n");
+        fflush(stdout);
+        return false;
+    }
+
     printf("[ZoomNative] StartRawDataCapture: attempting audio subscribe + video renderers\n");
     fflush(stdout);
 
@@ -337,15 +343,6 @@ bool ZoomAddon::StartRawDataCapture() {
 
     g_rawDataActive = true;
 
-    if (eventCallback_) {
-        eventCallback_.NonBlockingCall([](Napi::Env env, Napi::Function jsCallback) {
-            auto obj = Napi::Object::New(env);
-            obj.Set("type", Napi::String::New(env, "meeting-status"));
-            obj.Set("status", Napi::String::New(env, "RAW_RECORDING_STARTED"));
-            jsCallback.Call({ obj });
-        });
-    }
-
     {
         std::lock_guard<std::mutex> lock(mutex_);
         printf("[ZoomNative] StartRawDataCapture: subscribing video for %zu existing participants\n", participants_.size());
@@ -359,6 +356,13 @@ bool ZoomAddon::StartRawDataCapture() {
 }
 
 void ZoomAddon::RetryVideoSubscriptions() {
+    if (!g_rawRecordingStarted) {
+        printf("[ZoomNative] RetryVideoSubscriptions: raw recording not started, trying StartRawRecording\n");
+        fflush(stdout);
+        StartRawRecording();
+        return;
+    }
+
     if (!g_rawDataActive) {
         printf("[ZoomNative] RetryVideoSubscriptions: raw data not active, trying StartRawDataCapture\n");
         fflush(stdout);
@@ -410,6 +414,15 @@ void ZoomAddon::StopRawDataCapture() {
         }
         delete g_audioListener;
         g_audioListener = nullptr;
+    }
+
+    if (g_meetingService && g_rawRecordingStarted) {
+        auto* recCtrl = g_meetingService->GetMeetingRecordingController();
+        if (recCtrl) {
+            recCtrl->StopRawRecording();
+            printf("[ZoomNative] StopRawRecording called\n");
+            fflush(stdout);
+        }
     }
 
     if (g_recordingListener) {

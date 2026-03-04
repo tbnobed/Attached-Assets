@@ -32,8 +32,8 @@ public:
 
         if (status == MEETING_STATUS_INMEETING) {
             ZoomAddon::Instance().EnumerateParticipants();
-            bool rawOk = ZoomAddon::Instance().StartRawDataCapture();
-            printf("[ZoomNative] StartRawDataCapture: %s\n", rawOk ? "OK" : "FAILED (will retry)");
+            bool rawOk = ZoomAddon::Instance().StartRawRecording();
+            printf("[ZoomNative] StartRawRecording: %s\n", rawOk ? "OK" : "PENDING (will retry)");
             fflush(stdout);
         }
     }
