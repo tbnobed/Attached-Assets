@@ -1,0 +1,73 @@
+[ZoomNative] Initializing SDK (rawdata opts zeroed)
+[ZoomNative] InitSDK result=0
+[SessionManager] SDK initialized, authenticating...
+[SessionManager] Zoom Meeting SDK bridge initialized, available: true
+[NDI] grandiose loaded successfully - NDI output available
+[Recorder] FFmpeg found
+[ZoomBridge] Event: meeting-status AUTH_SUCCESS
+[SessionManager] SDK authentication successful
+[SessionManager] Attempting to join meeting: 873 6065 9912
+[ZoomNative] Meeting status: MEETING_STATUS_CONNECTING (result=0)
+[ZoomBridge] Event: meeting-status MEETING_STATUS_CONNECTING
+[ZoomNative] onUserJoin: 1 users
+[ZoomNative] onUserJoin: GetUserByUserID(16788480) returned null
+[ZoomNative] onUserJoin: 1 users
+[ZoomNative] onUserJoin: GetUserByUserID(16785408) returned null
+[ZoomNative] Meeting status: MEETING_STATUS_INMEETING (result=0)
+[ZoomNative] EnumerateParticipants called
+[ZoomNative] EnumerateParticipants: 2 participants in SDK list
+[ZoomNative] EnumerateParticipants: new userId=16785408 name=Obed Sandoval
+[ZoomNative] OnParticipantJoined: userId=16785408 name=Obed Sandoval
+[ZoomNative] EnumerateParticipants: new userId=16788480 name=PlexISO
+[ZoomNative] OnParticipantJoined: userId=16788480 name=PlexISO
+[ZoomNative] StartRawRecording: recording event listener set
+[ZoomNative] StartRawRecording: result=2
+[ZoomNative] StartRawRecording: unexpected error 2 ΓÇö will retry via RetryVideoSubscriptions
+[ZoomNative] StartRawRecording: PENDING (waiting for permission)
+[ZoomBridge] Event: meeting-status MEETING_STATUS_INMEETING
+[ZoomBridge] In meeting ΓÇö initiating raw recording and participant enumeration
+[ZoomBridge] Event: participant-joined  Obed Sandoval 16785408
+[ZoomBridge] Event: participant-joined  PlexISO 16788480
+[ZoomBridge] Event: meeting-status RAW_RECORDING_ERROR
+(node:49324) [DEP0168] DeprecationWarning: Uncaught Node-API callback exception detected, please run node with option --force-node-api-uncaught-exceptions-policy=true to handle those exceptions properly.
+(Use `electron --trace-deprecation ...` to show where the warning was created)
+[NDI] Created source: ZoomISO_ISO2_PlexISO
+[NDI] Created source: ZoomISO_ISO1_Obed_Sandoval
+[ZoomNative] EnumerateParticipants called
+[ZoomNative] EnumerateParticipants: 2 participants in SDK list
+[ZoomNative] EnumerateParticipants: userId=16785408 already known
+[ZoomNative] EnumerateParticipants: userId=16788480 already known
+[ZoomBridge] Enumerating existing participants: 2
+[ZoomNative] EnumerateParticipants called
+[ZoomNative] EnumerateParticipants: 2 participants in SDK list
+[ZoomNative] EnumerateParticipants: userId=16785408 already known
+[ZoomNative] EnumerateParticipants: userId=16788480 already known
+[ZoomBridge] Enumerating existing participants: 2
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: raw recording not started, trying StartRawRecording
+[ZoomNative] StartRawRecording: result=2
+[ZoomNative] StartRawRecording: unexpected error 2 ΓÇö will retry via RetryVideoSubscriptions
+[ZoomBridge] Event: meeting-status RAW_RECORDING_ERROR
+(node:49324) [DEP0168] DeprecationWarning: Uncaught Node-API callback exception detected, please run node with option --force-node-api-uncaught-exceptions-policy=true to handle those exceptions properly.
+[ZoomNative] EnumerateParticipants called
+[ZoomNative] EnumerateParticipants: 2 participants in SDK list
+[ZoomNative] EnumerateParticipants: userId=16785408 already known
+[ZoomNative] EnumerateParticipants: userId=16788480 already known
+[ZoomBridge] Enumerating existing participants: 2
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: raw recording not started, trying StartRawRecording
+[ZoomNative] StartRawRecording: result=2
+[ZoomNative] StartRawRecording: unexpected error 2 ΓÇö will retry via RetryVideoSubscriptions
+[ZoomBridge] Event: meeting-status RAW_RECORDING_ERROR
+(node:49324) [DEP0168] DeprecationWarning: Uncaught Node-API callback exception detected, please run node with option --force-node-api-uncaught-exceptions-policy=true to handle those exceptions properly.
+[ZoomNative] EnumerateParticipants called
+[ZoomNative] EnumerateParticipants: 2 participants in SDK list
+[ZoomNative] EnumerateParticipants: userId=16785408 already known
+[ZoomNative] EnumerateParticipants: userId=16788480 already known
+[ZoomBridge] Enumerating existing participants: 2
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: raw recording not started, trying StartRawRecording
+[ZoomNative] StartRawRecording: result=2
+[ZoomNative] StartRawRecording: unexpected error 2 ΓÇö will retry via RetryVideoSubscriptions
+[ZoomBridge] Event: meeting-status RAW_RECORDING_ERROR
+(node:49324) [DEP0168] DeprecationWarning: Uncaught Node-API callback exception detected, please run node with option --force-node-api-uncaught-exceptions-policy=true to handle those exceptions properly.

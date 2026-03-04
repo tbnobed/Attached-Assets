@@ -192,7 +192,7 @@ class ZoomMeetingBridge extends EventEmitter {
           });
           break;
         case 'meeting-status':
-          this._handleMeetingStatus(event.status);
+          this._handleMeetingStatus(event.status, event);
           break;
       }
     });
@@ -231,7 +231,7 @@ class ZoomMeetingBridge extends EventEmitter {
     }
   }
 
-  _handleMeetingStatus(status) {
+  _handleMeetingStatus(status, data) {
     switch (status) {
       case 'MEETING_STATUS_INMEETING':
         this.inMeeting = true;
@@ -258,8 +258,8 @@ class ZoomMeetingBridge extends EventEmitter {
         this.emit('raw-recording-started');
         break;
       case 'RAW_RECORDING_ERROR':
-        console.warn(`[ZoomBridge] Raw recording error (code=${data.errorCode}) — retries will continue`);
-        this.emit('raw-recording-error', { errorCode: data.errorCode });
+        console.warn(`[ZoomBridge] Raw recording error (code=${data && data.errorCode}) — retries will continue`);
+        this.emit('raw-recording-error', { errorCode: data && data.errorCode });
         break;
       case 'AUTH_SUCCESS':
         this.authenticated = true;
