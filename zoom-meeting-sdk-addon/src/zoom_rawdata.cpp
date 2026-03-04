@@ -22,70 +22,63 @@ public:
     void onRawDataFrameReceived(YUVRawDataI420* data) override {
         if (!data) return;
 
-        if (data->IsLimitedI420()) {
-            if (frameLogCount_ < 3) {
-                printf("[ZoomNative] Video frame: userId=%u limited/placeholder frame — skipping\n", userId_);
-                fflush(stdout);
-            }
-            frameLogCount_++;
-            return;
-        }
-
         unsigned int width = data->GetStreamWidth();
         unsigned int height = data->GetStreamHeight();
         if (width == 0 || height == 0) return;
 
+        bool isLimited = data->IsLimitedI420();
+        bool canRef = data->CanAddRef();
+
+        if (canRef) {
+            data->AddRef();
+        }
+
         unsigned int yuvSize = width * height * 3 / 2;
-
-        const char* rawBuf = data->GetBuffer();
-        unsigned int rawLen = data->GetBufferLen();
-
         const unsigned char* yPlane = nullptr;
         const unsigned char* uPlane = nullptr;
         const unsigned char* vPlane = nullptr;
-
         uint8_t* localCopy = nullptr;
 
-        if (rawBuf && rawLen >= yuvSize) {
+        const char* yBuf = data->GetYBuffer();
+        const char* uBuf = data->GetUBuffer();
+        const char* vBuf = data->GetVBuffer();
+        const char* rawBuf = data->GetBuffer();
+        unsigned int rawLen = data->GetBufferLen();
+
+        if (yBuf && uBuf && vBuf) {
+            localCopy = new uint8_t[yuvSize];
+            memcpy(localCopy, yBuf, width * height);
+            memcpy(localCopy + width * height, uBuf, width * height / 4);
+            memcpy(localCopy + width * height + width * height / 4, vBuf, width * height / 4);
+            yPlane = localCopy;
+            uPlane = localCopy + (width * height);
+            vPlane = localCopy + (width * height) + (width * height / 4);
+        } else if (rawBuf && rawLen >= yuvSize) {
             localCopy = new uint8_t[yuvSize];
             memcpy(localCopy, rawBuf, yuvSize);
             yPlane = localCopy;
             uPlane = localCopy + (width * height);
             vPlane = localCopy + (width * height) + (width * height / 4);
-        } else {
-            const char* yBuf = data->GetYBuffer();
-            const char* uBuf = data->GetUBuffer();
-            const char* vBuf = data->GetVBuffer();
-
-            if (yBuf && uBuf && vBuf) {
-                localCopy = new uint8_t[yuvSize];
-                memcpy(localCopy, yBuf, width * height);
-                memcpy(localCopy + width * height, uBuf, width * height / 4);
-                memcpy(localCopy + width * height + width * height / 4, vBuf, width * height / 4);
-                yPlane = localCopy;
-                uPlane = localCopy + (width * height);
-                vPlane = localCopy + (width * height) + (width * height / 4);
-            }
         }
 
         if (!yPlane) {
-            if (frameLogCount_ < 5) {
-                printf("[ZoomNative] Video frame: userId=%u %ux%u NO DATA — GetBuffer=%p len=%u, Y=%p U=%p V=%p canAddRef=%d isLimited=%d\n",
-                       userId_, width, height,
-                       (void*)rawBuf, rawLen,
-                       (void*)data->GetYBuffer(), (void*)data->GetUBuffer(), (void*)data->GetVBuffer(),
-                       (int)data->CanAddRef(), (int)data->IsLimitedI420());
+            if (frameLogCount_ < 10 || frameLogCount_ % 500 == 0) {
+                printf("[ZoomNative] Video frame: userId=%u %ux%u NO DATA (frame #%d) Y=%p U=%p V=%p buf=%p len=%u canRef=%d limited=%d\n",
+                       userId_, width, height, frameLogCount_,
+                       (void*)yBuf, (void*)uBuf, (void*)vBuf,
+                       (void*)rawBuf, rawLen, (int)canRef, (int)isLimited);
                 fflush(stdout);
             }
             frameLogCount_++;
             delete[] localCopy;
+            if (canRef) data->Release();
             return;
         }
 
         if (frameLogCount_ < 5 || frameLogCount_ % 300 == 0) {
-            printf("[ZoomNative] Video frame: userId=%u %ux%u (frame #%d) src=%s\n",
-                   userId_, width, height, frameLogCount_,
-                   (rawBuf && rawLen >= yuvSize) ? "GetBuffer" : "Y/U/V planes");
+            printf("[ZoomNative] Video frame: userId=%u %ux%u (frame #%d) limited=%d src=%s\n",
+                   userId_, width, height, frameLogCount_, (int)isLimited,
+                   (yBuf && uBuf && vBuf) ? "Y/U/V" : "GetBuffer");
             fflush(stdout);
         }
         frameLogCount_++;
@@ -120,6 +113,7 @@ public:
         ZoomAddon::Instance().OnVideoFrame(userId_, bgraData, width, height);
         delete[] bgraData;
         delete[] localCopy;
+        if (canRef) data->Release();
     }
 
     void onRawDataStatusChanged(RawDataStatus status) override {
@@ -237,7 +231,7 @@ void subscribeUserVideo(uint32_t userId) {
     IZoomSDKRenderer* renderer = nullptr;
     auto err = createRenderer(&renderer, listener);
     if (err == SDKERR_SUCCESS && renderer) {
-        auto resErr = renderer->setRawDataResolution(ZoomSDKResolution_1080P);
+        auto resErr = renderer->setRawDataResolution(ZoomSDKResolution_360P);
         auto subErr = renderer->subscribe(userId, RAW_DATA_TYPE_VIDEO);
         g_videoRenderers[userId] = { renderer, listener };
         printf("[ZoomNative] subscribeUserVideo: userId=%u renderer created (res=%d sub=%d)\n", userId, (int)resErr, (int)subErr);

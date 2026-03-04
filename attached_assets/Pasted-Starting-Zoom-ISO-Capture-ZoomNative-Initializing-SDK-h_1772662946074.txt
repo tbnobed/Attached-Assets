@@ -1,0 +1,94 @@
+Starting Zoom ISO Capture...
+
+[ZoomNative] Initializing SDK (heap memory mode, intermediate OFF)
+[ZoomNative] InitSDK result=0
+[SessionManager] SDK initialized, authenticating...
+[SessionManager] Zoom Meeting SDK bridge initialized, available: true
+[NDI] grandiose loaded successfully - NDI output available
+[Recorder] FFmpeg found
+[ZoomBridge] Event: meeting-status AUTH_SUCCESS
+[SessionManager] SDK authentication successful
+[RecordingToken] OAuth access token obtained
+[RecordingToken] Local recording join token obtained for meeting 91267462422
+[SessionManager] Local recording privilege token obtained
+[SessionManager] Attempting to join meeting: 912 6746 2422
+[ZoomBridge] Joining with app_privilege_token (local recording pre-authorized)
+[ZoomNative] JoinMeeting: app_privilege_token set (len=9)
+[ZoomNative] JoinMeeting: Join result=0
+[ZoomNative] Meeting status: MEETING_STATUS_CONNECTING (result=0)
+[ZoomBridge] Event: meeting-status MEETING_STATUS_CONNECTING
+[ZoomNative] onUserJoin: 1 users
+[ZoomNative] onUserJoin: GetUserByUserID(16783360) returned null
+[ZoomNative] onUserJoin: 1 users
+[ZoomNative] onUserJoin: GetUserByUserID(16778240) returned null
+[ZoomNative] Meeting status: MEETING_STATUS_INMEETING (result=0)
+[ZoomNative] EnumerateParticipants called
+[ZoomNative] EnumerateParticipants: 2 participants in SDK list
+[ZoomNative] EnumerateParticipants: new userId=16778240 name=Obed Conference
+[ZoomNative] OnParticipantJoined: userId=16778240 name=Obed Conference
+[ZoomNative] EnumerateParticipants: new userId=16783360 name=PlexISO
+[ZoomNative] OnParticipantJoined: userId=16783360 name=PlexISO
+[ZoomNative] StartRawRecording: recording event listener set
+[ZoomNative] StartRawRecording: result=0
+[ZoomNative] StartRawRecording succeeded ΓÇö activating raw data capture
+[ZoomNative] StartRawDataCapture: attempting audio subscribe + video renderers
+[ZoomNative] StartRawDataCapture: JoinVoip result=0
+[ZoomNative] StartRawDataCapture: audio subscribe result=0
+[ZoomNative] StartRawDataCapture: audio subscribe SUCCESS
+[ZoomNative] StartRawDataCapture: subscribing video for 2 existing participants
+[ZoomNative] subscribeUserVideo: userId=16778240 renderer created (res=0 sub=0)
+[ZoomNative] subscribeUserVideo: userId=16783360 renderer created (res=0 sub=0)
+[ZoomNative] StartRawRecording: OK
+[ZoomNative] Audio frame: nodeId=16783360 len=640 sr=32000 ch=1 (frame #0)
+[ZoomNative] Audio frame: nodeId=16783360 len=640 sr=32000 ch=1 (frame #1)
+[ZoomNative] Audio frame: nodeId=16783360 len=640 sr=32000 ch=1 (frame #2)
+[ZoomBridge] Event: meeting-status MEETING_STATUS_INMEETING
+[ZoomBridge] In meeting ΓÇö initiating raw recording and participant enumeration
+[ZoomBridge] Event: participant-joined  Obed Conference 16778240
+[ZoomBridge] Event: participant-joined  PlexISO 16783360
+[ZoomBridge] Event: meeting-status RAW_RECORDING_STARTED
+[ZoomBridge] Raw recording started ΓÇö video/audio capture active
+[SessionManager] Raw recording started ΓÇö capturing video/audio
+[ZoomNative] Audio frame: nodeId=16783360 len=640 sr=32000 ch=1 (frame #3)
+[NDI] Created source: ZoomISO_ISO1_Obed_Conference
+[NDI] Created source: ZoomISO_ISO2_PlexISO
+[ZoomNative] Audio frame: nodeId=16783360 len=640 sr=32000 ch=1 (frame #4)
+[ZoomNative] onRawDataStatusChanged: userId=16778240 status=RawData_On
+[ZoomNative] onRawDataStatusChanged: userId=16783360 status=RawData_Off
+[ZoomNative] Video frame: userId=16778240 limited/placeholder frame ΓÇö skipping
+[ZoomNative] Video frame: userId=16778240 limited/placeholder frame ΓÇö skipping
+[ZoomNative] EnumerateParticipants called
+[ZoomNative] EnumerateParticipants: 2 participants in SDK list
+[ZoomNative] EnumerateParticipants: userId=16778240 already known
+[ZoomNative] EnumerateParticipants: userId=16783360 already known
+[ZoomBridge] Enumerating existing participants: 2
+[ZoomNative] Video frame: userId=16778240 limited/placeholder frame ΓÇö skipping
+[ZoomNative] EnumerateParticipants called
+[ZoomNative] EnumerateParticipants: 2 participants in SDK list
+[ZoomNative] EnumerateParticipants: userId=16778240 already known
+[ZoomNative] EnumerateParticipants: userId=16783360 already known
+[ZoomBridge] Enumerating existing participants: 2
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 2 participants
+[ZoomNative] EnumerateParticipants called
+[ZoomNative] EnumerateParticipants: 2 participants in SDK list
+[ZoomNative] EnumerateParticipants: userId=16778240 already known
+[ZoomNative] EnumerateParticipants: userId=16783360 already known
+[ZoomBridge] Enumerating existing participants: 2
+[ZoomNative] Audio frame: nodeId=16778240 len=640 sr=32000 ch=1 (frame #1000)
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 2 participants
+[ZoomNative] EnumerateParticipants called
+[ZoomNative] EnumerateParticipants: 2 participants in SDK list
+[ZoomNative] EnumerateParticipants: userId=16778240 already known
+[ZoomNative] EnumerateParticipants: userId=16783360 already known
+[ZoomBridge] Enumerating existing participants: 2
+[ZoomNative] Audio frame: nodeId=16778240 len=640 sr=32000 ch=1 (frame #2000)
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 2 participants
+[ZoomNative] Audio frame: nodeId=16778240 len=640 sr=32000 ch=1 (frame #3000)
+[ZoomNative] Audio frame: nodeId=16778240 len=640 sr=32000 ch=1 (frame #4000)
+[ZoomNative] Audio frame: nodeId=16778240 len=640 sr=32000 ch=1 (frame #5000)
+[ZoomNative] Audio frame: nodeId=16778240 len=640 sr=32000 ch=1 (frame #6000)
+[ZoomNative] Audio frame: nodeId=16778240 len=640 sr=32000 ch=1 (frame #7000)
+[ZoomNative] Audio frame: nodeId=16778240 len=640 sr=32000 ch=1 (frame #8000)

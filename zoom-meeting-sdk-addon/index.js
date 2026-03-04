@@ -4,6 +4,11 @@ const EventEmitter = require('events');
 let nativeAddon = null;
 let addonAvailable = false;
 
+const sdkDllDir = path.join(__dirname, 'build', 'Release');
+if (process.platform === 'win32' && !process.env.PATH.includes(sdkDllDir)) {
+  process.env.PATH = sdkDllDir + ';' + process.env.PATH;
+}
+
 try {
   nativeAddon = require('./build/Release/zoom_meeting_sdk.node');
   addonAvailable = true;
