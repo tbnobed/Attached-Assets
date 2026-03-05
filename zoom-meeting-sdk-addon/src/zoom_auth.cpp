@@ -220,22 +220,46 @@ bool ZoomAddon::Authenticate() {
             fflush(stdout);
         }
 
-        ZoomSDKAuthContext* ctx = [[ZoomSDKAuthContext alloc] init];
         NSString* jwtNS = [NSString stringWithUTF8String:config_.jwtToken.c_str()];
-        ctx.jwtToken = jwtNS;
-
-        printf("[ZoomNative] AuthContext.jwtToken length: %lu\n", (unsigned long)[ctx.jwtToken length]);
-        printf("[ZoomNative] SDK initialized state: %d\n", (int)[[ZoomSDK sharedSDK] isSDKInitialized]);
+        printf("[ZoomNative] SDK initialized: %d\n", (int)[[ZoomSDK sharedSDK] isSDKInitialized]);
         fflush(stdout);
 
-        ZoomSDKError err = [authService sdkAuth:ctx];
-        printf("[ZoomNative] SDKAuth result=%d (0=Success, 1=Failed, 6=WrongUsage)\n", (int)err);
-        fflush(stdout);
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            @autoreleasepool {
+                printf("[ZoomNative] Deferred auth: SDK initialized=%d\n", (int)[[ZoomSDK sharedSDK] isSDKInitialized]);
+                fflush(stdout);
 
-        if (err != ZoomSDKError_Success) {
-            state_ = AddonState::Error;
-            return false;
-        }
+                ZoomSDKAuthService* svc = [[ZoomSDK sharedSDK] getAuthService];
+                if (!svc) {
+                    printf("[ZoomNative] Deferred auth: getAuthService returned nil\n");
+                    fflush(stdout);
+                    return;
+                }
+
+                ZoomSDKAuthContext* ctx = [[ZoomSDKAuthContext alloc] init];
+                ctx.jwtToken = jwtNS;
+
+                ZoomSDKError err = [svc sdkAuth:ctx];
+                printf("[ZoomNative] Deferred SDKAuth result=%d (0=Success, 1=Failed)\n", (int)err);
+                fflush(stdout);
+
+                if (err != ZoomSDKError_Success) {
+                    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                        @autoreleasepool {
+                            printf("[ZoomNative] Retry auth: SDK initialized=%d\n", (int)[[ZoomSDK sharedSDK] isSDKInitialized]);
+                            fflush(stdout);
+                            ZoomSDKAuthService* svc2 = [[ZoomSDK sharedSDK] getAuthService];
+                            if (!svc2) return;
+                            ZoomSDKAuthContext* ctx2 = [[ZoomSDKAuthContext alloc] init];
+                            ctx2.jwtToken = jwtNS;
+                            ZoomSDKError err2 = [svc2 sdkAuth:ctx2];
+                            printf("[ZoomNative] Retry SDKAuth result=%d\n", (int)err2);
+                            fflush(stdout);
+                        }
+                    });
+                }
+            }
+        });
     }
 
     return true;
