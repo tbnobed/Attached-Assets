@@ -319,6 +319,11 @@ public:
 
         if (status == Video_ON && g_rawDataActive) {
             std::lock_guard<std::mutex> lock(g_videoMutex);
+            if (g_videoSubscribedOK.count(userId)) {
+                printf("[ZoomNative] onUserVideoStatusChange: userId=%u video ON — already subscribed OK, keeping renderer\n", userId);
+                fflush(stdout);
+                return;
+            }
             if (g_videoRenderers.count(userId)) {
                 auto* oldRenderer = g_videoRenderers[userId].first;
                 auto* oldListener = g_videoRenderers[userId].second;
@@ -328,7 +333,6 @@ public:
                 destroyRenderer(oldRenderer);
                 delete oldListener;
                 g_videoRenderers.erase(userId);
-                g_videoSubscribedOK.erase(userId);
             }
             auto* listener = new PerUserVideoListener(userId);
             IZoomSDKRenderer* renderer = nullptr;

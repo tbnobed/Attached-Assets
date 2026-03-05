@@ -43,10 +43,10 @@ public:
                     }
                 }
             }
-            ZoomAddon::Instance().EnumerateParticipants();
             bool rawOk = ZoomAddon::Instance().StartRawRecording();
             printf("[ZoomNative] StartRawRecording: %s\n", rawOk ? "OK" : "PENDING (will retry)");
             fflush(stdout);
+            ZoomAddon::Instance().EnumerateParticipants();
         }
     }
 
