@@ -1,0 +1,177 @@
+Launch the app now? [Y/N]: y
+
+Starting Zoom ISO Capture...
+
+[ZoomNative] Hidden HWND created: 00000000001A1B7E
+[ZoomNative] Initializing SDK (rawdata intermediate mode DISABLED, hResInstance set)
+[ZoomNative] InitSDK result=0
+[SessionManager] SDK initialized, authenticating...
+[SessionManager] Zoom Meeting SDK bridge initialized, available: true
+[NDI] grandiose loaded successfully - NDI output available
+[Recorder] FFmpeg found
+[ZoomBridge] Event: meeting-status AUTH_SUCCESS
+[SessionManager] SDK authentication successful
+[RecordingToken] OAuth access token obtained
+[RecordingToken] Local recording join token obtained for meeting 91267462422
+[SessionManager] Local recording privilege token obtained
+[SessionManager] Attempting to join meeting: 912 6746 2422
+[TokenDebug] appPrivilegeToken type=string len=9 val=lroftndrd
+[TokenDebug] joinMeeting args: [
+  '[0] type=string len=11 val=91267462422',
+  '[1] type=string len=6 val=510911',
+  '[2] type=string len=7 val=PlexISO',
+  '[3] type=string len=9 val=lroftndrd'
+]
+[ZoomBridge] Joining with app_privilege_token (local recording pre-authorized)
+[NativeArgs] arg[0] = 91267462422 (len=11)
+[NativeArgs] arg[1] = 510911 (len=6)
+[NativeArgs] arg[2] = PlexISO (len=7)
+[NativeArgs] arg[3] = lroftndrd (len=9)
+[ZoomNative] JoinMeeting: app_privilege_token set (len=9)
+[ZoomNative] JoinMeeting: Join result=0
+[ZoomNative] Meeting status: MEETING_STATUS_CONNECTING (result=0)
+[ZoomBridge] Event: meeting-status MEETING_STATUS_CONNECTING
+[ZoomNative] onUserJoin: 1 users
+[ZoomNative] onUserJoin: GetUserByUserID(16778240) returned null
+[ZoomNative] Meeting status: MEETING_STATUS_INMEETING (result=0)
+[ZoomNative] Self userId detected: 16778240
+[ZoomNative] EnumerateParticipants called
+[ZoomNative] EnumerateParticipants: 1 participants in SDK list
+[ZoomNative] EnumerateParticipants: userId=16778240 is SELF ΓÇö skipping
+[ZoomNative] StartRawRecording: recording event listener set
+[ZoomNative] StartRawRecording: result=0
+[ZoomNative] StartRawRecording succeeded ΓÇö activating raw data capture
+[ZoomNative] StartRawDataCapture: attempting audio subscribe + video renderers
+[ZoomNative] StartRawDataCapture: JoinVoip result=0
+[ZoomNative] StartRawDataCapture: audio subscribe result=0
+[ZoomNative] StartRawDataCapture: audio subscribe SUCCESS
+[ZoomNative] StartRawDataCapture: video controller event listener set
+[ZoomNative] StartRawDataCapture: subscribed 0 existing participants
+[ZoomNative] StartRawRecording: OK
+[ZoomNative] Audio frame: nodeId=16778240 len=640 sr=32000 ch=1 (frame #0)
+[ZoomBridge] Event: meeting-status MEETING_STATUS_INMEETING
+[ZoomBridge] In meeting ΓÇö initiating raw recording and participant enumeration
+[ZoomBridge] Event: meeting-status RAW_RECORDING_STARTED
+[ZoomBridge] Raw recording started ΓÇö video/audio capture active
+[SessionManager] Raw recording started ΓÇö capturing video/audio
+[ZoomNative] Audio frame: nodeId=16778240 len=640 sr=32000 ch=1 (frame #1)
+[ZoomNative] Audio frame: nodeId=16778240 len=640 sr=32000 ch=1 (frame #2)
+[ZoomNative] Audio frame: nodeId=16778240 len=640 sr=32000 ch=1 (frame #3)
+[ZoomNative] Audio frame: nodeId=16778240 len=640 sr=32000 ch=1 (frame #4)
+[ZoomNative] EnumerateParticipants called
+[ZoomNative] EnumerateParticipants: 1 participants in SDK list
+[ZoomNative] EnumerateParticipants: userId=16778240 is SELF ΓÇö skipping
+[ZoomBridge] Enumerating existing participants: 0
+[ZoomNative] EnumerateParticipants called
+[ZoomNative] EnumerateParticipants: 1 participants in SDK list
+[ZoomNative] EnumerateParticipants: userId=16778240 is SELF ΓÇö skipping
+[ZoomBridge] Enumerating existing participants: 0
+[ZoomNative] onUserVideoStatusChange: userId=16778240 status=Video_OFF
+[ZoomNative] onUserVideoStatusChange: userId=16778240 is SELF ΓÇö ignoring
+[ZoomNative] onUserVideoStatusChange: userId=16778240 status=Video_OFF
+[ZoomNative] onUserVideoStatusChange: userId=16778240 is SELF ΓÇö ignoring
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 0 participants, 0 needed retry, 0 already OK
+[ZoomNative] onUserVideoStatusChange: userId=16778240 status=Video_ON
+[ZoomNative] onUserVideoStatusChange: userId=16778240 is SELF ΓÇö ignoring
+[ZoomNative] onUserVideoStatusChange: userId=16778240 status=Video_ON
+[ZoomNative] onUserVideoStatusChange: userId=16778240 is SELF ΓÇö ignoring
+[ZoomNative] EnumerateParticipants called
+[ZoomNative] EnumerateParticipants: 1 participants in SDK list
+[ZoomNative] EnumerateParticipants: userId=16778240 is SELF ΓÇö skipping
+[ZoomBridge] Enumerating existing participants: 0
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 0 participants, 0 needed retry, 0 already OK
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 0 participants, 0 needed retry, 0 already OK
+[ZoomNative] EnumerateParticipants called
+[ZoomNative] EnumerateParticipants: 1 participants in SDK list
+[ZoomNative] EnumerateParticipants: userId=16778240 is SELF ΓÇö skipping
+[ZoomBridge] Enumerating existing participants: 0
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 0 participants, 0 needed retry, 0 already OK
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 0 participants, 0 needed retry, 0 already OK
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 0 participants, 0 needed retry, 0 already OK
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 0 participants, 0 needed retry, 0 already OK
+[ZoomNative] onUserJoin: 1 users
+[ZoomNative] onUserJoin: userId=16782336 name=Obed Sandoval
+[ZoomNative] OnParticipantJoined: userId=16782336 name=Obed Sandoval
+[ZoomNative] subscribeUserVideo: userId=16782336 renderer created (res=0 sub=0)
+[ZoomBridge] Event: participant-joined  Obed Sandoval 16782336
+[ZoomNative] onRawDataStatusChanged: userId=16782336 status=RawData_Off
+[NDI] Created source: ZoomISO_ISO1_Obed_Sandoval
+[ZoomNative] onUserVideoStatusChange: userId=16782336 status=Video_OFF
+[ZoomNative] onUserVideoStatusChange: userId=16782336 status=Video_OFF
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 1 participants, 0 needed retry, 1 already OK
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 1 participants, 0 needed retry, 1 already OK
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 1 participants, 0 needed retry, 1 already OK
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 1 participants, 0 needed retry, 1 already OK
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 1 participants, 0 needed retry, 1 already OK
+[ZoomNative] onUserVideoStatusChange: userId=16782336 status=Video_ON
+[ZoomNative] onUserVideoStatusChange: userId=16782336 video ON ΓÇö renderer exists, keeping subscription
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 1 participants, 0 needed retry, 1 already OK
+[ZoomNative] onUserVideoStatusChange: userId=16782336 status=Video_ON
+[ZoomNative] onUserVideoStatusChange: userId=16782336 video ON ΓÇö renderer exists, keeping subscription
+[ZoomNative] onRawDataStatusChanged: userId=16782336 status=RawData_On
+[ZoomNative] onRawDataStatusChanged: userId=16782336 video is ON ΓÇö marking pending resubscribe
+[ZoomNative] Video frame: userId=16782336 640x360 (frame #0) limited=1 src=Y/U/V
+[ZoomNative] Video frame: userId=16782336 640x360 (frame #1) limited=1 src=Y/U/V
+[ZoomNative] Video frame: userId=16782336 640x360 (frame #2) limited=1 src=Y/U/V
+[ZoomNative] Video frame: userId=16782336 640x360 (frame #3) limited=1 src=Y/U/V
+[ZoomNative] Video frame: userId=16782336 640x360 (frame #4) limited=1 src=Y/U/V
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: processing pending resubscribe for userId=16782336
+[ZoomNative] RetryVideoSubscriptions: 1 participants, 0 needed retry, 1 already OK
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 1 participants, 0 needed retry, 1 already OK
+[ZoomNative] Video frame: userId=16782336 640x360 (frame #300) limited=1 src=Y/U/V
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 1 participants, 0 needed retry, 1 already OK
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 1 participants, 0 needed retry, 1 already OK
+[ZoomNative] Video frame: userId=16782336 640x360 (frame #600) limited=1 src=Y/U/V
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 1 participants, 0 needed retry, 1 already OK
+[ZoomNative] onUserJoin: 1 users
+[ZoomNative] onUserJoin: userId=16783360 name=obed cell
+[ZoomNative] OnParticipantJoined: userId=16783360 name=obed cell
+[ZoomNative] subscribeUserVideo: userId=16783360 renderer created (res=0 sub=0)
+[ZoomBridge] Event: participant-joined  obed cell 16783360
+[NDI] Created source: ZoomISO_ISO2_obed_cell
+[ZoomNative] onRawDataStatusChanged: userId=16783360 status=RawData_Off
+[ZoomNative] onUserVideoStatusChange: userId=16783360 status=Video_OFF
+[ZoomNative] onUserVideoStatusChange: userId=16783360 status=Video_OFF
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 2 participants, 0 needed retry, 2 already OK
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 2 participants, 0 needed retry, 2 already OK
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 2 participants, 0 needed retry, 2 already OK
+[ZoomNative] onUserVideoStatusChange: userId=16783360 status=Video_ON
+[ZoomNative] onUserVideoStatusChange: userId=16783360 video ON ΓÇö renderer exists, keeping subscription
+[ZoomNative] Audio frame: nodeId=16783360 len=640 sr=32000 ch=1 (frame #0)
+[ZoomNative] Audio frame: nodeId=16783360 len=640 sr=32000 ch=1 (frame #1)
+[ZoomNative] Audio frame: nodeId=16783360 len=640 sr=32000 ch=1 (frame #2)
+[ZoomNative] Audio frame: nodeId=16783360 len=640 sr=32000 ch=1 (frame #3)
+[ZoomNative] Audio frame: nodeId=16783360 len=640 sr=32000 ch=1 (frame #4)
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 2 participants, 0 needed retry, 2 already OK
+[ZoomNative] onUserVideoStatusChange: userId=16783360 status=Video_ON
+[ZoomNative] onUserVideoStatusChange: userId=16783360 video ON ΓÇö renderer exists, keeping subscription
+[ZoomNative] Video frame: userId=16782336 640x360 (frame #900) limited=1 src=Y/U/V
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 2 participants, 0 needed retry, 2 already OK
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 2 participants, 0 needed retry, 2 already OK
+[ZoomNative] Video frame: userId=16782336 640x360 (frame #1200) limited=1 src=Y/U/V
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 2 participants, 0 needed retry, 2 already OK
