@@ -385,6 +385,21 @@ bool ZoomAddon::LeaveMeeting() {
 - (void)onAllowParticipantsUnmuteSelfNotification:(BOOL)allow {}
 - (void)onMeetingLockStatus:(BOOL)isLock {}
 - (void)onRequestLocalRecordingPrivilegeChanged:(ZoomSDKLocalRecordingRequestPrivilegeStatus)status {}
+- (void)onUserInfoUpdate:(unsigned int)userID {}
+- (void)onVirtualNameTagStatusChanged:(BOOL)bOn userID:(unsigned int)userID {}
+- (void)onVirtualNameTagRosterInfoUpdated:(unsigned int)userID {}
+- (void)onMultiToSingleShareNeedConfirm:(ZoomSDKMultiToSingleShareConfirmHandler*)confirmHandle {}
+- (void)onShareMeetingChatStatusChanged:(BOOL)isStart {}
+- (void)onAllowParticipantsShareWhiteBoardNotification:(BOOL)allow {}
+- (void)onVideoAlphaChannelStatusChanged:(BOOL)isAlphaModeOn {}
+- (void)onMeetingQAStatusChanged:(BOOL)isMeetingQAFeatureOn {}
+- (void)notifyToJoin3rdPartyTelephonyAudio:(NSString*)audioInfo {}
+- (void)onCameraControlRequestReceived:(unsigned int)userId requestType:(ZoomSDKCameraControlRequestType)requestType actionApprove:(nullable ZoomSDKError(^)(void))actionApprove actionDecline:(nullable ZoomSDKError(^)(void))actionDecline {}
+- (void)onCameraControlRequestResult:(unsigned int)userId resultType:(ZoomSDKCameraControlRequestResult)resultType {}
+- (void)onBotAuthorizerRelationChanged:(unsigned int)authorizeUserID {}
+- (void)onCreateCompanionRelation:(unsigned int)parentUserID childUserID:(unsigned int)childUserID {}
+- (void)onRemoveCompanionRelation:(unsigned int)childUserID {}
+- (void)onGrantCoOwnerPrivilegeChanged:(BOOL)canGrantOther {}
 - (void)onAllowParticipantsRequestCloudRecording:(BOOL)allow {}
 - (void)onInMeetingUserAvatarPathUpdated:(unsigned int)userID {}
 - (void)onAICompanionActiveChangeNotice:(BOOL)active {}

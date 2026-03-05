@@ -1,0 +1,135 @@
+debo@LLM-Studio-1 zoom-meeting-sdk-addon % CXX="$(pwd)/build-tools/cxx-objcpp.sh" NODE_TLS_REJECT_UNAUTHORIZED=0 PYTHON=/opt/homebrew/bin/python3.12 npx node-gyp rebuild
+gyp info it worked if it ends with ok
+gyp info using node-gyp@10.3.1
+gyp info using node@20.20.0 | darwin | arm64
+gyp info find Python using Python version 3.12.13 found at "/opt/homebrew/opt/python@3.12/bin/python3.12"
+
+gyp info spawn /opt/homebrew/opt/python@3.12/bin/python3.12
+gyp info spawn args [
+gyp info spawn args '/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/node_modules/node-gyp/gyp/gyp_main.py',
+gyp info spawn args 'binding.gyp',
+gyp info spawn args '-f',
+gyp info spawn args 'make',
+gyp info spawn args '-I',
+gyp info spawn args '/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/build/config.gypi',
+gyp info spawn args '-I',
+gyp info spawn args '/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/node_modules/node-gyp/addon.gypi',
+gyp info spawn args '-I',
+gyp info spawn args '/Users/debo/Library/Caches/node-gyp/20.20.0/include/node/common.gypi',
+gyp info spawn args '-Dlibrary=shared_library',
+gyp info spawn args '-Dvisibility=default',
+gyp info spawn args '-Dnode_root_dir=/Users/debo/Library/Caches/node-gyp/20.20.0',
+gyp info spawn args '-Dnode_gyp_dir=/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/node_modules/node-gyp',
+gyp info spawn args '-Dnode_lib_file=/Users/debo/Library/Caches/node-gyp/20.20.0/<(target_arch)/node.lib',
+gyp info spawn args '-Dmodule_root_dir=/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon',
+gyp info spawn args '-Dnode_engine=v8',
+gyp info spawn args '--depth=.',
+gyp info spawn args '--no-parallel',
+gyp info spawn args '--generator-output',
+gyp info spawn args 'build',
+gyp info spawn args '-Goutput_dir=.'
+gyp info spawn args ]
+gyp info spawn make
+gyp info spawn args [ 'BUILDTYPE=Release', '-C', 'build' ]
+  CXX(target) Release/obj.target/zoom_meeting_sdk/src/zoom_addon.o
+clang: warning: '-x objective-c++' after last input file has no effect [-Wunused-command-line-argument]
+  CXX(target) Release/obj.target/zoom_meeting_sdk/src/zoom_auth.o
+clang: warning: '-x objective-c++' after last input file has no effect [-Wunused-command-line-argument]
+  CXX(target) Release/obj.target/zoom_meeting_sdk/src/zoom_meeting.o
+clang: warning: '-x objective-c++' after last input file has no effect [-Wunused-command-line-argument]
+../src/zoom_meeting.cpp:320:17: warning: method 'onUserInfoUpdate:' in protocol 'ZoomSDKMeetingActionControllerDelegate' not implemented [-Wprotocol]
+@implementation ZoomActionDelegateImpl
+                ^
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKMeetingActionController.h:595:1: note: method 'onUserInfoUpdate:' declared here
+- (void)onUserInfoUpdate:(unsigned int)userID DEPRECATED_MSG_ATTRIBUTE("No longer used");
+^
+../src/zoom_meeting.cpp:320:17: warning: method 'onVirtualNameTagStatusChanged:userID:' in protocol 'ZoomSDKMeetingActionControllerDelegate' not implemented [-Wprotocol]
+@implementation ZoomActionDelegateImpl
+                ^
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKMeetingActionController.h:602:1: note: method 'onVirtualNameTagStatusChanged:userID:' declared here
+- (void)onVirtualNameTagStatusChanged:(BOOL)bOn userID:(unsigned int)userID;
+^
+../src/zoom_meeting.cpp:320:17: warning: method 'onVirtualNameTagRosterInfoUpdated:' in protocol 'ZoomSDKMeetingActionControllerDelegate' not implemented [-Wprotocol]
+@implementation ZoomActionDelegateImpl
+                ^
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKMeetingActionController.h:608:1: note: method 'onVirtualNameTagRosterInfoUpdated:' declared here
+- (void)onVirtualNameTagRosterInfoUpdated:(unsigned int)userID;
+^
+../src/zoom_meeting.cpp:320:17: warning: method 'onMultiToSingleShareNeedConfirm:' in protocol 'ZoomSDKMeetingActionControllerDelegate' not implemented [-Wprotocol]
+@implementation ZoomActionDelegateImpl
+                ^
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKMeetingActionController.h:654:1: note: method 'onMultiToSingleShareNeedConfirm:' declared here
+- (void)onMultiToSingleShareNeedConfirm:(ZoomSDKMultiToSingleShareConfirmHandler*_Nullable)confirmHandle;
+^
+../src/zoom_meeting.cpp:320:17: warning: method 'onShareMeetingChatStatusChanged:' in protocol 'ZoomSDKMeetingActionControllerDelegate' not implemented [-Wprotocol]
+@implementation ZoomActionDelegateImpl
+                ^
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKMeetingActionController.h:738:1: note: method 'onShareMeetingChatStatusChanged:' declared here
+- (void)onShareMeetingChatStatusChanged:(BOOL)isStart;
+^
+../src/zoom_meeting.cpp:320:17: warning: method 'onAllowParticipantsShareWhiteBoardNotification:' in protocol 'ZoomSDKMeetingActionControllerDelegate' not implemented [-Wprotocol]
+@implementation ZoomActionDelegateImpl
+                ^
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKMeetingActionController.h:767:1: note: method 'onAllowParticipantsShareWhiteBoardNotification:' declared here
+- (void)onAllowParticipantsShareWhiteBoardNotification:(BOOL)allow;
+^
+../src/zoom_meeting.cpp:320:17: warning: method 'onVideoAlphaChannelStatusChanged:' in protocol 'ZoomSDKMeetingActionControllerDelegate' not implemented [-Wprotocol]
+@implementation ZoomActionDelegateImpl
+                ^
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKMeetingActionController.h:808:1: note: method 'onVideoAlphaChannelStatusChanged:' declared here
+- (void)onVideoAlphaChannelStatusChanged:(BOOL)isAlphaModeOn;
+^
+../src/zoom_meeting.cpp:320:17: warning: method 'onMeetingQAStatusChanged:' in protocol 'ZoomSDKMeetingActionControllerDelegate' not implemented [-Wprotocol]
+@implementation ZoomActionDelegateImpl
+                ^
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKMeetingActionController.h:826:1: note: method 'onMeetingQAStatusChanged:' declared here
+- (void)onMeetingQAStatusChanged:(BOOL)isMeetingQAFeatureOn;
+^
+../src/zoom_meeting.cpp:320:17: warning: method 'notifyToJoin3rdPartyTelephonyAudio:' in protocol 'ZoomSDKMeetingActionControllerDelegate' not implemented [-Wprotocol]
+@implementation ZoomActionDelegateImpl
+                ^
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKMeetingActionController.h:832:2: note: method 'notifyToJoin3rdPartyTelephonyAudio:' declared here
+ - (void)notifyToJoin3rdPartyTelephonyAudio:(NSString*)audioInfo;
+ ^
+../src/zoom_meeting.cpp:320:17: warning: method 'onCameraControlRequestReceived:requestType:actionApprove:actionDecline:' in protocol 'ZoomSDKMeetingActionControllerDelegate' not implemented [-Wprotocol]
+@implementation ZoomActionDelegateImpl
+                ^
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKMeetingActionController.h:841:1: note: method 'onCameraControlRequestReceived:requestType:actionApprove:actionDecline:' declared here
+- (void)onCameraControlRequestReceived:(unsigned int)userId requestType:(ZoomSDKCameraControlRequestType)requestType actionApprove:(nullable ZoomSDKError(^)(void))actionApprove actionDecline:(nullable ZoomSDKError(^)(void))actionDecline;
+^
+../src/zoom_meeting.cpp:320:17: warning: method 'onCameraControlRequestResult:resultType:' in protocol 'ZoomSDKMeetingActionControllerDelegate' not implemented [-Wprotocol]
+@implementation ZoomActionDelegateImpl
+                ^
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKMeetingActionController.h:848:1: note: method 'onCameraControlRequestResult:resultType:' declared here
+- (void)onCameraControlRequestResult:(unsigned int)userId resultType:(ZoomSDKCameraControlRequestResult)resultType;
+^
+../src/zoom_meeting.cpp:320:17: warning: method 'onBotAuthorizerRelationChanged:' in protocol 'ZoomSDKMeetingActionControllerDelegate' not implemented [-Wprotocol]
+@implementation ZoomActionDelegateImpl
+                ^
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKMeetingActionController.h:866:1: note: method 'onBotAuthorizerRelationChanged:' declared here
+- (void)onBotAuthorizerRelationChanged:(unsigned int)authorizeUserID;
+^
+../src/zoom_meeting.cpp:320:17: warning: method 'onCreateCompanionRelation:childUserID:' in protocol 'ZoomSDKMeetingActionControllerDelegate' not implemented [-Wprotocol]
+@implementation ZoomActionDelegateImpl
+                ^
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKMeetingActionController.h:873:1: note: method 'onCreateCompanionRelation:childUserID:' declared here
+- (void)onCreateCompanionRelation:(unsigned int)parentUserID childUserID:(unsigned int)childUserID;
+^
+../src/zoom_meeting.cpp:320:17: warning: method 'onRemoveCompanionRelation:' in protocol 'ZoomSDKMeetingActionControllerDelegate' not implemented [-Wprotocol]
+@implementation ZoomActionDelegateImpl
+                ^
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKMeetingActionController.h:879:1: note: method 'onRemoveCompanionRelation:' declared here
+- (void)onRemoveCompanionRelation:(unsigned int)childUserID;
+^
+../src/zoom_meeting.cpp:320:17: warning: method 'onGrantCoOwnerPrivilegeChanged:' in protocol 'ZoomSDKMeetingActionControllerDelegate' not implemented [-Wprotocol]
+@implementation ZoomActionDelegateImpl
+                ^
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKMeetingActionController.h:885:1: note: method 'onGrantCoOwnerPrivilegeChanged:' declared here
+- (void)onGrantCoOwnerPrivilegeChanged:(BOOL)canGrantOther;
+^
+15 warnings generated.
+  CXX(target) Release/obj.target/zoom_meeting_sdk/src/zoom_rawdata.o
+clang: warning: '-x objective-c++' after last input file has no effect [-Wunused-command-line-argument]
+  SOLINK_MODULE(target) Release/zoom_meeting_sdk.node
+gyp info ok 
+debo@LLM-Studio-1 zoom-meeting-sdk-addon %
