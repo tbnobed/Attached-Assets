@@ -1,0 +1,44 @@
+debo@LLM-Studio-1 ~ % find /Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDK/ZoomSDK.framework -type f -name "*.h" | head -40
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDK/ZoomSDK.framework/Versions/A/Headers/ZoomSDKMeetingSmartSummaryController.h
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDK/ZoomSDK.framework/Versions/A/Headers/ZoomSDKRawDataShareSourceController.h
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDK/ZoomSDK.framework/Versions/A/Headers/ZoomSDKNotificationServiceController.h
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDK/ZoomSDK.framework/Versions/A/Headers/ZoomSDKMeetingIndicatorController.h
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDK/ZoomSDK.framework/Versions/A/Headers/ZoomSDKPhoneHelper.h
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDK/ZoomSDK.framework/Versions/A/Headers/ZoomSDKReactionController.h
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDK/ZoomSDK.framework/Versions/A/Headers/ZoomSDKPollingController.h
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDK/ZoomSDK.framework/Versions/A/Headers/ZoomSDKMeetingService.h
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDK/ZoomSDK.framework/Versions/A/Headers/ZoomSDKShareContainer.h
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDK/ZoomSDK.framework/Versions/A/Headers/ZoomSDKRawDataVideoSourceController.h
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDK/ZoomSDK.framework/Versions/A/Headers/ZoomSDKAICompanionQueryHelper.h
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDK/ZoomSDK.framework/Versions/A/Headers/ZoomSDKSignInterpretationController.h
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDK/ZoomSDK.framework/Versions/A/Headers/ZoomSDKRawDataAudioSourceController.h
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDK/ZoomSDK.framework/Versions/A/Headers/ZoomSDKCloseCaptionController.h
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDK/ZoomSDK.framework/Versions/A/Headers/ZoomSDKSettingService.h
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDK/ZoomSDK.framework/Versions/A/Headers/ZoomSDKErrors.h
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDK/ZoomSDK.framework/Versions/A/Headers/ZoomSDKMeetingActionController.h
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDK/ZoomSDK.framework/Versions/A/Headers/ZoomSDKPremeetingService.h
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDK/ZoomSDK.framework/Versions/A/Headers/ZoomSDKMeetingProductionStudioController.h
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDK/ZoomSDK.framework/Versions/A/Headers/ZoomSDKInterpretationController.h
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDK/ZoomSDK.framework/Versions/A/Headers/ZoomSDKRawDataController.h
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDK/ZoomSDK.framework/Versions/A/Headers/ZoomSDKLiveStreamHelper.h
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDK/ZoomSDK.framework/Versions/A/Headers/ZoomSDKMeetingAICompanionController.h
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDK/ZoomSDK.framework/Versions/A/Headers/ZoomSDKMeetingUIController.h
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDK/ZoomSDK.framework/Versions/A/Headers/ZoomSDKQAController.h
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDK/ZoomSDK.framework/Versions/A/Headers/ZoomSDKASController.h
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDK/ZoomSDK.framework/Versions/A/Headers/ZoomSDKWaitingRoomController.h
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDK/ZoomSDK.framework/Versions/A/Headers/ZoomSDKMeetingRecordController.h
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDK/ZoomSDK.framework/Versions/A/Headers/ZoomSDKCustomizedAnnotationCtr.h
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDK/ZoomSDK.framework/Versions/A/Headers/ZoomSDKMeetingConfiguration.h
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDK/ZoomSDK.framework/Versions/A/Headers/ZoomSDKMeetingEncryptionController.h
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDK/ZoomSDK.framework/Versions/A/Headers/ZoomSDKPresenceHelper.h
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDK/ZoomSDK.framework/Versions/A/Headers/ZoomSDKMeetingDocsController.h
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDK/ZoomSDK.framework/Versions/A/Headers/ZoomSDKReminderController.h
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDK/ZoomSDK.framework/Versions/A/Headers/ZoomSDKRealNameAuthenticationController.h
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDK/ZoomSDK.framework/Versions/A/Headers/ZoomSDKAppSignalController.h
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDK/ZoomSDK.framework/Versions/A/Headers/ZoomSDK.h
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDK/ZoomSDK.framework/Versions/A/Headers/ZoomSDKNetworkService.h
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDK/ZoomSDK.framework/Versions/A/Headers/ZoomSDKRawArchivingController.h
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDK/ZoomSDK.framework/Versions/A/Headers/ZoomSDKMeetingWhiteboardController.h
+debo@LLM-Studio-1 ~ % ls /Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDK/ZoomSDK.framework/
+Headers		Modules		Resources	Versions	ZoomSDK
+debo@LLM-Studio-1 ~ % 
