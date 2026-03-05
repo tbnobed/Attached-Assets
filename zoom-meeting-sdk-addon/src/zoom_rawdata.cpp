@@ -270,16 +270,23 @@ void subscribeUserVideo(uint32_t userId) {
     }
 
     if (g_videoRenderers.count(userId)) {
-        auto* renderer = g_videoRenderers[userId].first;
-        renderer->unSubscribe();
-        renderer->setRawDataResolution(ZoomSDKResolution_1080P);
-        auto subErr = renderer->subscribe(userId, RAW_DATA_TYPE_VIDEO);
+        auto* oldRenderer = g_videoRenderers[userId].first;
+        auto* oldListener = g_videoRenderers[userId].second;
+        oldRenderer->unSubscribe();
+        oldRenderer->setRawDataResolution(ZoomSDKResolution_1080P);
+        auto subErr = oldRenderer->subscribe(userId, RAW_DATA_TYPE_VIDEO);
         printf("[ZoomNative] subscribeUserVideo: userId=%u RE-subscribe result=%d (1080P)\n", userId, (int)subErr);
         fflush(stdout);
         if (subErr == SDKERR_SUCCESS) {
             g_videoSubscribedOK.insert(userId);
+            return;
         }
-        return;
+        printf("[ZoomNative] subscribeUserVideo: userId=%u RE-subscribe failed — destroying old renderer, creating fresh\n", userId);
+        fflush(stdout);
+        oldRenderer->unSubscribe();
+        destroyRenderer(oldRenderer);
+        delete oldListener;
+        g_videoRenderers.erase(userId);
     }
 
     auto* listener = new PerUserVideoListener(userId);
