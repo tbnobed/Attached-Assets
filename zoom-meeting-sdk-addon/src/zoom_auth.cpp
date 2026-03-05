@@ -177,7 +177,7 @@ bool ZoomAddon::Initialize(const ZoomConfig& config) {
         sdk.enableRawdataIntermediateMode = NO;
 
         ZoomSDKInitParams* params = [[ZoomSDKInitParams alloc] init];
-        params.zoomDomain = @"zoom.us";
+        params.zoomDomain = @"https://zoom.us";
         params.enableLog = YES;
         params.needCustomizedUI = YES;
 
@@ -221,13 +221,15 @@ bool ZoomAddon::Authenticate() {
         }
 
         ZoomSDKAuthContext* ctx = [[ZoomSDKAuthContext alloc] init];
-        ctx.jwtToken = [NSString stringWithUTF8String:config_.jwtToken.c_str()];
+        NSString* jwtNS = [NSString stringWithUTF8String:config_.jwtToken.c_str()];
+        ctx.jwtToken = jwtNS;
 
         printf("[ZoomNative] AuthContext.jwtToken length: %lu\n", (unsigned long)[ctx.jwtToken length]);
+        printf("[ZoomNative] SDK initialized state: %d\n", (int)[[ZoomSDK sharedSDK] isSDKInitialized]);
         fflush(stdout);
 
         ZoomSDKError err = [authService sdkAuth:ctx];
-        printf("[ZoomNative] SDKAuth result=%d\n", (int)err);
+        printf("[ZoomNative] SDKAuth result=%d (0=Success, 1=Failed, 6=WrongUsage)\n", (int)err);
         fflush(stdout);
 
         if (err != ZoomSDKError_Success) {
