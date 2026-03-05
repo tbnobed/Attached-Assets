@@ -190,6 +190,7 @@ class ZoomMeetingBridge extends EventEmitter {
             this.emit('participant-joined', {
               userId: event.userId,
               displayName: event.displayName,
+              isSelf: !!event.isSelf,
             });
           }
           break;

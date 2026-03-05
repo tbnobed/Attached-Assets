@@ -323,6 +323,12 @@ public:
         printf("[ZoomNative] onUserVideoStatusChange: userId=%u status=%s\n", userId, statusName);
         fflush(stdout);
 
+        if (userId == ZoomAddon::Instance().GetSelfUserId()) {
+            printf("[ZoomNative] onUserVideoStatusChange: userId=%u is SELF — ignoring\n", userId);
+            fflush(stdout);
+            return;
+        }
+
         if (status == Video_OFF) {
             std::lock_guard<std::mutex> lock(g_videoMutex);
             g_videoSubscribedOK.erase(userId);
@@ -573,6 +579,7 @@ void ZoomAddon::RetryVideoSubscriptions() {
     std::lock_guard<std::mutex> lock(mutex_);
     int needSub = 0;
     for (const auto& [userId, info] : participants_) {
+        if (userId == selfUserId_) continue;
         {
             std::lock_guard<std::mutex> vlock(g_videoMutex);
             if (g_videoSubscribedOK.count(userId)) continue;
@@ -614,6 +621,11 @@ void ZoomAddon::RetryVideoSubscriptions() {
 }
 
 void ZoomAddon::SubscribeParticipantVideo(uint32_t userId) {
+    if (userId == selfUserId_) {
+        printf("[ZoomNative] SubscribeParticipantVideo: userId=%u is SELF — skipping\n", userId);
+        fflush(stdout);
+        return;
+    }
     if (g_rawDataActive) {
         subscribeUserVideo(userId);
     }

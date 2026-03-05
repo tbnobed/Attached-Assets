@@ -121,7 +121,10 @@ npm start
 - Audio helper: use `GetAudioRawdataHelper()` directly (not via GetRawdataAPIHelper)
 - Include `meeting_audio_interface.h` before `meeting_participants_ctrl_interface.h` for AudioType
 - Raw data requires `StartRawRecording()` on IMeetingRecordingController BEFORE createRenderer/audio subscribe
-- InitParam.rawdataOpts.enableRawdataIntermediateMode MUST be true — zeroing rawdataOpts disables raw data and causes SDKERR_WRONG_USAGE (2) on StartRawRecording
+- InitParam.rawdataOpts.enableRawdataIntermediateMode MUST be false — true produces empty frames
+- Bot's own userId (selfUserId_) is detected via GetMySelfUser() at INMEETING and excluded from video subscriptions, EnumerateParticipants, and onUserVideoStatusChange to avoid wasting renderer slots
+- subscribeUserVideo: if RE-subscribe fails (sub!=0), destroys old renderer and creates a fresh one (stale renderers can't be reused after Video_OFF→Video_ON)
+- PerUserVideoListener::subscribed_ resets to false on RawData_Off, enabling re-trigger on next RawData_On
 - If bot lacks recording permission, call `RequestLocalRecordingPrivilege()` and wait for `onRecordPrivilegeChanged(true)`
 - `onRecordingStatus(Recording_Start)` is the gate signal: only after this can renderers and audio subscriptions succeed
 - `IMeetingRecordingCtrlEvent` v6.7.5 requires: onRecordingStatus, onCloudRecordingStatus, onRecordPrivilegeChanged, onLocalRecordingPrivilegeRequestStatus, onRequestCloudRecordingResponse, onLocalRecordingPrivilegeRequested(handler*), onStartCloudRecordingRequested(handler*), onCustomizedLocalRecordingSourceNotification, onCloudRecordingStorageFull, onRecording2MP4Done, onRecording2MP4Processing, onEnableAndStartSmartRecordingRequested(handler*), onSmartRecordingEnableActionCallback(handler*)

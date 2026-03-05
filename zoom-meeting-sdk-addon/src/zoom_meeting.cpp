@@ -31,6 +31,18 @@ public:
         ZoomAddon::Instance().OnMeetingStatusChanged(statusStr);
 
         if (status == MEETING_STATUS_INMEETING) {
+            if (g_meetingService) {
+                auto* pCtrl = g_meetingService->GetMeetingParticipantsController();
+                if (pCtrl) {
+                    auto* selfInfo = pCtrl->GetMySelfUser();
+                    if (selfInfo) {
+                        uint32_t selfId = selfInfo->GetUserID();
+                        ZoomAddon::Instance().SetSelfUserId(selfId);
+                        printf("[ZoomNative] Self userId detected: %u\n", selfId);
+                        fflush(stdout);
+                    }
+                }
+            }
             ZoomAddon::Instance().EnumerateParticipants();
             bool rawOk = ZoomAddon::Instance().StartRawRecording();
             printf("[ZoomNative] StartRawRecording: %s\n", rawOk ? "OK" : "PENDING (will retry)");
@@ -197,6 +209,12 @@ void ZoomAddon::EnumerateParticipants() {
 
     for (int i = 0; i < lstUserID->GetCount(); i++) {
         unsigned int userId = lstUserID->GetItem(i);
+
+        if (userId == selfUserId_) {
+            printf("[ZoomNative] EnumerateParticipants: userId=%u is SELF — skipping\n", userId);
+            fflush(stdout);
+            continue;
+        }
 
         {
             std::lock_guard<std::mutex> lock(mutex_);

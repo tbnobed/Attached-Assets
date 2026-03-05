@@ -61,11 +61,14 @@ public:
     void OnParticipantJoined(uint32_t userId, const std::string& name);
     void OnParticipantLeft(uint32_t userId);
     void OnMeetingStatusChanged(const std::string& status);
+    void SetSelfUserId(uint32_t userId) { selfUserId_ = userId; }
+    uint32_t GetSelfUserId() const { return selfUserId_; }
 
 private:
-    ZoomAddon() : state_(AddonState::Uninitialized) {}
+    ZoomAddon() : state_(AddonState::Uninitialized), selfUserId_(0) {}
 
     AddonState state_;
+    uint32_t selfUserId_;
     ZoomConfig config_;
     std::map<uint32_t, ParticipantInfo> participants_;
     mutable std::mutex mutex_;

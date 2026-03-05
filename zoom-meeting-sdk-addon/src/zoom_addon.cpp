@@ -64,6 +64,27 @@ void ZoomAddon::OnAudioFrame(uint32_t userId, const uint8_t* data, int length, i
 void ZoomAddon::OnParticipantJoined(uint32_t userId, const std::string& name) {
     printf("[ZoomNative] OnParticipantJoined: userId=%u name=%s\n", userId, name.c_str());
     fflush(stdout);
+
+    if (userId == selfUserId_) {
+        printf("[ZoomNative] OnParticipantJoined: userId=%u is SELF (bot) — skipping video subscription\n", userId);
+        fflush(stdout);
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            participants_[userId] = { userId, name, false, false };
+        }
+        if (eventCallback_) {
+            eventCallback_.NonBlockingCall([userId, name](Napi::Env env, Napi::Function jsCallback) {
+                auto obj = Napi::Object::New(env);
+                obj.Set("type", Napi::String::New(env, "participant-joined"));
+                obj.Set("userId", Napi::Number::New(env, userId));
+                obj.Set("displayName", Napi::String::New(env, name));
+                obj.Set("isSelf", Napi::Boolean::New(env, true));
+                jsCallback.Call({ obj });
+            });
+        }
+        return;
+    }
+
     {
         std::lock_guard<std::mutex> lock(mutex_);
         participants_[userId] = { userId, name, false, false };

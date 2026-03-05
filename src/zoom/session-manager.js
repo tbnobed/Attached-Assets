@@ -41,7 +41,11 @@ class SessionManager extends EventEmitter {
         console.error('[SessionManager] SDK initialization failed');
       }
 
-      this.zoomBridge.on('participant-joined', ({ userId, displayName }) => {
+      this.zoomBridge.on('participant-joined', ({ userId, displayName, isSelf }) => {
+        if (isSelf) {
+          console.log(`[SessionManager] Skipping self (bot) participant: ${displayName} (${userId})`);
+          return;
+        }
         this.addParticipant({ userId, displayName });
       });
 
