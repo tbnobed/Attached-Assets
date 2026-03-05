@@ -5,12 +5,18 @@ let nativeAddon = null;
 let addonAvailable = false;
 
 const sdkLibDir = path.join(__dirname, 'build', 'Release');
+const sdkDir = path.join(__dirname, 'sdk', 'lib');
+
 if (process.platform === 'win32' && !process.env.PATH.includes(sdkLibDir)) {
   process.env.PATH = sdkLibDir + ';' + process.env.PATH;
 } else if (process.platform === 'darwin') {
   const currentDyldPath = process.env.DYLD_LIBRARY_PATH || '';
   if (!currentDyldPath.includes(sdkLibDir)) {
     process.env.DYLD_LIBRARY_PATH = sdkLibDir + (currentDyldPath ? ':' + currentDyldPath : '');
+  }
+  const currentFrameworkPath = process.env.DYLD_FRAMEWORK_PATH || '';
+  if (!currentFrameworkPath.includes(sdkDir)) {
+    process.env.DYLD_FRAMEWORK_PATH = sdkDir + (currentFrameworkPath ? ':' + currentFrameworkPath : '');
   }
 }
 

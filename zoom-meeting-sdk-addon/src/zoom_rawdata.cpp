@@ -1,12 +1,9 @@
 #include "zoom_addon.h"
 #include <vector>
 
-#if defined(_WIN32) || defined(__APPLE__)
-
 #ifdef _WIN32
-#include <windows.h>
-#endif
 
+#include <windows.h>
 #include "zoom_sdk.h"
 #include "zoom_sdk_raw_data_def.h"
 #include "rawdata/zoom_rawdata_api.h"
@@ -729,6 +726,671 @@ void ZoomAddon::StopRawDataCapture() {
 
     g_rawDataActive = false;
     g_rawRecordingStarted = false;
+}
+
+#elif defined(__APPLE__)
+
+#import <ZoomSDK/ZoomSDK.h>
+
+static std::mutex g_macVideoMutex;
+static std::set<uint32_t> g_macVideoSubscribedOK;
+static std::set<uint32_t> g_macVideoPendingResubscribe;
+static bool g_macRawDataActive = false;
+static bool g_macRawRecordingStarted = false;
+
+@class PerUserVideoDelegateImpl;
+
+static NSMutableDictionary<NSNumber*, PerUserVideoDelegateImpl*>* g_macVideoDelegates = nil;
+static NSMutableDictionary<NSNumber*, ZoomSDKRenderer*>* g_macVideoRenderers = nil;
+
+@interface PerUserVideoDelegateImpl : NSObject <ZoomSDKRendererDelegate>
+@property (assign, nonatomic) uint32_t userId;
+@property (assign, nonatomic) int frameLogCount;
+@property (assign, nonatomic) BOOL rawDataOnReceived;
+@end
+
+@implementation PerUserVideoDelegateImpl
+
+- (instancetype)initWithUserId:(uint32_t)userId {
+    self = [super init];
+    if (self) {
+        _userId = userId;
+        _frameLogCount = 0;
+        _rawDataOnReceived = NO;
+    }
+    return self;
+}
+
+- (void)onSubscribedUserDataOn {
+    printf("[ZoomNative] onSubscribedUserDataOn: userId=%u\n", _userId);
+    fflush(stdout);
+    _rawDataOnReceived = YES;
+}
+
+- (void)onSubscribedUserDataOff {
+    printf("[ZoomNative] onSubscribedUserDataOff: userId=%u\n", _userId);
+    fflush(stdout);
+}
+
+- (void)onSubscribedUserLeft {
+    printf("[ZoomNative] onSubscribedUserLeft: userId=%u\n", _userId);
+    fflush(stdout);
+}
+
+- (void)onRendererBeDestroyed {
+    printf("[ZoomNative] onRendererBeDestroyed: userId=%u\n", _userId);
+    fflush(stdout);
+}
+
+- (void)onRawDataReceived:(ZoomSDKYUVRawDataI420*)data {
+    if (!data) return;
+
+    unsigned int width = [data getStreamWidth];
+    unsigned int height = [data getStreamHeight];
+    if (width == 0 || height == 0) return;
+
+    BOOL canRef = [data canAddRef];
+    if (canRef) {
+        [data addRef];
+    }
+
+    unsigned int yuvSize = width * height * 3 / 2;
+    char* yBuf = [data getYBuffer];
+    char* uBuf = [data getUBuffer];
+    char* vBuf = [data getVBuffer];
+    char* rawBuf = [data getBuffer];
+    unsigned int rawLen = [data getBufferLen];
+
+    const unsigned char* yPlane = nullptr;
+    const unsigned char* uPlane = nullptr;
+    const unsigned char* vPlane = nullptr;
+    uint8_t* localCopy = nullptr;
+
+    if (yBuf && uBuf && vBuf) {
+        localCopy = new uint8_t[yuvSize];
+        memcpy(localCopy, yBuf, width * height);
+        memcpy(localCopy + width * height, uBuf, width * height / 4);
+        memcpy(localCopy + width * height + width * height / 4, vBuf, width * height / 4);
+        yPlane = localCopy;
+        uPlane = localCopy + (width * height);
+        vPlane = localCopy + (width * height) + (width * height / 4);
+    } else if (rawBuf && rawLen >= yuvSize) {
+        localCopy = new uint8_t[yuvSize];
+        memcpy(localCopy, rawBuf, yuvSize);
+        yPlane = localCopy;
+        uPlane = localCopy + (width * height);
+        vPlane = localCopy + (width * height) + (width * height / 4);
+    }
+
+    if (!yPlane) {
+        if (_frameLogCount < 10 || _frameLogCount % 500 == 0) {
+            printf("[ZoomNative] Video frame: userId=%u %ux%u NO DATA (frame #%d)\n", _userId, width, height, _frameLogCount);
+            fflush(stdout);
+        }
+        _frameLogCount++;
+        delete[] localCopy;
+        if (canRef) [data releaseData];
+        return;
+    }
+
+    if (_frameLogCount < 5 || _frameLogCount % 300 == 0) {
+        printf("[ZoomNative] Video frame: userId=%u %ux%u (frame #%d) src=%s\n",
+               _userId, width, height, _frameLogCount,
+               (yBuf && uBuf && vBuf) ? "Y/U/V" : "GetBuffer");
+        fflush(stdout);
+    }
+    _frameLogCount++;
+
+    unsigned int bgraSize = width * height * 4;
+    auto* bgraData = new uint8_t[bgraSize];
+
+    unsigned int yStride = width;
+    unsigned int uStride = width / 2;
+
+    for (unsigned int j = 0; j < height; j++) {
+        for (unsigned int i = 0; i < width; i++) {
+            unsigned int yIdx = j * yStride + i;
+            unsigned int uvIdx = (j / 2) * uStride + (i / 2);
+
+            int y = yPlane[yIdx];
+            int u = uPlane[uvIdx] - 128;
+            int v = vPlane[uvIdx] - 128;
+
+            int r = y + (int)(1.402 * v);
+            int g = y - (int)(0.344 * u) - (int)(0.714 * v);
+            int b = y + (int)(1.772 * u);
+
+            unsigned int idx = (j * width + i) * 4;
+            bgraData[idx + 0] = (uint8_t)(b < 0 ? 0 : (b > 255 ? 255 : b));
+            bgraData[idx + 1] = (uint8_t)(g < 0 ? 0 : (g > 255 ? 255 : g));
+            bgraData[idx + 2] = (uint8_t)(r < 0 ? 0 : (r > 255 ? 255 : r));
+            bgraData[idx + 3] = 255;
+        }
+    }
+
+    ZoomAddon::Instance().OnVideoFrame(_userId, bgraData, width, height);
+    delete[] bgraData;
+    delete[] localCopy;
+    if (canRef) [data releaseData];
+}
+
+@end
+
+@interface AudioRawDataDelegateImpl : NSObject <ZoomSDKAudioRawDataDelegate>
+@end
+
+@implementation AudioRawDataDelegateImpl {
+    std::map<uint32_t, int> _audioFrameCounts;
+}
+
+- (void)onMixedAudioRawDataReceived:(ZoomSDKAudioRawData*)data {}
+
+- (void)onOneWayAudioRawDataReceived:(ZoomSDKAudioRawData*)data nodeID:(unsigned int)nodeID {
+    [self handleOneWayAudio:data userID:nodeID];
+}
+
+- (void)onOneWayAudioRawDataReceived:(ZoomSDKAudioRawData*)data userID:(unsigned int)userID {
+    [self handleOneWayAudio:data userID:userID];
+}
+
+- (void)handleOneWayAudio:(ZoomSDKAudioRawData*)data userID:(unsigned int)userID {
+    if (!data) return;
+
+    auto& count = _audioFrameCounts[userID];
+    if (count < 5 || count % 1000 == 0) {
+        printf("[ZoomNative] Audio frame: userId=%u len=%u sr=%u ch=%u (frame #%d)\n",
+               userID, [data getBufferLen], [data getSampleRate], [data getChannelNum], count);
+        fflush(stdout);
+    }
+    count++;
+
+    ZoomAddon::Instance().OnAudioFrame(
+        userID,
+        (const uint8_t*)[data getBuffer],
+        [data getBufferLen],
+        [data getSampleRate],
+        [data getChannelNum]
+    );
+}
+
+- (void)onShareAudioRawDataReceived:(ZoomSDKAudioRawData*)data {}
+- (void)onShareAudioRawDataReceived:(ZoomSDKAudioRawData*)data userID:(unsigned int)userID {}
+- (void)onOneWayInterpreterAudioRawDataReceived:(ZoomSDKAudioRawData*)data strLanguageName:(NSString*)languageName {}
+
+@end
+
+@interface RecordingDelegateImpl : NSObject <ZoomSDKMeetingRecordDelegate>
+@end
+
+@implementation RecordingDelegateImpl
+
+- (void)onRecord2MP4Done:(BOOL)success Path:(NSString*)recordPath {}
+- (void)onRecord2MP4Progressing:(int)percentage {}
+- (void)onCloudRecordingStatus:(ZoomSDKRecordingStatus)status {}
+
+- (void)onRecordPrivilegeChange:(BOOL)canRec {
+    printf("[ZoomNative] onRecordPrivilegeChange: canRecord=%d\n", canRec);
+    fflush(stdout);
+    if (canRec) {
+        ZoomAddon::Instance().OnRecordingPermissionGranted();
+    }
+}
+
+- (void)onCustomizedRecordingSourceReceived:(CustomizedRecordingLayoutHelper*)helper {}
+
+- (void)onLocalRecordStatus:(ZoomSDKRecordingStatus)status userID:(unsigned int)userID {
+    const char* statusName = "UNKNOWN";
+    switch (status) {
+        case ZoomSDKRecordingStatus_Start: statusName = "Recording_Start"; break;
+        case ZoomSDKRecordingStatus_Stop: statusName = "Recording_Stop"; break;
+        case ZoomSDKRecordingStatus_Pause: statusName = "Recording_Pause"; break;
+        case ZoomSDKRecordingStatus_DiskFull: statusName = "Recording_DiskFull"; break;
+        default: break;
+    }
+    printf("[ZoomNative] onLocalRecordStatus: %s (%d) userId=%u\n", statusName, (int)status, userID);
+    fflush(stdout);
+
+    if (status == ZoomSDKRecordingStatus_Start) {
+        printf("[ZoomNative] Raw recording started — now subscribing raw data\n");
+        fflush(stdout);
+        ZoomAddon::Instance().OnRawRecordingStarted();
+    }
+}
+
+- (void)onLocalRecordingPrivilegeRequestStatus:(ZoomSDKRequestLocalRecordingStatus)status {
+    printf("[ZoomNative] onLocalRecordingPrivilegeRequestStatus: %d\n", (int)status);
+    fflush(stdout);
+}
+
+- (void)onLocalRecordingPrivilegeRequested:(ZoomSDKRequestLocalRecordingPrivilegeHandler*)handler {
+    printf("[ZoomNative] onLocalRecordingPrivilegeRequested\n");
+    fflush(stdout);
+}
+
+- (void)onCloudRecordingStorageFull:(time_t)gracePeriodDate {}
+- (void)onRequestCloudRecordingResponse:(ZoomSDKRequestStartCloudRecordingStatus)status {}
+- (void)onStartCloudRecordingRequested:(ZoomSDKRequestStartCloudRecordingHandler*)handler {}
+- (void)onEnableAndStartSmartRecordingRequested:(ZoomSDKRequestEnableAndStartSmartRecordingHandler*)handler {}
+- (void)onSmartRecordingEnableActionCallback:(ZoomSDKSmartRecordingEnableActionHandler*)handler {}
+
+@end
+
+static AudioRawDataDelegateImpl* g_macAudioDelegate = nil;
+static RecordingDelegateImpl* g_macRecordingDelegate = nil;
+static ZoomSDKAudioRawDataHelper* g_macAudioHelper = nil;
+
+static void macSubscribeUserVideo(uint32_t userId) {
+    std::lock_guard<std::mutex> lock(g_macVideoMutex);
+
+    if (g_macVideoSubscribedOK.count(userId)) {
+        return;
+    }
+
+    if (!g_macRawDataActive) {
+        printf("[ZoomNative] subscribeUserVideo: userId=%u deferred — raw data not active yet\n", userId);
+        fflush(stdout);
+        return;
+    }
+
+    @autoreleasepool {
+        NSNumber* key = @(userId);
+
+        if (g_macVideoRenderers[key]) {
+            printf("[ZoomNative] subscribeUserVideo: userId=%u renderer already exists — keeping\n", userId);
+            fflush(stdout);
+            g_macVideoSubscribedOK.insert(userId);
+            return;
+        }
+
+        ZoomSDKRawDataController* rawCtrl = [[ZoomSDK sharedSDK] getRawDataController];
+        if (!rawCtrl) {
+            printf("[ZoomNative] subscribeUserVideo: userId=%u getRawDataController returned nil\n", userId);
+            fflush(stdout);
+            return;
+        }
+
+        ZoomSDKRenderer* renderer = nil;
+        ZoomSDKError err = [rawCtrl createRender:&renderer];
+        if (err != ZoomSDKError_Success || !renderer) {
+            printf("[ZoomNative] subscribeUserVideo: userId=%u createRender FAILED (err=%d)\n", userId, (int)err);
+            fflush(stdout);
+            return;
+        }
+
+        PerUserVideoDelegateImpl* delegate = [[PerUserVideoDelegateImpl alloc] initWithUserId:userId];
+        renderer.delegate = delegate;
+
+        [renderer setResolution:ZoomSDKResolution_1080P];
+        ZoomSDKError subErr = [renderer subscribe:userId rawDataType:ZoomSDKRawDataType_Video];
+
+        if (!g_macVideoDelegates) g_macVideoDelegates = [[NSMutableDictionary alloc] init];
+        if (!g_macVideoRenderers) g_macVideoRenderers = [[NSMutableDictionary alloc] init];
+
+        g_macVideoDelegates[key] = delegate;
+        g_macVideoRenderers[key] = renderer;
+
+        printf("[ZoomNative] subscribeUserVideo: userId=%u renderer=%p delegate=%p created (sub=%d)\n",
+               userId, (__bridge void*)renderer, (__bridge void*)delegate, (int)subErr);
+        fflush(stdout);
+
+        if (subErr == ZoomSDKError_Success) {
+            g_macVideoSubscribedOK.insert(userId);
+        }
+    }
+}
+
+static void macUnsubscribeUserVideo(uint32_t userId) {
+    std::lock_guard<std::mutex> lock(g_macVideoMutex);
+    g_macVideoSubscribedOK.erase(userId);
+    g_macVideoPendingResubscribe.erase(userId);
+
+    @autoreleasepool {
+        NSNumber* key = @(userId);
+        ZoomSDKRenderer* renderer = g_macVideoRenderers[key];
+        if (renderer) {
+            [renderer unSubscribe];
+
+            ZoomSDKRawDataController* rawCtrl = [[ZoomSDK sharedSDK] getRawDataController];
+            if (rawCtrl) {
+                [rawCtrl destroyRender:renderer];
+            }
+
+            [g_macVideoRenderers removeObjectForKey:key];
+            [g_macVideoDelegates removeObjectForKey:key];
+        }
+    }
+}
+
+static void macUnsubscribeAllVideo() {
+    std::lock_guard<std::mutex> lock(g_macVideoMutex);
+
+    @autoreleasepool {
+        ZoomSDKRawDataController* rawCtrl = [[ZoomSDK sharedSDK] getRawDataController];
+        for (NSNumber* key in [g_macVideoRenderers allKeys]) {
+            ZoomSDKRenderer* renderer = g_macVideoRenderers[key];
+            if (renderer) {
+                [renderer unSubscribe];
+                if (rawCtrl) {
+                    [rawCtrl destroyRender:renderer];
+                }
+            }
+        }
+        [g_macVideoRenderers removeAllObjects];
+        [g_macVideoDelegates removeAllObjects];
+    }
+
+    g_macVideoSubscribedOK.clear();
+    g_macVideoPendingResubscribe.clear();
+}
+
+static bool macIsUserVideoOn(uint32_t userId) {
+    @autoreleasepool {
+        ZoomSDKMeetingService* meetingSvc = [[ZoomSDK sharedSDK] getMeetingService];
+        if (!meetingSvc) return false;
+        ZoomSDKMeetingActionController* actionCtrl = [meetingSvc getMeetingActionController];
+        if (!actionCtrl) return false;
+        ZoomSDKUserInfo* info = [actionCtrl getUserByUserID:userId];
+        if (!info) return false;
+        return [info isVideoOn];
+    }
+}
+
+bool ZoomAddon::StartRawRecording() {
+    if (g_macRawRecordingStarted) {
+        printf("[ZoomNative] StartRawRecording: already started\n");
+        fflush(stdout);
+        return true;
+    }
+
+    @autoreleasepool {
+        ZoomSDKMeetingService* meetingSvc = [[ZoomSDK sharedSDK] getMeetingService];
+        if (!meetingSvc) {
+            printf("[ZoomNative] StartRawRecording: no meeting service\n");
+            fflush(stdout);
+            return false;
+        }
+
+        ZoomSDKMeetingRecordController* recCtrl = [meetingSvc getRecordController];
+        if (!recCtrl) {
+            printf("[ZoomNative] StartRawRecording: getRecordController returned nil\n");
+            fflush(stdout);
+            return false;
+        }
+
+        if (!g_macRecordingDelegate) {
+            g_macRecordingDelegate = [[RecordingDelegateImpl alloc] init];
+            recCtrl.delegate = g_macRecordingDelegate;
+            printf("[ZoomNative] StartRawRecording: recording delegate set\n");
+            fflush(stdout);
+        }
+
+        ZoomSDKError err = [recCtrl startRawRecording];
+        printf("[ZoomNative] StartRawRecording: result=%d\n", (int)err);
+        fflush(stdout);
+
+        if (err == ZoomSDKError_Success) {
+            g_macRawRecordingStarted = true;
+            printf("[ZoomNative] StartRawRecording succeeded — starting data capture\n");
+            fflush(stdout);
+            StartRawDataCapture();
+            return true;
+        }
+
+        if (err == ZoomSDKError_NoPermission) {
+            printf("[ZoomNative] StartRawRecording: no permission — requesting local recording privilege\n");
+            fflush(stdout);
+            ZoomSDKError reqErr = [recCtrl requestLocalRecordingPrivilege];
+            printf("[ZoomNative] requestLocalRecordingPrivilege: result=%d\n", (int)reqErr);
+            fflush(stdout);
+        } else {
+            printf("[ZoomNative] StartRawRecording: error %d — will retry\n", (int)err);
+            fflush(stdout);
+            if (eventCallback_) {
+                int errCode = (int)err;
+                eventCallback_.NonBlockingCall([errCode](Napi::Env env, Napi::Function jsCallback) {
+                    auto obj = Napi::Object::New(env);
+                    obj.Set("type", Napi::String::New(env, "meeting-status"));
+                    obj.Set("status", Napi::String::New(env, "RAW_RECORDING_ERROR"));
+                    obj.Set("errorCode", Napi::Number::New(env, errCode));
+                    jsCallback.Call({ obj });
+                });
+            }
+        }
+    }
+
+    return false;
+}
+
+void ZoomAddon::OnRecordingPermissionGranted() {
+    if (g_macRawRecordingStarted) {
+        printf("[ZoomNative] OnRecordingPermissionGranted: already started, ignoring\n");
+        fflush(stdout);
+        return;
+    }
+    printf("[ZoomNative] Recording permission granted — attempting StartRawRecording\n");
+    fflush(stdout);
+
+    @autoreleasepool {
+        ZoomSDKMeetingService* meetingSvc = [[ZoomSDK sharedSDK] getMeetingService];
+        if (meetingSvc) {
+            ZoomSDKMeetingRecordController* recCtrl = [meetingSvc getRecordController];
+            if (recCtrl) {
+                ZoomSDKError err = [recCtrl startRawRecording];
+                printf("[ZoomNative] StartRawRecording after permission: result=%d\n", (int)err);
+                fflush(stdout);
+                if (err == ZoomSDKError_Success) {
+                    g_macRawRecordingStarted = true;
+                    StartRawDataCapture();
+                }
+            }
+        }
+    }
+}
+
+void ZoomAddon::OnRawRecordingStarted() {
+    g_macRawRecordingStarted = true;
+
+    if (eventCallback_) {
+        eventCallback_.NonBlockingCall([](Napi::Env env, Napi::Function jsCallback) {
+            auto obj = Napi::Object::New(env);
+            obj.Set("type", Napi::String::New(env, "meeting-status"));
+            obj.Set("status", Napi::String::New(env, "RAW_RECORDING_STARTED"));
+            jsCallback.Call({ obj });
+        });
+    }
+
+    StartRawDataCapture();
+    EnumerateParticipants();
+}
+
+bool ZoomAddon::StartRawDataCapture() {
+    if (g_macRawDataActive) {
+        printf("[ZoomNative] StartRawDataCapture: already active\n");
+        fflush(stdout);
+        return true;
+    }
+
+    if (!g_macRawRecordingStarted) {
+        printf("[ZoomNative] StartRawDataCapture: raw recording not started yet — deferring\n");
+        fflush(stdout);
+        return false;
+    }
+
+    printf("[ZoomNative] StartRawDataCapture: attempting audio subscribe + video renderers\n");
+    fflush(stdout);
+
+    @autoreleasepool {
+        ZoomSDKMeetingService* meetingSvc = [[ZoomSDK sharedSDK] getMeetingService];
+        if (meetingSvc) {
+            ZoomSDKMeetingActionController* actionCtrl = [meetingSvc getMeetingActionController];
+            if (actionCtrl) {
+                [actionCtrl actionMeetingWithCmd:ActionMeetingCmd_JoinVoip userID:0 onScreen:ScreenType_First];
+                printf("[ZoomNative] StartRawDataCapture: JoinVoip sent\n");
+                fflush(stdout);
+            }
+        }
+
+        ZoomSDKRawDataController* rawCtrl = [[ZoomSDK sharedSDK] getRawDataController];
+        if (rawCtrl) {
+            ZoomSDKAudioRawDataHelper* audioHelper = nil;
+            ZoomSDKError audioErr = [rawCtrl getAudioRawDataHelper:&audioHelper];
+            if (audioErr == ZoomSDKError_Success && audioHelper) {
+                g_macAudioDelegate = [[AudioRawDataDelegateImpl alloc] init];
+                audioHelper.delegate = g_macAudioDelegate;
+                ZoomSDKError subErr = [audioHelper subscribe];
+                printf("[ZoomNative] StartRawDataCapture: audio subscribe result=%d\n", (int)subErr);
+                fflush(stdout);
+                if (subErr == ZoomSDKError_Success) {
+                    g_macAudioHelper = audioHelper;
+                    printf("[ZoomNative] StartRawDataCapture: audio subscribe SUCCESS\n");
+                    fflush(stdout);
+                } else {
+                    printf("[ZoomNative] StartRawDataCapture: audio subscribe FAILED (err=%d)\n", (int)subErr);
+                    fflush(stdout);
+                    g_macAudioDelegate = nil;
+                }
+            } else {
+                printf("[ZoomNative] StartRawDataCapture: getAudioRawDataHelper failed (err=%d)\n", (int)audioErr);
+                fflush(stdout);
+            }
+        }
+    }
+
+    g_macRawDataActive = true;
+
+    std::vector<uint32_t> toSubscribe;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        for (const auto& [userId, info] : participants_) {
+            if (userId == selfUserId_) continue;
+            toSubscribe.push_back(userId);
+        }
+    }
+    for (auto uid : toSubscribe) {
+        printf("[ZoomNative] StartRawDataCapture: subscribing existing participant userId=%u\n", uid);
+        fflush(stdout);
+        macSubscribeUserVideo(uid);
+    }
+    printf("[ZoomNative] StartRawDataCapture: subscribed %zu existing participants\n", toSubscribe.size());
+    fflush(stdout);
+
+    return true;
+}
+
+void ZoomAddon::RetryVideoSubscriptions() {
+    if (!g_macRawRecordingStarted) {
+        printf("[ZoomNative] RetryVideoSubscriptions: raw recording not started, trying StartRawRecording\n");
+        fflush(stdout);
+        StartRawRecording();
+        return;
+    }
+
+    if (!g_macRawDataActive) {
+        printf("[ZoomNative] RetryVideoSubscriptions: raw data not active, trying StartRawDataCapture\n");
+        fflush(stdout);
+        StartRawDataCapture();
+        if (!g_macRawDataActive) return;
+    }
+
+    std::set<uint32_t> pending;
+    {
+        std::lock_guard<std::mutex> lock(g_macVideoMutex);
+        pending = g_macVideoPendingResubscribe;
+        g_macVideoPendingResubscribe.clear();
+    }
+    for (auto uid : pending) {
+        printf("[ZoomNative] RetryVideoSubscriptions: processing pending resubscribe for userId=%u\n", uid);
+        fflush(stdout);
+        macSubscribeUserVideo(uid);
+    }
+
+    std::lock_guard<std::mutex> lock(mutex_);
+    int needSub = 0;
+    for (const auto& [userId, info] : participants_) {
+        if (userId == selfUserId_) continue;
+        bool isSubscribedOK = false;
+        {
+            std::lock_guard<std::mutex> vlock(g_macVideoMutex);
+            isSubscribedOK = g_macVideoSubscribedOK.count(userId) > 0;
+        }
+        if (isSubscribedOK) continue;
+        if (macIsUserVideoOn(userId)) {
+            needSub++;
+            printf("[ZoomNative] RetryVideoSubscriptions: userId=%u video ON but not subscribed — subscribing\n", userId);
+            fflush(stdout);
+            macSubscribeUserVideo(userId);
+        }
+    }
+    printf("[ZoomNative] RetryVideoSubscriptions: %zu participants, %d needed retry, %zu already OK\n",
+           participants_.size(), needSub, g_macVideoSubscribedOK.size());
+    fflush(stdout);
+
+    if (!g_macAudioHelper) {
+        @autoreleasepool {
+            ZoomSDKRawDataController* rawCtrl = [[ZoomSDK sharedSDK] getRawDataController];
+            if (rawCtrl) {
+                ZoomSDKAudioRawDataHelper* audioHelper = nil;
+                ZoomSDKError audioErr = [rawCtrl getAudioRawDataHelper:&audioHelper];
+                if (audioErr == ZoomSDKError_Success && audioHelper) {
+                    g_macAudioDelegate = [[AudioRawDataDelegateImpl alloc] init];
+                    audioHelper.delegate = g_macAudioDelegate;
+                    ZoomSDKError subErr = [audioHelper subscribe];
+                    if (subErr == ZoomSDKError_Success) {
+                        g_macAudioHelper = audioHelper;
+                        printf("[ZoomNative] RetryVideoSubscriptions: audio subscribe SUCCESS\n");
+                        fflush(stdout);
+                    } else {
+                        printf("[ZoomNative] RetryVideoSubscriptions: audio subscribe FAILED (err=%d)\n", (int)subErr);
+                        fflush(stdout);
+                        g_macAudioDelegate = nil;
+                    }
+                }
+            }
+        }
+    }
+}
+
+void ZoomAddon::SubscribeParticipantVideo(uint32_t userId) {
+    if (userId == selfUserId_) {
+        printf("[ZoomNative] SubscribeParticipantVideo: userId=%u is SELF — skipping\n", userId);
+        fflush(stdout);
+        return;
+    }
+    if (g_macRawDataActive) {
+        macSubscribeUserVideo(userId);
+    }
+}
+
+void ZoomAddon::UnsubscribeParticipantVideo(uint32_t userId) {
+    macUnsubscribeUserVideo(userId);
+}
+
+void ZoomAddon::StopRawDataCapture() {
+    macUnsubscribeAllVideo();
+
+    @autoreleasepool {
+        if (g_macAudioHelper) {
+            [g_macAudioHelper unSubscribe];
+            g_macAudioHelper = nil;
+        }
+        g_macAudioDelegate = nil;
+
+        if (g_macRawRecordingStarted) {
+            ZoomSDKMeetingService* meetingSvc = [[ZoomSDK sharedSDK] getMeetingService];
+            if (meetingSvc) {
+                ZoomSDKMeetingRecordController* recCtrl = [meetingSvc getRecordController];
+                if (recCtrl) {
+                    [recCtrl stopRawRecording];
+                    printf("[ZoomNative] StopRawRecording called\n");
+                    fflush(stdout);
+                }
+            }
+        }
+        g_macRecordingDelegate = nil;
+    }
+
+    g_macRawDataActive = false;
+    g_macRawRecordingStarted = false;
 }
 
 #else

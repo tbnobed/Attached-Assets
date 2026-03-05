@@ -11,13 +11,15 @@
         "src/zoom_rawdata.cpp"
       ],
       "include_dirs": [
-        "<!@(node -p \"require('node-addon-api').include\")",
-        "<(module_root_dir)/sdk/h"
+        "<!@(node -p \"require('node-addon-api').include\")"
       ],
       "defines": ["NAPI_DISABLE_CPP_EXCEPTIONS"],
       "conditions": [
         ["OS=='win'", {
           "defines": ["WIN32"],
+          "include_dirs": [
+            "<(module_root_dir)/sdk/h"
+          ],
           "libraries": [
             "<(module_root_dir)/sdk/lib/sdk.lib"
           ],
@@ -35,35 +37,23 @@
             "GCC_ENABLE_CPP_EXCEPTIONS": "YES",
             "CLANG_CXX_LIBRARY": "libc++",
             "MACOSX_DEPLOYMENT_TARGET": "10.15",
-            "OTHER_CPLUSPLUSFLAGS": ["-std=c++17"],
+            "GCC_INPUT_FILETYPE": "sourcecode.cpp.objcpp",
+            "OTHER_CPLUSPLUSFLAGS": [
+              "-std=c++17",
+              "-fobjc-arc",
+              "-F<(module_root_dir)/sdk/lib"
+            ],
             "OTHER_LDFLAGS": [
+              "-F<(module_root_dir)/sdk/lib",
+              "-framework ZoomSDK",
               "-Wl,-rpath,@loader_path",
+              "-Wl,-rpath,@loader_path/../../sdk/lib",
               "-Wl,-rpath,@executable_path/../Frameworks"
+            ],
+            "FRAMEWORK_SEARCH_PATHS": [
+              "<(module_root_dir)/sdk/lib"
             ]
-          },
-          "libraries": [
-            "<(module_root_dir)/sdk/lib/libmeetingsdk.dylib"
-          ],
-          "copies": [
-            {
-              "destination": "<(module_root_dir)/build/Release",
-              "files": [
-                "<(module_root_dir)/sdk/lib/libmeetingsdk.dylib"
-              ]
-            }
-          ],
-          "postbuilds": [
-            {
-              "postbuild_name": "Fix dylib install_name",
-              "action": [
-                "install_name_tool",
-                "-change",
-                "/usr/local/lib/libmeetingsdk.dylib",
-                "@rpath/libmeetingsdk.dylib",
-                "${BUILT_PRODUCTS_DIR}/zoom_meeting_sdk.node"
-              ]
-            }
-          ]
+          }
         }]
       ]
     }

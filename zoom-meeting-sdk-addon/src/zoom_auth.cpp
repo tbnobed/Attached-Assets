@@ -138,54 +138,60 @@ void ZoomAddon::Cleanup() {
 
 #elif defined(__APPLE__)
 
-#include "zoom_sdk.h"
-#include "zoom_sdk_def.h"
-#include "auth_service_interface.h"
+#import <ZoomSDK/ZoomSDK.h>
 
-using namespace ZOOMSDK;
+@interface ZoomAuthDelegateImpl : NSObject <ZoomSDKAuthDelegate>
+@end
 
-class AuthServiceEventListener : public IAuthServiceEvent {
-public:
-    void onAuthenticationReturn(AuthResult ret) override {
-        if (ret == AUTHRET_SUCCESS) {
-            ZoomAddon::Instance().OnMeetingStatusChanged("AUTH_SUCCESS");
-        } else {
-            printf("[ZoomNative] Auth failed: result=%d\n", (int)ret);
-            fflush(stdout);
-            ZoomAddon::Instance().OnMeetingStatusChanged("AUTH_FAILED");
-        }
+@implementation ZoomAuthDelegateImpl
+
+- (void)onZoomSDKAuthReturn:(ZoomSDKAuthError)returnValue {
+    if (returnValue == ZoomSDKAuthError_Success) {
+        printf("[ZoomNative] Auth SUCCESS\n");
+        fflush(stdout);
+        ZoomAddon::Instance().OnMeetingStatusChanged("AUTH_SUCCESS");
+    } else {
+        printf("[ZoomNative] Auth FAILED: result=%d\n", (int)returnValue);
+        fflush(stdout);
+        ZoomAddon::Instance().OnMeetingStatusChanged("AUTH_FAILED");
     }
+}
 
-    void onLoginReturnWithReason(LOGINSTATUS ret, IAccountInfo* pAccountInfo, LoginFailReason reason) override {}
-    void onLogout() override {}
-    void onZoomIdentityExpired() override {}
-    void onZoomAuthIdentityExpired() override {}
-    void onNotificationServiceStatus(SDKNotificationServiceStatus status, SDKNotificationServiceError error) override {}
-};
+- (void)onZoomAuthIdentityExpired {
+    printf("[ZoomNative] Auth identity expired\n");
+    fflush(stdout);
+}
 
-static AuthServiceEventListener* g_authListener = nullptr;
-static IAuthService* g_authService = nullptr;
+@end
+
+static ZoomAuthDelegateImpl* g_authDelegate = nil;
 
 bool ZoomAddon::Initialize(const ZoomConfig& config) {
     config_ = config;
 
-    InitParam initParam;
-    memset(&initParam, 0, sizeof(initParam));
-    initParam.strWebDomain = "https://zoom.us";
-    initParam.enableLogByDefault = true;
+    @autoreleasepool {
+        ZoomSDK* sdk = [ZoomSDK sharedSDK];
+        sdk.videoRawDataMode = ZoomSDKRawDataMemoryMode_Heap;
+        sdk.audioRawDataMode = ZoomSDKRawDataMemoryMode_Heap;
+        sdk.shareRawDataMode = ZoomSDKRawDataMemoryMode_Heap;
+        sdk.enableRawdataIntermediateMode = NO;
 
-    initParam.rawdataOpts.enableRawdataIntermediateMode = false;
+        ZoomSDKInitParams* params = [[ZoomSDKInitParams alloc] init];
+        params.zoomDomain = @"zoom.us";
+        params.enableLog = YES;
+        params.needCustomizedUI = YES;
 
-    printf("[ZoomNative] Initializing macOS SDK (rawdata intermediate mode DISABLED)\n");
-    fflush(stdout);
+        printf("[ZoomNative] Initializing macOS SDK (customUI=YES, rawdata heap mode)\n");
+        fflush(stdout);
 
-    SDKError err = InitSDK(initParam);
-    printf("[ZoomNative] InitSDK result=%d\n", (int)err);
-    fflush(stdout);
+        ZoomSDKError err = [sdk initSDKWithParams:params];
+        printf("[ZoomNative] InitSDK result=%d\n", (int)err);
+        fflush(stdout);
 
-    if (err != SDKERR_SUCCESS) {
-        state_ = AddonState::Error;
-        return false;
+        if (err != ZoomSDKError_Success) {
+            state_ = AddonState::Error;
+            return false;
+        }
     }
 
     state_ = AddonState::Initialized;
@@ -195,25 +201,29 @@ bool ZoomAddon::Initialize(const ZoomConfig& config) {
 bool ZoomAddon::Authenticate() {
     if (state_ != AddonState::Initialized) return false;
 
-    SDKError err = CreateAuthService(&g_authService);
-    if (err != SDKERR_SUCCESS || !g_authService) {
-        state_ = AddonState::Error;
-        return false;
-    }
+    @autoreleasepool {
+        ZoomSDKAuthService* authService = [[ZoomSDK sharedSDK] getAuthService];
+        if (!authService) {
+            printf("[ZoomNative] getAuthService returned nil\n");
+            fflush(stdout);
+            state_ = AddonState::Error;
+            return false;
+        }
 
-    g_authListener = new AuthServiceEventListener();
-    g_authService->SetEvent(g_authListener);
+        g_authDelegate = [[ZoomAuthDelegateImpl alloc] init];
+        authService.delegate = g_authDelegate;
 
-    AuthContext authCtx;
-    authCtx.jwt_token = config_.jwtToken.c_str();
+        ZoomSDKAuthContext* ctx = [[ZoomSDKAuthContext alloc] init];
+        ctx.jwtToken = [NSString stringWithUTF8String:config_.jwtToken.c_str()];
 
-    err = g_authService->SDKAuth(authCtx);
-    printf("[ZoomNative] SDKAuth result=%d\n", (int)err);
-    fflush(stdout);
+        ZoomSDKError err = [authService sdkAuth:ctx];
+        printf("[ZoomNative] SDKAuth result=%d\n", (int)err);
+        fflush(stdout);
 
-    if (err != SDKERR_SUCCESS) {
-        state_ = AddonState::Error;
-        return false;
+        if (err != ZoomSDKError_Success) {
+            state_ = AddonState::Error;
+            return false;
+        }
     }
 
     return true;
@@ -222,17 +232,11 @@ bool ZoomAddon::Authenticate() {
 void ZoomAddon::Cleanup() {
     StopRawDataCapture();
 
-    if (g_authService) {
-        DestroyAuthService(g_authService);
-        g_authService = nullptr;
-    }
-    if (g_authListener) {
-        delete g_authListener;
-        g_authListener = nullptr;
+    @autoreleasepool {
+        [[ZoomSDK sharedSDK] unInitSDK];
     }
 
-    ZOOMSDK::CleanUPSDK();
-
+    g_authDelegate = nil;
     state_ = AddonState::Uninitialized;
     participants_.clear();
 }

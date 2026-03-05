@@ -8,7 +8,7 @@ Electron desktop application for capturing isolated video/audio feeds from Zoom 
 - **Main Process** (`src/main/`): Session management, NDI output, FFmpeg recording, IPC handlers
 - **Renderer** (`src/renderer/`): Dashboard UI with participant grid, meeting join controls, activity log
 - **Zoom Integration** (`src/zoom/`): Session manager wrapping the native Meeting SDK addon, stream handler, JWT generator
-- **Native Addon** (`zoom-meeting-sdk-addon/`): C++ N-API wrapper around the Zoom Meeting SDK, providing raw data callbacks (video I420, audio PCM) per participant. Supports both macOS and Windows via platform-specific `#ifdef` blocks
+- **Native Addon** (`zoom-meeting-sdk-addon/`): C++/ObjC++ N-API wrapper around the Zoom Meeting SDK. macOS uses Objective-C ZoomSDK.framework API; Windows uses C++ zoom_sdk API. Both provide raw data callbacks (video I420, audio PCM) per participant via ThreadSafeFunction
 - **NDI** (`src/ndi/`): NDI source management via grandiose (graceful fallback if unavailable)
 - **Recorder** (`src/recorder/`): FFmpeg-based per-participant MP4 recording
 - **Config** (`src/config/`): Settings loader from environment variables
@@ -25,27 +25,38 @@ Electron desktop application for capturing isolated video/audio feeds from Zoom 
 - `src/ndi/ndi-manager.js` - NDI source creation/destruction
 - `src/recorder/recorder-manager.js` - FFmpeg spawn and pipe management
 - `src/config/settings.js` - Environment variable loader
-- `zoom-meeting-sdk-addon/index.js` - JS bridge for the native C++ addon (handles DLL/dylib paths per platform)
-- `zoom-meeting-sdk-addon/src/zoom_addon.cpp` - N-API entry point
+- `zoom-meeting-sdk-addon/index.js` - JS bridge for the native addon (handles DLL/dylib/framework paths per platform)
+- `zoom-meeting-sdk-addon/src/zoom_addon.cpp` - N-API entry point (platform-independent callbacks, participant tracking)
 - `zoom-meeting-sdk-addon/src/zoom_addon.h` - Shared header (ZoomAddon singleton, structs, enums)
-- `zoom-meeting-sdk-addon/src/zoom_auth.cpp` - SDK init/auth (JWT-based, platform-specific)
-- `zoom-meeting-sdk-addon/src/zoom_meeting.cpp` - Meeting join/leave, participant events (platform-specific string handling)
-- `zoom-meeting-sdk-addon/src/zoom_rawdata.cpp` - Raw data capture (I420->RGBA video, PCM audio) — shared between macOS and Windows
-- `zoom-meeting-sdk-addon/binding.gyp` - Build config for node-gyp (macOS dylib / Windows lib+dll)
-- `scripts/install-zoom-sdk.js` - Copies SDK files from download to addon directory (platform-aware, fixes dylib install_name on macOS)
+- `zoom-meeting-sdk-addon/src/zoom_auth.cpp` - SDK init/auth: macOS uses ZoomSDKAuthService/ZoomSDKAuthDelegate (ObjC), Windows uses IAuthService (C++)
+- `zoom-meeting-sdk-addon/src/zoom_meeting.cpp` - Meeting join/leave/participants: macOS uses ZoomSDKMeetingService/ZoomSDKMeetingActionController (ObjC), Windows uses IMeetingService (C++)
+- `zoom-meeting-sdk-addon/src/zoom_rawdata.cpp` - Raw data capture: macOS uses ZoomSDKRenderer/ZoomSDKRendererDelegate/ZoomSDKAudioRawDataHelper (ObjC), Windows uses IZoomSDKRenderer/IZoomSDKAudioRawDataDelegate (C++)
+- `zoom-meeting-sdk-addon/binding.gyp` - Build config: macOS links ZoomSDK.framework with ObjC++ compilation; Windows links sdk.lib+dll
+- `scripts/install-zoom-sdk.js` - Copies SDK files: macOS copies entire ZoomSDK.framework + companion frameworks/dylibs; Windows copies h/lib/bin dirs
 
 ## Platform Support
 
-### macOS (Primary)
-- SDK uses `const char*` (UTF-8) for all string types (`zchar_t`)
-- No HWND or Windows API dependencies
-- `InitParam` only needs `strWebDomain` and `enableLogByDefault`
-- `JoinParam4WithoutLogin` uses `const char*` for `userName`, `psw`, `app_privilege_token`
-- Meeting number parsed via `std::stoll()` instead of `_wtoi64()`
-- SDK binary: `libmeetingsdk.dylib` in `sdk/lib/`
-- DYLD_LIBRARY_PATH set automatically by `index.js`
+### macOS (Primary) — Objective-C Framework API
+- SDK: `ZoomSDK.framework` (Objective-C, NOT C++)
+- All SDK classes are ObjC: `ZoomSDKAuthService`, `ZoomSDKMeetingService`, `ZoomSDKRenderer`, etc.
+- Delegates: `ZoomSDKAuthDelegate`, `ZoomSDKMeetingServiceDelegate`, `ZoomSDKMeetingActionControllerDelegate`, `ZoomSDKRendererDelegate`, `ZoomSDKAudioRawDataDelegate`, `ZoomSDKMeetingRecordDelegate`
+- Compiled as Objective-C++ via `GCC_INPUT_FILETYPE: sourcecode.cpp.objcpp` in binding.gyp
+- ARC enabled via `-fobjc-arc`
+- Framework search path: `-F<addon>/sdk/lib`
+- Runtime: `DYLD_FRAMEWORK_PATH` set by index.js
+- SDK path: `/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDK/`
+- Init: `[[ZoomSDK sharedSDK] initSDKWithParams:]` with `needCustomizedUI=YES`, heap raw data modes
+- Auth: `ZoomSDKAuthContext.jwtToken` + `[authService sdkAuth:]`
+- Join: `ZoomSDKJoinMeetingElements` with `isNoVideo=YES`, `isNoAudio=YES`, `isMyVoiceInMix=NO`, `audioRawdataSamplingRate=48K`
+- Self detection: `[[actionCtrl getMyself] getUserID]`
+- Participants: `[actionCtrl getParticipantsList]` returns NSArray of NSNumbers
+- Video: `[rawCtrl createRender:&renderer]` → `renderer.delegate` → `[renderer subscribe:userId rawDataType:ZoomSDKRawDataType_Video]`
+- Audio: `[rawCtrl getAudioRawDataHelper:&helper]` → `helper.delegate` → `[helper subscribe]`
+- Recording: `[[meetingSvc getRecordController] startRawRecording]`
+- Video frames: `ZoomSDKYUVRawDataI420` → getYBuffer/getUBuffer/getVBuffer → YUV→BGRA
+- Audio frames: `ZoomSDKAudioRawData` → getBuffer/getBufferLen/getSampleRate/getChannelNum
 
-### Windows (Legacy)
+### Windows (Legacy) — C++ API
 - SDK uses `const wchar_t*` for string types
 - Requires hidden HWND for SDK initialization
 - `InitParam` needs `hResInstance = GetModuleHandle(nullptr)`
@@ -54,17 +65,18 @@ Electron desktop application for capturing isolated video/audio feeds from Zoom 
 
 ## Data Flow
 1. Native addon joins Zoom meeting, MEETING_STATUS_INMEETING fires
-2. C++ calls StartRawRecording() on IMeetingRecordingController — if bot isn't host, requests recording privilege
-3. onRecordingStatus(Recording_Start) callback fires -> OnRawRecordingStarted() -> StartRawDataCapture()
-4. StartRawDataCapture subscribes audio (GetAudioRawdataHelper) + creates IZoomSDKRenderer per existing participant
-5. C++ actively enumerates participants via GetParticipantsList() + onUserJoin callback (dual approach)
-6. JS bridge polls enumerateParticipants() at 0.5s, 2s, 5s, 10s after joining for reliability
-7. RetryVideoSubscriptions at 3s/8s/15s cascades: StartRawRecording -> StartRawDataCapture -> subscribe missing
-8. Per-participant I420 video frames -> converted to RGBA in C++ -> sent via ThreadSafeFunction to JS
-9. Per-participant PCM audio -> sent via ThreadSafeFunction to JS
-10. SessionManager receives frames -> routes to StreamHandler
-11. StreamHandler emits video-frame/audio-data events
-12. main.js routes to NDIManager (RGBA frames -> NDI sources) and RecorderManager (FFmpeg pipes)
+2. Calls StartRawRecording() — macOS: `[recCtrl startRawRecording]`; Windows: `recCtrl->StartRawRecording()`
+3. If bot isn't host, requests recording privilege and waits for grant callback
+4. Recording status callback fires → OnRawRecordingStarted() → StartRawDataCapture()
+5. StartRawDataCapture subscribes audio + creates per-user video renderers
+6. Participant enumeration via SDK list + delegate callbacks (dual approach)
+7. JS bridge polls enumerateParticipants() at 0.5s, 2s, 5s, 10s after joining
+8. RetryVideoSubscriptions at 3s/8s/15s cascades: StartRawRecording → StartRawDataCapture → subscribe missing
+9. Per-participant I420 video frames → converted to BGRA in C++/ObjC++ → sent via ThreadSafeFunction to JS
+10. Per-participant PCM audio → sent via ThreadSafeFunction to JS
+11. SessionManager receives frames → routes to StreamHandler
+12. StreamHandler emits video-frame/audio-data events
+13. main.js routes to NDIManager (BGRA frames → NDI sources) and RecorderManager (FFmpeg pipes)
 
 ## Dependencies
 - electron - Desktop app framework
@@ -85,7 +97,7 @@ Electron desktop application for capturing isolated video/audio feeds from Zoom 
 ```bash
 npm install
 cd zoom-meeting-sdk-addon && npm install && cd ..
-node scripts/install-zoom-sdk.js ~/Downloads/zoom-meeting-sdk-mac-6.x.x
+node scripts/install-zoom-sdk.js /Users/debo/Documents/zoom-sdk-macos-6.7.6.75900
 cd zoom-meeting-sdk-addon && npx node-gyp rebuild && cd ..
 ```
 
@@ -101,11 +113,11 @@ cd zoom-meeting-sdk-addon && npx node-gyp rebuild
 ```
 
 ## Zoom SDK Notes
-- Raw data requires `StartRawRecording()` on IMeetingRecordingController BEFORE createRenderer/audio subscribe
-- InitParam.rawdataOpts.enableRawdataIntermediateMode MUST be false — true produces empty frames
-- Bot's own userId (selfUserId_) is detected via GetMySelfUser() at INMEETING and excluded from video subscriptions
-- CRITICAL ORDERING: EnumerateParticipants MUST run inside OnRawRecordingStarted (after onRecordingStatus(Recording_Start) callback), NOT at MEETING_STATUS_INMEETING
-- On Video_ON: if already subscribed with RawData_On fired, keep working renderer. If subscribed but RawData_On never fired (stuck), destroy+recreate
+- Raw data requires StartRawRecording() BEFORE createRenderer/audio subscribe
+- macOS: `enableRawdataIntermediateMode = NO` on ZoomSDK sharedSDK
+- Windows: `InitParam.rawdataOpts.enableRawdataIntermediateMode = false`
+- Bot's own userId (selfUserId_) detected via getMyself/GetMySelfUser at INMEETING, excluded from video subscriptions
+- CRITICAL ORDERING: EnumerateParticipants MUST run inside OnRawRecordingStarted, NOT at MEETING_STATUS_INMEETING
 - RetryVideoSubscriptions detects stuck renderers and recreates them
-- If bot lacks recording permission, call `RequestLocalRecordingPrivilege()` and wait for `onRecordPrivilegeChanged(true)`
-- `onRecordingStatus(Recording_Start)` is the gate signal: only after this can renderers and audio subscriptions succeed
+- If bot lacks recording permission, request privilege and wait for grant callback
+- `onRecordingStatus(Recording_Start)` / `onLocalRecordStatus:ZoomSDKRecordingStatus_Start` is the gate signal for raw data
