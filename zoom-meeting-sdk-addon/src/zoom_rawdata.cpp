@@ -427,9 +427,8 @@ bool ZoomAddon::StartRawRecording() {
     fflush(stdout);
 
     if (err == SDKERR_SUCCESS) {
-        printf("[ZoomNative] StartRawRecording succeeded — activating raw data capture\n");
+        printf("[ZoomNative] StartRawRecording succeeded — waiting for onRecordingStatus(Recording_Start) callback\n");
         fflush(stdout);
-        OnRawRecordingStarted();
         return true;
     }
 
@@ -488,6 +487,7 @@ void ZoomAddon::OnRawRecordingStarted() {
     }
 
     StartRawDataCapture();
+    EnumerateParticipants();
 }
 
 bool ZoomAddon::StartRawDataCapture() {
