@@ -132,6 +132,10 @@ public:
         printf("[ZoomNative] onRawDataStatusChanged: userId=%u status=%s\n", userId_, statusName);
         fflush(stdout);
 
+        if (status == RawData_Off) {
+            subscribed_ = false;
+        }
+
         if (status == RawData_On && !subscribed_) {
             subscribed_ = true;
             printf("[ZoomNative] onRawDataStatusChanged: userId=%u video is ON — marking pending resubscribe\n", userId_);
@@ -312,12 +316,21 @@ public:
         printf("[ZoomNative] onUserVideoStatusChange: userId=%u status=%s\n", userId, statusName);
         fflush(stdout);
 
+        if (status == Video_OFF) {
+            std::lock_guard<std::mutex> lock(g_videoMutex);
+            g_videoSubscribedOK.erase(userId);
+            printf("[ZoomNative] onUserVideoStatusChange: userId=%u video OFF — cleared subscription OK state\n", userId);
+            fflush(stdout);
+        }
+
         if (status == Video_ON && g_rawDataActive) {
-            if (!g_videoSubscribedOK.count(userId)) {
-                printf("[ZoomNative] onUserVideoStatusChange: userId=%u video ON — subscribing\n", userId);
-                fflush(stdout);
-                subscribeUserVideo(userId);
+            {
+                std::lock_guard<std::mutex> lock(g_videoMutex);
+                g_videoSubscribedOK.erase(userId);
             }
+            printf("[ZoomNative] onUserVideoStatusChange: userId=%u video ON — (re)subscribing\n", userId);
+            fflush(stdout);
+            subscribeUserVideo(userId);
         }
     }
     void onSpotlightedUserListChangeNotification(IList<unsigned int>* lstSpotlightedUserID) override {}
