@@ -1,0 +1,102 @@
+debo@LLM-Studio-1 Attached-Assets % node scripts/install-zoom-sdk.js /Users/debo/Documents/zoom-sdk-macos-6.7.6.75900
+=== Installing Zoom Meeting SDK (darwin) ===
+
+Source: /Users/debo/Documents/zoom-sdk-macos-6.7.6.75900
+
+Found SDK at: /Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDK
+Found framework: /Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDK/ZoomSDK.framework
+
+  Copying bundle: AnnoUI.bundle
+  Copying app: CptHost.app
+  Copying framework: Lottie.framework
+  Copying framework: PTUIBridge.framework
+  Copying framework: Prism.framework
+  Copying bundle: RingtoneRes.bundle
+  Copying app: SDK_Transcode.app
+  Copying framework: ZMDB.framework
+  Copying app: ZMScreenshot.app
+  Copying framework: ZMScreenshotKit.framework
+  Copying framework: ZoomAIC.framework
+  Copying framework: ZoomAppUISDK.framework
+  Copying framework: ZoomKit.framework
+  Copying framework: ZoomMeetingBridge.framework
+  Copying framework: ZoomSDK.framework
+  Copying bundle: ZoomSDKChatUI.bundle
+  Copying framework: ZoomSDKCustomVideoUI.framework
+  Copying bundle: ZoomSDKVideoUI.bundle
+  Copying framework: ZoomSetting.framework
+  Copying framework: ZoomTask.framework
+  Copying bundle: ZoomTelemetry.bundle
+  Copying framework: ZoomUnit.framework
+  Copying app: airhost.app
+  Copying bundle: annoter.bundle
+  Copying bundle: aomagent.bundle
+  Copying app: aomhost.app
+  Copying framework: asproxy.framework
+  Copying app: capHost.app
+  Copying framework: cmmbiz.framework
+  Copying framework: cmmlib.framework
+  Copying framework: curl64.framework
+  Copying dylib: libcares.dylib
+  Copying dylib: libcrypto.dylib
+  Copying dylib: libjson.dylib
+  Copying dylib: liblooper.dylib
+  Copying dylib: libminizip.dylib
+  Copying bundle: libmpg123_mac.bundle
+  Copying dylib: libssl.dylib
+  Copying dylib: libzContext.dylib
+  Copying dylib: libzoombase_crypto_shared.dylib
+  Copying bundle: mcm.bundle
+  Copying framework: nydus.framework
+  Copying framework: protobuf.framework
+  Copying bundle: ssb_sdk.bundle
+  Copying framework: tp.framework
+  Copying framework: util.framework
+  Copying framework: viper.framework
+  Copying bundle: viperex.bundle
+  Copying framework: xmpp_framework.framework
+  Copying bundle: zApp.bundle
+  Copying bundle: zAppUI.bundle
+  Copying framework: zBusinessUIComponent.framework
+  Copying framework: zChatComponent.framework
+  Copying bundle: zData.bundle
+  Copying framework: zEventTracker.framework
+  Copying bundle: zKBCrypto.bundle
+  Copying bundle: zMacRes.bundle
+  Copying bundle: zMacResRetina.bundle
+  Copying framework: zMsgAppCommon.framework
+  Copying bundle: zNet.bundle
+  Copying framework: zNetUtils.framework
+  Copying bundle: zPSApp.bundle
+  Copying bundle: zPTApp.bundle
+  Copying bundle: zPTKBCrypto.bundle
+  Copying bundle: zTelemetryBiz.bundle
+  Copying framework: zUI.framework
+  Copying framework: zUIClient.framework
+  Copying framework: zUnifyWebView.framework
+  Copying bundle: zUnifyWebViewInterceptor.bundle
+  Copying bundle: zVideoApp.bundle
+  Copying framework: zVideoUIBridge.framework
+  Copying bundle: zVideoUIEx.bundle
+  Copying bundle: zWebService.bundle
+  Copying dylib: zbt.dylib
+  Copying bundle: zlt.bundle
+  Copying bundle: zmLoader.bundle
+  Copying bundle: zm_conf_universal_ui.bundle
+  Copying bundle: zmb.bundle
+
+Copied: 33 frameworks, 9 dylibs, 30 bundles, 6 apps
+
+SDK headers: 53 .h files in ZoomSDK.framework/Headers
+
+=== SDK installed successfully ===
+Location: /Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk
+
+Next step: rebuild the addon:
+  npm run build-addon
+debo@LLM-Studio-1 Attached-Assets % cd zoom-meeting-sdk-addon && npx node-gyp rebuild && cd ..
+npm error code UNABLE_TO_GET_ISSUER_CERT_LOCALLY
+npm error errno UNABLE_TO_GET_ISSUER_CERT_LOCALLY
+npm error request to https://registry.npmjs.org/node-gyp failed, reason: unable to get local issuer certificate
+npm error A complete log of this run can be found in: /Users/debo/.npm/_logs/2026-03-05T19_48_27_605Z-debug-0.log
+debo@LLM-Studio-1 zoom-meeting-sdk-addon % 
