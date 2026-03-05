@@ -203,6 +203,8 @@ bool ZoomAddon::Authenticate() {
     if (state_ != AddonState::Initialized) return false;
 
     @autoreleasepool {
+        g_authDelegate = [[ZoomAuthDelegateImpl alloc] init];
+
         ZoomSDKAuthService* authService = [[ZoomSDK sharedSDK] getAuthService];
         if (!authService) {
             printf("[ZoomNative] getAuthService returned nil\n");
@@ -210,8 +212,6 @@ bool ZoomAddon::Authenticate() {
             state_ = AddonState::Error;
             return false;
         }
-
-        g_authDelegate = [[ZoomAuthDelegateImpl alloc] init];
         authService.delegate = g_authDelegate;
 
         NSString* jwtNS = [NSString stringWithUTF8String:config_.jwtToken.c_str()];
@@ -225,31 +225,54 @@ bool ZoomAddon::Authenticate() {
             return false;
         }
 
-        ZoomSDKAuthContext* ctx = [[ZoomSDKAuthContext alloc] init];
-        ctx.jwtToken = jwtNS;
-
-        ZoomSDKError err = [authService sdkAuth:ctx];
-        printf("[ZoomNative] SDKAuth result=%d (0=Success, 1=Failed)\n", (int)err);
+        NSString* bundleId = [[NSBundle mainBundle] bundleIdentifier];
+        printf("[ZoomNative] Bundle ID: %s\n", bundleId ? [bundleId UTF8String] : "(null)");
         fflush(stdout);
 
-        if (err != ZoomSDKError_Success) {
-            printf("[ZoomNative] Auth call failed — will retry in 1s\n");
-            fflush(stdout);
+        printf("[ZoomNative] Deferring auth by 2s to allow SDK internal init to complete...\n");
+        fflush(stdout);
 
-            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-                @autoreleasepool {
-                    ZoomSDKAuthService* svc = [[ZoomSDK sharedSDK] getAuthService];
-                    if (!svc) return;
-                    svc.delegate = g_authDelegate;
-                    ZoomSDKAuthContext* ctx2 = [[ZoomSDKAuthContext alloc] init];
-                    ctx2.jwtToken = jwtNS;
-                    ZoomSDKError err2 = [svc sdkAuth:ctx2];
-                    printf("[ZoomNative] Retry SDKAuth result=%d\n", (int)err2);
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            @autoreleasepool {
+                printf("[ZoomNative] Deferred auth executing now...\n");
+                fflush(stdout);
+
+                ZoomSDKAuthService* svc = [[ZoomSDK sharedSDK] getAuthService];
+                if (!svc) {
+                    printf("[ZoomNative] getAuthService returned nil in deferred block\n");
                     fflush(stdout);
+                    return;
                 }
-            });
-            return true;
-        }
+                svc.delegate = g_authDelegate;
+
+                ZoomSDKAuthContext* ctx = [[ZoomSDKAuthContext alloc] init];
+                ctx.jwtToken = jwtNS;
+
+                ZoomSDKError err = [svc sdkAuth:ctx];
+                printf("[ZoomNative] Deferred SDKAuth result=%d (0=Success)\n", (int)err);
+                fflush(stdout);
+
+                if (err != ZoomSDKError_Success) {
+                    printf("[ZoomNative] Deferred auth failed, retrying in 3s...\n");
+                    fflush(stdout);
+
+                    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                        @autoreleasepool {
+                            ZoomSDKAuthService* svc2 = [[ZoomSDK sharedSDK] getAuthService];
+                            if (!svc2) return;
+                            svc2.delegate = g_authDelegate;
+
+                            ZoomSDKAuthContext* ctx2 = [[ZoomSDKAuthContext alloc] init];
+                            ctx2.jwtToken = jwtNS;
+
+                            ZoomSDKError err2 = [svc2 sdkAuth:ctx2];
+                            printf("[ZoomNative] Retry SDKAuth (5s total) result=%d\n", (int)err2);
+                            fflush(stdout);
+                        }
+                    });
+                }
+            }
+        });
     }
 
     return true;
