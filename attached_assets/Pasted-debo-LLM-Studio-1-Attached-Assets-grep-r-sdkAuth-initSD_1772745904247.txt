@@ -1,0 +1,41 @@
+debo@LLM-Studio-1 Attached-Assets % grep -r "sdkAuth\|initSDK\|ZoomSDKAuth\|sharedSDK\|delegate" /Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample/ --include="*.m" --include="*.h" | grep -v ".xcodeproj" | head -40
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/ZMSDKChatWindowController.m:    self.chatContentTextField.delegate = self;
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/ZMSDKChatWindowController.m:    ZoomSDKMeetingService* meetingService = [[ZoomSDK sharedSDK] getMeetingService];
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/ZMSDKChatWindowController.m:    ZoomSDKMeetingChatController *chatController = [[[ZoomSDK sharedSDK] getMeetingService] getMeetingChatController];
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/ZMSDKChatWindowController.m:        chatController.delegate = self;
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/ZMSDKChatWindowController.m:    ZoomSDKMeetingChatController *chatController = [[[ZoomSDK sharedSDK] getMeetingService] getMeetingChatController];
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/SDKAppDelegate.m:#pragma mark - app delegate
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/SDKAppDelegate.m:    [[ZoomSDK sharedSDK] unInitSDK];
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/Init/ZMSDKInitHelper.m:+(void)initSDK:(BOOL)useCustomizedUI domain:(NSString*)domain
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/Init/ZMSDKInitHelper.m:        [[ZoomSDK sharedSDK] setAppLocale:ZoomSDKLocale_CN];
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/Init/ZMSDKInitHelper.m:        [[ZoomSDK sharedSDK] setAppLocale:ZoomSDKLocale_Def];*/
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/Init/ZMSDKInitHelper.m:    [[ZoomSDK sharedSDK] initSDKWithParams:params];
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/Init/ZMSDKInitHelper.h:+(void)initSDK:(BOOL)useCustomizedUI domain:(NSString*)domain;
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/ZMSDKMeetingStatusMgr.m:        _meetingService = [[ZoomSDK sharedSDK] getMeetingService];
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/ZMSDKMeetingStatusMgr.m:        _meetingService.delegate = self;
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/ZMSDKMeetingStatusMgr.m:        _meetingService.getWebinarController.delegate = self;
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/ZMSDKMeetingStatusMgr.m:        _meetingService.getMeetingActionController.delegate = self;
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/ZMSDKMeetingStatusMgr.m:        _meetingService.getRecordController.delegate = self;
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/ZMSDKMeetingStatusMgr.m:    _meetingService = [[ZoomSDK sharedSDK] getMeetingService];
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/ZMSDKMeetingStatusMgr.m:    _meetingService.delegate = nil;
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/ZMSDKMeetingStatusMgr.m:    _meetingService.getMeetingActionController.delegate = nil;
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/ZMSDKMeetingStatusMgr.m:    _meetingService.getWebinarController.delegate = nil;
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/ZMSDKMeetingStatusMgr.m:    _meetingService.getRecordController.delegate = nil;
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/ZMSDKMeetingStatusMgr.m:            ZoomSDKMeetingService* meetingService = [[ZoomSDK sharedSDK] getMeetingService];
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/ZMSDKUserHelper.m:        _meetingService = [[ZoomSDK sharedSDK] getMeetingService];
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/Auth/ZMSDKAuthHelper.m:        [[ZMSDKCommonHelper sharedInstance].delegateMgr addAuthDelegateListener:self];
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/Auth/ZMSDKAuthHelper.m:    [[ZMSDKCommonHelper sharedInstance].delegateMgr removeAuthDelegateListener:self];
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/Auth/ZMSDKAuthHelper.m:    ZoomSDKAuthContext *content = [[ZoomSDKAuthContext alloc] init];
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/Auth/ZMSDKAuthHelper.m:    return [[[ZoomSDK sharedSDK] getAuthService] sdkAuth:content];
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/Auth/ZMSDKAuthHelper.m:-(void)onZoomSDKAuthReturn:(ZoomSDKAuthError)returnValue
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/Auth/ZMSDKAuthHelper.m:    if(ZoomSDKAuthError_Success == returnValue)
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/Auth/ZMSDKAuthHelper.m:            case ZoomSDKAuthError_KeyOrSecretWrong:
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/Auth/ZMSDKAuthHelper.m:            case ZoomSDKAuthError_AccountNotSupport:
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/Auth/ZMSDKAuthHelper.m:            case ZoomSDKAuthError_AccountNotEnableSDK:
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/Auth/ZMSDKAuthHelper.m:            case ZoomSDKAuthError_Unknown:
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/Auth/ZMSDKAuthHelper.h:@interface ZMSDKAuthHelper : NSObject<ZoomSDKAuthDelegate>
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/Auth/ZMSDKAuthHelper.h:@property(nonatomic, weak,readwrite)ZoomSDKAuthService*  auth;
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/Auth/ZMSDKAuthHelper.h:- (void)onZoomSDKAuthReturn:(ZoomSDKAuthError)returnValue;
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/StartJoinMeeting/ZMSDKApiMeetingInterface.m:    ZoomSDKMeetingService* meetingService = [[ZoomSDK sharedSDK] getMeetingService];
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/StartJoinMeeting/ZMSDKApiMeetingInterface.m:    ZoomSDKMeetingService* meetingService = [[ZoomSDK sharedSDK] getMeetingService];
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/StartJoinMeeting/ZMSDKApiMeetingInterface.m:    ZoomSDKMeetingService* meetingService = [[ZoomSDK sharedSDK] getMeetingService];
