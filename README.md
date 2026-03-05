@@ -11,82 +11,115 @@ Professional broadcast-grade Electron application for capturing isolated video a
 - **Test Pattern Mode**: Generate placeholder NDI sources for infrastructure testing
 - **Broadcast-Style UI**: Dark, minimal dashboard with live thumbnails and controls
 
-## Prerequisites
+## Mac Studio Setup (Step by Step)
 
-- Node.js 20+
-- macOS 10.15+ (primary) or Windows 10+ (legacy)
-- Zoom Meeting SDK (download from https://marketplace.zoom.us/)
-- FFmpeg (for local recording): https://ffmpeg.org/download.html
-- NDI Tools (optional, for NDI output): https://ndi.video/tools/
-
-## Setup
-
-### 1. Install Dependencies
+### Step 1: Install Homebrew (if needed)
 
 ```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+### Step 2: Install System Dependencies
+
+```bash
+brew install node@20 python3 ffmpeg
+```
+
+Add Node to your PATH if needed:
+```bash
+echo 'export PATH="/opt/homebrew/opt/node@20/bin:$PATH"' >> ~/.zshrc
+source ~/.zshrc
+```
+
+Verify everything:
+```bash
+node --version       # 20+
+ffmpeg -version
+python3 --version
+xcode-select --install   # Xcode Command Line Tools (needed for native compilation)
+```
+
+### Step 3: Install Node Dependencies
+
+```bash
+cd /path/to/zoom-iso-capture
 npm install
 cd zoom-meeting-sdk-addon && npm install && cd ..
 ```
 
-### 2. Install Zoom Meeting SDK
+### Step 4: Install the Zoom Meeting SDK
 
-Download the macOS Meeting SDK from Zoom Marketplace, then:
+The install script auto-discovers headers and libraries inside the SDK folder:
 
 ```bash
-node scripts/install-zoom-sdk.js ~/Downloads/zoom-meeting-sdk-mac-6.x.x
+node scripts/install-zoom-sdk.js /Users/debo/Documents/zoom-sdk-macos-6.7.6.75900
 ```
 
-### 3. Build the Native Addon
+The script scans for `zoom_sdk.h` and `.dylib`/`.framework` files recursively, so it works regardless of the SDK's internal folder structure.
+
+### Step 5: Build the Native Addon
 
 ```bash
 npm run build-addon
 ```
 
-### 4. Configure Environment
+If successful, you'll see `zoom-meeting-sdk-addon/build/Release/zoom_meeting_sdk.node`.
 
-Create a `.env` file in the project root:
+### Step 6: NDI Support (Optional)
 
+NDI Tools for Mac installs `libndi.dylib` inside application bundles. To make it available for grandiose:
+
+```bash
+sudo mkdir -p /usr/local/lib
+sudo cp "/Library/CoreMediaIO/Plug-Ins/DAL/NDIVideoOut.plugin/Contents/Frameworks/libndi.dylib" /usr/local/lib/
+sudo mkdir -p /usr/local/include
 ```
-ZOOM_SDK_KEY=your_sdk_key_here
-ZOOM_SDK_SECRET=your_sdk_secret_here
-ZOOM_ACCOUNT_ID=your_account_id_here
-ZOOM_CLIENT_ID=your_client_id_here
-ZOOM_CLIENT_SECRET=your_client_secret_here
+
+Then install grandiose:
+```bash
+npm install grandiose
+```
+
+If grandiose won't compile, skip it — the app works without NDI. Recording still captures every participant to separate MP4 files.
+
+### Step 7: Configure Environment
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env`:
+```
+ZOOM_SDK_KEY=your_meeting_sdk_key
+ZOOM_SDK_SECRET=your_meeting_sdk_secret
+ZOOM_ACCOUNT_ID=your_account_id
+ZOOM_CLIENT_ID=your_client_id
+ZOOM_CLIENT_SECRET=your_client_secret
 DEFAULT_OUTPUT_DIR=./recordings
 ```
 
-Get your SDK Key and Secret from the Zoom Marketplace — create a "Meeting SDK" app type.
-
-### 5. Run
+### Step 8: Run
 
 ```bash
 npm start
 ```
 
-## Installing NDI Support (Optional)
+## Quick Reference
 
-```bash
-npm install grandiose
-```
+| Command | What it does |
+|---|---|
+| `npm start` | Launch the app |
+| `npm run build-addon` | Rebuild the native C++ addon |
+| `npm run install-sdk -- /path/to/sdk` | Install/update Zoom SDK files |
 
-If NDI support is not installed, the app still runs — recording and all other features work fine. NDI output will show as "Unavailable" in the dashboard.
+## Troubleshooting
 
-## Connecting OBS to NDI Sources
-
-1. Install NDI Tools from https://ndi.video/tools/
-2. Install the OBS NDI plugin (https://github.com/obs-ndi/obs-ndi/releases)
-3. Launch Zoom ISO Capture and join a meeting
-4. In OBS, click "+" under Sources, choose "NDI Source"
-5. Select the participant source (e.g., `ZoomISO_ISO1_Alice`)
-6. Each participant appears as a separate NDI source
-
-Hardware switchers on the same network will also see these sources automatically.
-
-## Testing Without a Zoom Meeting
-
-1. Click "Test Pattern" in the toolbar — creates 8 NDI sources with color bars
-2. Confirm you see them in OBS or your switcher
-3. Click "+ Participant" to add simulated participants for testing recording and UI
+- **"Native addon not available"** — Rebuild with `npm run build-addon` and check for compile errors.
+- **"dyld: Library not loaded"** — The dylib can't be found. Make sure `build/Release/libmeetingsdk.dylib` exists after building.
+- **FFmpeg not found** — Run `brew install ffmpeg` and verify with `which ffmpeg`.
+- **NDI unavailable** — Expected if grandiose isn't installed. Recording still works.
+- **Recording permission denied** — The bot needs the meeting host to grant local recording permission, or configure Server-to-Server OAuth credentials for auto-authorization.
+- **Xcode errors during build** — Run `xcode-select --install` to install Command Line Tools.
 
 ## Architecture
 
@@ -103,13 +136,5 @@ zoom-meeting-sdk-addon/
   binding.gyp   - Build config (macOS dylib / Windows lib+dll)
   index.js      - JS bridge with platform-aware library loading
 scripts/
-  install-zoom-sdk.js - Copies SDK files and fixes dylib paths
+  install-zoom-sdk.js - Auto-discovers and copies SDK files, fixes dylib paths
 ```
-
-## Tech Stack
-
-- Electron (desktop runtime)
-- Zoom Meeting SDK (native C++ addon via N-API)
-- grandiose (NDI output, optional)
-- FFmpeg (ISO recording)
-- Vanilla JS UI with broadcast-style dark theme
