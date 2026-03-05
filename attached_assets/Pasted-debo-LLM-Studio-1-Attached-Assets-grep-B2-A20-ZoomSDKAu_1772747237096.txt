@@ -1,0 +1,55 @@
+debo@LLM-Studio-1 Attached-Assets % grep -B2 -A20 "ZoomSDKAuthContext" /Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/*.h
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKAuthService.h-NS_ASSUME_NONNULL_BEGIN
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKAuthService.h-/**
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKAuthService.h: * @class ZoomSDKAuthContext
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKAuthService.h- * @brief Context object containing authentication token information.
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKAuthService.h- */
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKAuthService.h:@interface ZoomSDKAuthContext : NSObject
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKAuthService.h-
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKAuthService.h-/**
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKAuthService.h- * @brief JWT token used for SDK authentication.
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKAuthService.h- */
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKAuthService.h-@property(nonatomic, copy, nullable) NSString *jwtToken;
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKAuthService.h-
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKAuthService.h-/**
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKAuthService.h- * @brief Public app key used for SDK authentication. Alternative to JWT token.
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKAuthService.h- */
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKAuthService.h-@property(nonatomic, copy, nullable) NSString *publicAppKey;
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKAuthService.h-@end
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKAuthService.h-
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKAuthService.h-
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKAuthService.h-/**
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKAuthService.h- * @class ZoomSDKWebinarRegistrationExplainInfo
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKAuthService.h- * @brief Holds explanatory information related to webinar registration.
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKAuthService.h- */
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKAuthService.h-@interface ZoomSDKWebinarRegistrationExplainInfo : NSObject
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKAuthService.h-/**
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKAuthService.h- * @brief Content of the webinar Registration Explain Info
+--
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKAuthService.h-/**
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKAuthService.h- * @brief New authenticate SDK.
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKAuthService.h: * @param authContext A ZoomSDKAuthContext object containing auth information.
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKAuthService.h- * @return If the function succeeds, it returns @c ZoomSDKError_Success. Otherwise, this function returns an error.
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKAuthService.h- * @note If the jwttoken expired, will return \link ZoomSDKAuthDelegate::onZoomAuthIdentityExpired \endlink callback.
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKAuthService.h- */
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKAuthService.h:- (ZoomSDKError)sdkAuth:(ZoomSDKAuthContext*)authContext;
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKAuthService.h-
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKAuthService.h-/**
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKAuthService.h- * @brief Determines if SDK is authorized.
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKAuthService.h- * @return YES if it is authorized. Otherwise, NO.
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKAuthService.h- */
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKAuthService.h-- (BOOL)isAuthorized;
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKAuthService.h-
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKAuthService.h-/**
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKAuthService.h-* @brief Generate SSO login web url.
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKAuthService.h-* @param prefixOfVanityUrl The prefix of vanity url.
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKAuthService.h-* @return If the function succeeds, it returns url of can launch app. Otherwise, this function fails and returns nil.
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKAuthService.h-*/
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKAuthService.h-- (NSString*_Nullable)generateSSOLoginWebURL:(NSString*)prefixOfVanityUrl;
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKAuthService.h-
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKAuthService.h-/**
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKAuthService.h- * @brief Login ZOOM with uri protocol.
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKAuthService.h- * @param uriProtocol For the parameter to be used for sso account login.
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKAuthService.h- * @return If the function succeeds, it returns ZoomSDKError_Success. Otherwise, this function returns an error.
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKAuthService.h- */
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKAuthService.h-- (ZoomSDKError)SSOLoginWithWebUriProtocol:(NSString*)uriProtocol;
