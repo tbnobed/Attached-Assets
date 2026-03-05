@@ -436,8 +436,10 @@ bool ZoomAddon::StartRawRecording() {
     fflush(stdout);
 
     if (err == SDKERR_SUCCESS) {
-        printf("[ZoomNative] StartRawRecording succeeded — waiting for onRecordingStatus(Recording_Start) callback\n");
+        g_rawRecordingStarted = true;
+        printf("[ZoomNative] StartRawRecording succeeded — starting data capture now, enumeration deferred to onRecordingStatus(Recording_Start)\n");
         fflush(stdout);
+        StartRawDataCapture();
         return true;
     }
 
@@ -590,7 +592,7 @@ void ZoomAddon::RetryVideoSubscriptions() {
         printf("[ZoomNative] RetryVideoSubscriptions: raw data not active, trying StartRawDataCapture\n");
         fflush(stdout);
         StartRawDataCapture();
-        return;
+        if (!g_rawDataActive) return;
     }
 
     std::set<uint32_t> pending;

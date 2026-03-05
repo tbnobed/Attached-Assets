@@ -277,6 +277,11 @@ class ZoomMeetingBridge extends EventEmitter {
       case 'RAW_RECORDING_STARTED':
         console.log('[ZoomBridge] Raw recording started — video/audio capture active');
         this.emit('raw-recording-started');
+        this._enumerateExistingParticipants();
+        this._retrySubscriptions();
+        setTimeout(() => this._retrySubscriptions(), 500);
+        setTimeout(() => this._retrySubscriptions(), 1500);
+        setTimeout(() => this._retrySubscriptions(), 3000);
         break;
       case 'RAW_RECORDING_ERROR':
         console.warn(`[ZoomBridge] Raw recording error (code=${data && data.errorCode}) — retries will continue`);

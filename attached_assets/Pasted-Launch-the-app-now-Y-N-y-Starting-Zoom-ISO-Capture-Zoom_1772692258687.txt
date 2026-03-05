@@ -1,0 +1,144 @@
+Launch the app now? [Y/N]: y
+
+Starting Zoom ISO Capture...
+
+[ZoomNative] Hidden HWND created: 00000000002B55AE
+[ZoomNative] Initializing SDK (rawdata intermediate mode DISABLED, hResInstance set)
+[ZoomNative] InitSDK result=0
+[SessionManager] SDK initialized, authenticating...
+[SessionManager] Zoom Meeting SDK bridge initialized, available: true
+[NDI] grandiose loaded successfully - NDI output available
+[Recorder] FFmpeg found
+[ZoomBridge] Event: meeting-status AUTH_SUCCESS
+[SessionManager] SDK authentication successful
+[RecordingToken] OAuth access token obtained
+[TokenDebug] Full API response status: 200
+[TokenDebug] Full API response body: {"token":"lrq8f3b06","expire_in":120}
+[TokenDebug] Token field: lrq8f3b06
+[TokenDebug] Token type: string len: 9
+[RecordingToken] Local recording join token obtained for meeting 91267462422
+[SessionManager] Local recording privilege token obtained
+[SessionManager] Attempting to join meeting: 912 6746 2422
+[TokenDebug] appPrivilegeToken type=string len=9 val=lrq8f3b06
+[TokenDebug] joinMeeting args: [
+  '[0] type=string len=11 val=91267462422',
+  '[1] type=string len=6 val=510911',
+  '[2] type=string len=7 val=PlexISO',
+  '[3] type=string len=9 val=lrq8f3b06'
+]
+[ZoomBridge] Joining with app_privilege_token (local recording pre-authorized)
+[NativeArgs] arg[0] = 91267462422 (len=11)
+[NativeArgs] arg[1] = 510911 (len=6)
+[NativeArgs] arg[2] = PlexISO (len=7)
+[NativeArgs] arg[3] = lrq8f3b06 (len=9)
+[ZoomNative] JoinMeeting: app_privilege_token set (len=9)
+[ZoomNative] JoinMeeting: Join result=0
+[ZoomNative] Meeting status: MEETING_STATUS_CONNECTING (result=0)
+[ZoomBridge] Event: meeting-status MEETING_STATUS_CONNECTING
+[ZoomNative] onUserJoin: 1 users
+[ZoomNative] onUserJoin: GetUserByUserID(16778240) returned null
+[ZoomNative] Meeting status: MEETING_STATUS_INMEETING (result=0)
+[ZoomNative] Self userId detected: 16778240
+[ZoomNative] StartRawRecording: recording event listener set
+[ZoomNative] StartRawRecording: result=0
+[ZoomNative] StartRawRecording succeeded ΓÇö waiting for onRecordingStatus(Recording_Start) callback
+[ZoomNative] StartRawRecording: OK
+[ZoomBridge] Event: meeting-status MEETING_STATUS_INMEETING
+[ZoomBridge] In meeting ΓÇö initiating raw recording and participant enumeration
+[ZoomNative] EnumerateParticipants called
+[ZoomNative] EnumerateParticipants: 1 participants in SDK list
+[ZoomNative] EnumerateParticipants: userId=16778240 is SELF ΓÇö skipping
+[ZoomBridge] Enumerating existing participants: 0
+[ZoomNative] EnumerateParticipants called
+[ZoomNative] EnumerateParticipants: 1 participants in SDK list
+[ZoomNative] EnumerateParticipants: userId=16778240 is SELF ΓÇö skipping
+[ZoomBridge] Enumerating existing participants: 0
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: raw recording not started, trying StartRawRecording
+[ZoomNative] StartRawRecording: result=0
+[ZoomNative] StartRawRecording succeeded ΓÇö waiting for onRecordingStatus(Recording_Start) callback
+[ZoomNative] EnumerateParticipants called
+[ZoomNative] EnumerateParticipants: 1 participants in SDK list
+[ZoomNative] EnumerateParticipants: userId=16778240 is SELF ΓÇö skipping
+[ZoomBridge] Enumerating existing participants: 0
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: raw recording not started, trying StartRawRecording
+[ZoomNative] StartRawRecording: result=18
+[ZoomNative] StartRawRecording: unexpected error 18 ΓÇö will retry via RetryVideoSubscriptions
+[ZoomBridge] Event: meeting-status RAW_RECORDING_ERROR
+[ZoomBridge] Raw recording error (code=18) ΓÇö retries will continue
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: raw recording not started, trying StartRawRecording
+[ZoomNative] StartRawRecording: result=0
+[ZoomNative] StartRawRecording succeeded ΓÇö waiting for onRecordingStatus(Recording_Start) callback
+[ZoomNative] EnumerateParticipants called
+[ZoomNative] EnumerateParticipants: 1 participants in SDK list
+[ZoomNative] EnumerateParticipants: userId=16778240 is SELF ΓÇö skipping
+[ZoomBridge] Enumerating existing participants: 0
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: raw recording not started, trying StartRawRecording
+[ZoomNative] StartRawRecording: result=18
+[ZoomNative] StartRawRecording: unexpected error 18 ΓÇö will retry via RetryVideoSubscriptions
+[ZoomBridge] Event: meeting-status RAW_RECORDING_ERROR
+[ZoomBridge] Raw recording error (code=18) ΓÇö retries will continue
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: raw recording not started, trying StartRawRecording
+[ZoomNative] StartRawRecording: result=0
+[ZoomNative] StartRawRecording succeeded ΓÇö waiting for onRecordingStatus(Recording_Start) callback
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: raw recording not started, trying StartRawRecording
+[ZoomNative] StartRawRecording: result=18
+[ZoomNative] StartRawRecording: unexpected error 18 ΓÇö will retry via RetryVideoSubscriptions
+[ZoomBridge] Event: meeting-status RAW_RECORDING_ERROR
+[ZoomBridge] Raw recording error (code=18) ΓÇö retries will continue
+[ZoomNative] onUserJoin: 1 users
+[ZoomNative] onUserJoin: userId=16782336 name=obed cell
+[ZoomNative] OnParticipantJoined: userId=16782336 name=obed cell
+[ZoomBridge] Event: participant-joined  obed cell 16782336
+[NDI] Created source: ZoomISO_ISO1_obed_cell
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: raw recording not started, trying StartRawRecording
+[ZoomNative] StartRawRecording: result=18
+[ZoomNative] StartRawRecording: unexpected error 18 ΓÇö will retry via RetryVideoSubscriptions
+[ZoomBridge] Event: meeting-status RAW_RECORDING_ERROR
+[ZoomBridge] Raw recording error (code=18) ΓÇö retries will continue
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: raw recording not started, trying StartRawRecording
+[ZoomNative] StartRawRecording: result=18
+[ZoomNative] StartRawRecording: unexpected error 18 ΓÇö will retry via RetryVideoSubscriptions
+[ZoomBridge] Event: meeting-status RAW_RECORDING_ERROR
+[ZoomBridge] Raw recording error (code=18) ΓÇö retries will continue
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: raw recording not started, trying StartRawRecording
+[ZoomNative] StartRawRecording: result=0
+[ZoomNative] StartRawRecording succeeded ΓÇö waiting for onRecordingStatus(Recording_Start) callback
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: raw recording not started, trying StartRawRecording
+[ZoomNative] StartRawRecording: result=18
+[ZoomNative] StartRawRecording: unexpected error 18 ΓÇö will retry via RetryVideoSubscriptions
+[ZoomBridge] Event: meeting-status RAW_RECORDING_ERROR
+[ZoomBridge] Raw recording error (code=18) ΓÇö retries will continue
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: raw recording not started, trying StartRawRecording
+[ZoomNative] StartRawRecording: result=0
+[ZoomNative] StartRawRecording succeeded ΓÇö waiting for onRecordingStatus(Recording_Start) callback
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: raw recording not started, trying StartRawRecording
+[ZoomNative] StartRawRecording: result=0
+[ZoomNative] StartRawRecording succeeded ΓÇö waiting for onRecordingStatus(Recording_Start) callback
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: raw recording not started, trying StartRawRecording
+[ZoomNative] StartRawRecording: result=0
+[ZoomNative] StartRawRecording succeeded ΓÇö waiting for onRecordingStatus(Recording_Start) callback
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: raw recording not started, trying StartRawRecording
+[ZoomNative] StartRawRecording: result=0
+[ZoomNative] StartRawRecording succeeded ΓÇö waiting for onRecordingStatus(Recording_Start) callback
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: raw recording not started, trying StartRawRecording
+[ZoomNative] StartRawRecording: result=0
+[ZoomNative] StartRawRecording succeeded ΓÇö waiting for onRecordingStatus(Recording_Start) callback
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: raw recording not started, trying StartRawRecording
+[ZoomNative] StartRawRecording: result=0
+[ZoomNative] StartRawRecording succeeded ΓÇö waiting for onRecordingStatus(Recording_Start) callback
