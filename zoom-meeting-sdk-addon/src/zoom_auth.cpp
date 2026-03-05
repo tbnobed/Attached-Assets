@@ -195,8 +195,8 @@ bool ZoomAddon::Initialize(const ZoomConfig& config) {
         printf("[ZoomNative] Raw data modes set (heap, no intermediate)\n");
         fflush(stdout);
 
-        NSString* serialNo = [sdk getSDKSerialNumber];
-        printf("[ZoomNative] SDK serial: %s\n", serialNo ? [serialNo UTF8String] : "(null)");
+        NSString* sdkVer = [sdk getSDKVersionNumber];
+        printf("[ZoomNative] SDK version: %s\n", sdkVer ? [sdkVer UTF8String] : "(null)");
         fflush(stdout);
     }
 
