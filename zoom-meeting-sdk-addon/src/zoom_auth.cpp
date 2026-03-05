@@ -213,8 +213,18 @@ bool ZoomAddon::Authenticate() {
         g_authDelegate = [[ZoomAuthDelegateImpl alloc] init];
         authService.delegate = g_authDelegate;
 
+        printf("[ZoomNative] JWT token length: %zu\n", config_.jwtToken.length());
+        fflush(stdout);
+        if (config_.jwtToken.length() > 20) {
+            printf("[ZoomNative] JWT prefix: %.20s...\n", config_.jwtToken.c_str());
+            fflush(stdout);
+        }
+
         ZoomSDKAuthContext* ctx = [[ZoomSDKAuthContext alloc] init];
         ctx.jwtToken = [NSString stringWithUTF8String:config_.jwtToken.c_str()];
+
+        printf("[ZoomNative] AuthContext.jwtToken length: %lu\n", (unsigned long)[ctx.jwtToken length]);
+        fflush(stdout);
 
         ZoomSDKError err = [authService sdkAuth:ctx];
         printf("[ZoomNative] SDKAuth result=%d\n", (int)err);
