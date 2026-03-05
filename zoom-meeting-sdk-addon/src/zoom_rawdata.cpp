@@ -287,7 +287,7 @@ void subscribeUserVideo(uint32_t userId) {
         auto resErr = renderer->setRawDataResolution(ZoomSDKResolution_1080P);
         auto subErr = renderer->subscribe(userId, RAW_DATA_TYPE_VIDEO);
         g_videoRenderers[userId] = { renderer, listener };
-        printf("[ZoomNative] subscribeUserVideo: userId=%u renderer created (res=%d sub=%d)\n", userId, (int)resErr, (int)subErr);
+        printf("[ZoomNative] subscribeUserVideo: userId=%u renderer=%p delegate=%p created (res=%d sub=%d) totalRenderers=%zu\n", userId, (void*)renderer, (void*)listener, (int)resErr, (int)subErr, g_videoRenderers.size());
         fflush(stdout);
         if (subErr == SDKERR_SUCCESS) {
             g_videoSubscribedOK.insert(userId);
@@ -350,7 +350,7 @@ public:
                 renderer->setRawDataResolution(ZoomSDKResolution_1080P);
                 auto subErr = renderer->subscribe(userId, RAW_DATA_TYPE_VIDEO);
                 g_videoRenderers[userId] = { renderer, listener };
-                printf("[ZoomNative] onUserVideoStatusChange: userId=%u fresh renderer created (sub=%d)\n", userId, (int)subErr);
+                printf("[ZoomNative] onUserVideoStatusChange: userId=%u renderer=%p delegate=%p fresh created (sub=%d)\n", userId, (void*)renderer, (void*)listener, (int)subErr);
                 fflush(stdout);
                 if (subErr == SDKERR_SUCCESS) {
                     g_videoSubscribedOK.insert(userId);
