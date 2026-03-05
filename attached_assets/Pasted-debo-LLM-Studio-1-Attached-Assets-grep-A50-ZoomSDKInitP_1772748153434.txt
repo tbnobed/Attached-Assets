@@ -1,0 +1,98 @@
+debo@LLM-Studio-1 Attached-Assets % grep -A50 "ZoomSDKInitParams" /Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDK.h | head -60
+ * @class ZoomSDKInitParams
+ * @brief The configuration object used to initialize the Zoom SDK.
+ */
+@interface ZoomSDKInitParams : NSObject
+{
+    BOOL                        _needCustomizedUI;
+    BOOL                        _enableLog;
+    int                         _logFileSize;
+    ZoomSDKLocale               _appLocale;
+    NSString*                   _preferedLanguage;
+    NSString*                   _customLocalizationFileName;
+    NSString*                   _customLocalizationFilePath;
+    NSString*                   _zoomDomain;
+}
+/**
+ * @brief Whether to use customized UI mode instead of the default Zoom UI.
+ */
+@property (assign, nonatomic) BOOL needCustomizedUI;
+/**
+ * @brief Whether to enable SDK internal logging (default max 5MB).
+ */
+@property (assign, nonatomic) BOOL enableLog;
+/**
+ * @brief Maximum size of log files in MB. Range: 1~50 MB.
+ */
+@property (assign, nonatomic) int logFileSize;
+/**
+ * @brief Locale setting for the SDK.
+ */
+@property (assign, nonatomic) ZoomSDKLocale appLocale;
+/**
+ * @brief Preferred language for the SDK.
+ * @note if user does not specify the language, it will follow up the systematical language.
+ */
+@property (retain, nonatomic, nullable) NSString *preferedLanguage;
+/**
+ * @brief Name of the custom localization file (e.g., Localizable.strings).
+ */
+@property (retain, nonatomic, nullable) NSString *customLocalizationFileName;
+/**
+ * @brief Path to the custom localization file. The default is under ZoomSDK.framework/Resources.
+ */
+@property (retain, nonatomic, nullable) NSString *customLocalizationFilePath;
+/**
+ * @brief SDK wrapper type (reserved for internal use).
+ */
+@property (assign, nonatomic) int wrapperType;
+/**
+ * @brief Zoom domain for SDK communication (e.g., zoom.us).
+ */
+@property (retain, nonatomic, nullable) NSString *zoomDomain;
+/**
+ * @brief Gets the list of supported language codes.
+ * @return An array of supported language codes. Otherwise, this function fails and returns nil.
+--
+- (ZoomSDKError)initSDKWithParams:(ZoomSDKInitParams*)initParams;
+
+/**
+ * @brief Uninitialize and clean up the Zoom SDK.
+ */
+debo@LLM-Studio-1 Attached-Assets % ls -la ~/Library/Application\ Support/Electron/data/
+total 8
+drwx------  4 debo  staff   128 Mar  5 12:33 .
+drwx------  3 debo  staff    96 Mar  5 12:33 ..
+-rw-------  1 debo  staff  3072 Mar  5 13:56 zoomus.zmdb.default.noenc.rlock.db
+-rw-------  1 debo  staff     0 Mar  5 13:56 zoomus.zmdb.default.noenc.rlock.db-journal
+debo@LLM-Studio-1 Attached-Assets % rm -rf ~/Library/Application\ Support/Electron/data/zoomus*
+rm -rf ~/Library/Logs/ZoomSDK/*
+cd /Users/debo/Documents/Attached-Assets && npm start
+zsh: sure you want to delete all 6 files in /Users/debo/Library/Logs/ZoomSDK [yn]? y
+
+> zoom-iso-capture@1.0.0 start
+> electron . --no-sandbox --disable-gpu-sandbox
+
+
+[ZoomNative] Initializing macOS SDK (customUI=YES, logging=YES)
+[ZoomNative] InitSDK result=0
+[ZoomNative] Raw data modes set (heap, no intermediate)
+[ZoomNative] SDK version: 6.7.6 (75900)
+[SessionManager] SDK initialized, authenticating...
+[ZoomNative] JWT token length: 224
+[ZoomNative] Bundle ID: com.github.Electron
+[ZoomNative] JWT first 40 chars: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ
+[ZoomNative] isAuthorized before auth: NO
+[ZoomNative] Attempting auth with JWT (immediate)...
+[ZoomNative] Immediate SDKAuth result=1 (0=Success, 1=Failed)
+[ZoomNative] Immediate auth failed. Trying with publicAppKey only...
+[ZoomNative] SDKAuth (publicAppKey only) result=1
+[ZoomNative] Trying with BOTH jwtToken + publicAppKey...
+[ZoomNative] SDKAuth (jwt+publicAppKey) result=1
+[ZoomNative] Scheduling 2s deferred retry...
+[SessionManager] Zoom Meeting SDK bridge initialized, available: true
+[NDI] grandiose not available - NDI output disabled
+[NDI] Install NDI SDK and run: npm install github:rse/grandiose
+[Recorder] FFmpeg not found - recording disabled
+[ZoomNative] isAuthorized after 2s: NO
+[ZoomNative] Deferred SDKAuth result=1

@@ -1,0 +1,61 @@
+debo@LLM-Studio-1 Attached-Assets % grep -A50 "ZoomSDKInitParams" /Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDK.h | head -60
+ * @class ZoomSDKInitParams
+ * @brief The configuration object used to initialize the Zoom SDK.
+ */
+@interface ZoomSDKInitParams : NSObject
+{
+    BOOL                        _needCustomizedUI;
+    BOOL                        _enableLog;
+    int                         _logFileSize;
+    ZoomSDKLocale               _appLocale;
+    NSString*                   _preferedLanguage;
+    NSString*                   _customLocalizationFileName;
+    NSString*                   _customLocalizationFilePath;
+    NSString*                   _zoomDomain;
+}
+/**
+ * @brief Whether to use customized UI mode instead of the default Zoom UI.
+ */
+@property (assign, nonatomic) BOOL needCustomizedUI;
+/**
+ * @brief Whether to enable SDK internal logging (default max 5MB).
+ */
+@property (assign, nonatomic) BOOL enableLog;
+/**
+ * @brief Maximum size of log files in MB. Range: 1~50 MB.
+ */
+@property (assign, nonatomic) int logFileSize;
+/**
+ * @brief Locale setting for the SDK.
+ */
+@property (assign, nonatomic) ZoomSDKLocale appLocale;
+/**
+ * @brief Preferred language for the SDK.
+ * @note if user does not specify the language, it will follow up the systematical language.
+ */
+@property (retain, nonatomic, nullable) NSString *preferedLanguage;
+/**
+ * @brief Name of the custom localization file (e.g., Localizable.strings).
+ */
+@property (retain, nonatomic, nullable) NSString *customLocalizationFileName;
+/**
+ * @brief Path to the custom localization file. The default is under ZoomSDK.framework/Resources.
+ */
+@property (retain, nonatomic, nullable) NSString *customLocalizationFilePath;
+/**
+ * @brief SDK wrapper type (reserved for internal use).
+ */
+@property (assign, nonatomic) int wrapperType;
+/**
+ * @brief Zoom domain for SDK communication (e.g., zoom.us).
+ */
+@property (retain, nonatomic, nullable) NSString *zoomDomain;
+/**
+ * @brief Gets the list of supported language codes.
+ * @return An array of supported language codes. Otherwise, this function fails and returns nil.
+--
+- (ZoomSDKError)initSDKWithParams:(ZoomSDKInitParams*)initParams;
+
+/**
+ * @brief Uninitialize and clean up the Zoom SDK.
+ */
