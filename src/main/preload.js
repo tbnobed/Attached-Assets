@@ -101,4 +101,9 @@ contextBridge.exposeInMainWorld('zoomISO', {
     ipcRenderer.on('raw-recording-started', handler);
     return () => ipcRenderer.removeListener('raw-recording-started', handler);
   },
+  onVideoPreviewFrame: (callback) => {
+    const handler = (_event, data) => callback(data);
+    ipcRenderer.on('video-preview-frame', handler);
+    return () => ipcRenderer.removeListener('video-preview-frame', handler);
+  },
 });

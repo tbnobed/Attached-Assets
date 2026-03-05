@@ -95,9 +95,26 @@ function initManagers() {
     sendToRenderer('reconnecting', { attempt: info.attempt, maxAttempts: sessionManager.maxReconnectAttempts });
   });
 
+  const previewThrottle = new Map();
+  const PREVIEW_INTERVAL_MS = 200;
+
   streamHandler.on('video-frame', ({ userId, frameData }) => {
     ndiManager.sendVideoFrame(userId, frameData.buffer, frameData.width, frameData.height);
     recorderManager.writeVideoFrame(userId, frameData.buffer);
+
+    const now = Date.now();
+    const lastSent = previewThrottle.get(userId) || 0;
+    if (now - lastSent >= PREVIEW_INTERVAL_MS) {
+      previewThrottle.set(userId, now);
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('video-preview-frame', {
+          userId,
+          buffer: Buffer.from(frameData.buffer),
+          width: frameData.width,
+          height: frameData.height,
+        });
+      }
+    }
   });
 
   streamHandler.on('audio-data', ({ userId, audioData }) => {

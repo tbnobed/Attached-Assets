@@ -580,7 +580,8 @@
         html += `
           <div class="participant-card" data-user-id="${userId}">
             <div class="participant-preview">
-              <div class="preview-placeholder">
+              <canvas id="preview-canvas-${userId}" width="320" height="180" style="display:none;"></canvas>
+              <div class="preview-placeholder" id="preview-placeholder-${userId}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                   <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                 </svg>
@@ -818,6 +819,34 @@
 
       window.zoomISO.onRawRecordingStarted(() => {
         log('Raw recording started — capturing ISO video/audio feeds', 'success');
+      });
+
+      window.zoomISO.onVideoPreviewFrame(({ userId, buffer, width, height }) => {
+        const canvas = document.getElementById(`preview-canvas-${userId}`);
+        const placeholder = document.getElementById(`preview-placeholder-${userId}`);
+        if (!canvas) return;
+
+        if (canvas.width !== width || canvas.height !== height) {
+          canvas.width = width;
+          canvas.height = height;
+        }
+
+        canvas.style.display = 'block';
+        if (placeholder) placeholder.style.display = 'none';
+
+        const ctx = canvas.getContext('2d');
+        const imgData = ctx.createImageData(width, height);
+        const src = new Uint8Array(buffer);
+        const dst = imgData.data;
+
+        for (let i = 0; i < src.length; i += 4) {
+          dst[i]     = src[i + 2];
+          dst[i + 1] = src[i + 1];
+          dst[i + 2] = src[i];
+          dst[i + 3] = 255;
+        }
+
+        ctx.putImageData(imgData, 0, 0);
       });
 
       window.zoomISO.getSettings().then(s => {
