@@ -271,7 +271,6 @@ void subscribeUserVideo(uint32_t userId) {
 
     if (g_videoRenderers.count(userId)) {
         auto* oldRenderer = g_videoRenderers[userId].first;
-        auto* oldListener = g_videoRenderers[userId].second;
         oldRenderer->unSubscribe();
         oldRenderer->setRawDataResolution(ZoomSDKResolution_1080P);
         auto subErr = oldRenderer->subscribe(userId, RAW_DATA_TYPE_VIDEO);
@@ -279,14 +278,8 @@ void subscribeUserVideo(uint32_t userId) {
         fflush(stdout);
         if (subErr == SDKERR_SUCCESS) {
             g_videoSubscribedOK.insert(userId);
-            return;
         }
-        printf("[ZoomNative] subscribeUserVideo: userId=%u RE-subscribe failed — destroying old renderer, creating fresh\n", userId);
-        fflush(stdout);
-        oldRenderer->unSubscribe();
-        destroyRenderer(oldRenderer);
-        delete oldListener;
-        g_videoRenderers.erase(userId);
+        return;
     }
 
     auto* listener = new PerUserVideoListener(userId);
@@ -340,10 +333,10 @@ public:
             {
                 std::lock_guard<std::mutex> lock(g_videoMutex);
                 g_videoSubscribedOK.erase(userId);
+                g_videoPendingResubscribe.insert(userId);
             }
-            printf("[ZoomNative] onUserVideoStatusChange: userId=%u video ON — (re)subscribing\n", userId);
+            printf("[ZoomNative] onUserVideoStatusChange: userId=%u video ON — marked pending (will subscribe via RetryVideoSubscriptions)\n", userId);
             fflush(stdout);
-            subscribeUserVideo(userId);
         }
     }
     void onSpotlightedUserListChangeNotification(IList<unsigned int>* lstSpotlightedUserID) override {}

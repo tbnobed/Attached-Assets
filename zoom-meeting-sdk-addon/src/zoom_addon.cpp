@@ -90,7 +90,8 @@ void ZoomAddon::OnParticipantJoined(uint32_t userId, const std::string& name) {
         participants_[userId] = { userId, name, false, false };
     }
 
-    SubscribeParticipantVideo(userId);
+    printf("[ZoomNative] OnParticipantJoined: userId=%u — deferring video subscription to onUserVideoStatusChange(Video_ON)\n", userId);
+    fflush(stdout);
 
     if (eventCallback_) {
         eventCallback_.NonBlockingCall([userId, name](Napi::Env env, Napi::Function jsCallback) {

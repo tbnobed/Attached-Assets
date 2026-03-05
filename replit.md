@@ -123,7 +123,9 @@ npm start
 - Raw data requires `StartRawRecording()` on IMeetingRecordingController BEFORE createRenderer/audio subscribe
 - InitParam.rawdataOpts.enableRawdataIntermediateMode MUST be false — true produces empty frames
 - Bot's own userId (selfUserId_) is detected via GetMySelfUser() at INMEETING and excluded from video subscriptions, EnumerateParticipants, and onUserVideoStatusChange to avoid wasting renderer slots
-- subscribeUserVideo: if RE-subscribe fails (sub!=0), destroys old renderer and creates a fresh one (stale renderers can't be reused after Video_OFF→Video_ON)
+- Video subscription is DEFERRED: OnParticipantJoined does NOT create renderers; renderers are only created when onUserVideoStatusChange(Video_ON) fires, via pending resubscribe → RetryVideoSubscriptions
+- This avoids wasting renderer slots on users with cameras off (SDK may limit concurrent active subscriptions)
+- RetryVideoSubscriptions runs on periodic 5s interval + burst retries at 500ms/1.5s/3s after each participant join
 - PerUserVideoListener::subscribed_ resets to false on RawData_Off, enabling re-trigger on next RawData_On
 - If bot lacks recording permission, call `RequestLocalRecordingPrivilege()` and wait for `onRecordPrivilegeChanged(true)`
 - `onRecordingStatus(Recording_Start)` is the gate signal: only after this can renderers and audio subscriptions succeed

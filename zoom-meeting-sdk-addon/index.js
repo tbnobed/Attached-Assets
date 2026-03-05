@@ -192,6 +192,11 @@ class ZoomMeetingBridge extends EventEmitter {
               displayName: event.displayName,
               isSelf: !!event.isSelf,
             });
+            if (!event.isSelf) {
+              setTimeout(() => this._retrySubscriptions(), 500);
+              setTimeout(() => this._retrySubscriptions(), 1500);
+              setTimeout(() => this._retrySubscriptions(), 3000);
+            }
           }
           break;
         case 'participant-left':
@@ -253,10 +258,13 @@ class ZoomMeetingBridge extends EventEmitter {
         setTimeout(() => this._retrySubscriptions(), 3000);
         setTimeout(() => this._retrySubscriptions(), 8000);
         setTimeout(() => this._retrySubscriptions(), 15000);
+        if (this._retryInterval) clearInterval(this._retryInterval);
+        this._retryInterval = setInterval(() => this._retrySubscriptions(), 5000);
         break;
       case 'MEETING_STATUS_ENDED':
       case 'MEETING_STATUS_FAILED':
         this.inMeeting = false;
+        if (this._retryInterval) { clearInterval(this._retryInterval); this._retryInterval = null; }
         this.emit('meeting-ended', { status });
         break;
       case 'MEETING_STATUS_RECONNECTING':
