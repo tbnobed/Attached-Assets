@@ -1,0 +1,65 @@
+ebo@LLM-Studio-1 Attached-Assets % cd /Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon
+CXX="$(pwd)/build-tools/cxx-objcpp.sh" NODE_TLS_REJECT_UNAUTHORIZED=0 PYTHON=/opt/homebrew/bin/python3.12 npx node-gyp rebuild
+cd .. && npm start
+gyp info it worked if it ends with ok
+gyp info using node-gyp@10.3.1
+gyp info using node@20.20.0 | darwin | arm64
+gyp info find Python using Python version 3.12.13 found at "/opt/homebrew/opt/python@3.12/bin/python3.12"
+
+gyp info spawn /opt/homebrew/opt/python@3.12/bin/python3.12
+gyp info spawn args [
+gyp info spawn args '/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/node_modules/node-gyp/gyp/gyp_main.py',
+gyp info spawn args 'binding.gyp',
+gyp info spawn args '-f',
+gyp info spawn args 'make',
+gyp info spawn args '-I',
+gyp info spawn args '/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/build/config.gypi',
+gyp info spawn args '-I',
+gyp info spawn args '/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/node_modules/node-gyp/addon.gypi',
+gyp info spawn args '-I',
+gyp info spawn args '/Users/debo/Library/Caches/node-gyp/20.20.0/include/node/common.gypi',
+gyp info spawn args '-Dlibrary=shared_library',
+gyp info spawn args '-Dvisibility=default',
+gyp info spawn args '-Dnode_root_dir=/Users/debo/Library/Caches/node-gyp/20.20.0',
+gyp info spawn args '-Dnode_gyp_dir=/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/node_modules/node-gyp',
+gyp info spawn args '-Dnode_lib_file=/Users/debo/Library/Caches/node-gyp/20.20.0/<(target_arch)/node.lib',
+gyp info spawn args '-Dmodule_root_dir=/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon',
+gyp info spawn args '-Dnode_engine=v8',
+gyp info spawn args '--depth=.',
+gyp info spawn args '--no-parallel',
+gyp info spawn args '--generator-output',
+gyp info spawn args 'build',
+gyp info spawn args '-Goutput_dir=.'
+gyp info spawn args ]
+gyp info spawn make
+gyp info spawn args [ 'BUILDTYPE=Release', '-C', 'build' ]
+  CXX(target) Release/obj.target/zoom_meeting_sdk/src/zoom_addon.o
+clang: warning: '-x objective-c++' after last input file has no effect [-Wunused-command-line-argument]
+  CXX(target) Release/obj.target/zoom_meeting_sdk/src/zoom_auth.o
+clang: warning: '-x objective-c++' after last input file has no effect [-Wunused-command-line-argument]
+../src/zoom_auth.cpp:224:80: error: no visible @interface for 'ZoomSDK' declares the selector 'isSDKInitialized'
+        printf("[ZoomNative] SDK initialized: %d\n", (int)[[ZoomSDK sharedSDK] isSDKInitialized]);
+                                                           ~~~~~~~~~~~~~~~~~~~ ^~~~~~~~~~~~~~~~
+../src/zoom_auth.cpp:229:102: error: no visible @interface for 'ZoomSDK' declares the selector 'isSDKInitialized'
+                printf("[ZoomNative] Deferred auth: SDK initialized=%d\n", (int)[[ZoomSDK sharedSDK] isSDKInitialized]);
+                                                                                 ~~~~~~~~~~~~~~~~~~~ ^~~~~~~~~~~~~~~~
+../src/zoom_auth.cpp:249:111: error: no visible @interface for 'ZoomSDK' declares the selector 'isSDKInitialized'
+                            printf("[ZoomNative] Retry auth: SDK initialized=%d\n", (int)[[ZoomSDK sharedSDK] isSDKInitialized]);
+                                                                                          ~~~~~~~~~~~~~~~~~~~ ^~~~~~~~~~~~~~~~
+3 errors generated.
+make: *** [Release/obj.target/zoom_meeting_sdk/src/zoom_auth.o] Error 1
+gyp ERR! build error 
+gyp ERR! stack Error: `make` failed with exit code: 2
+gyp ERR! stack at ChildProcess.<anonymous> (/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/node_modules/node-gyp/lib/build.js:216:23)
+gyp ERR! System Darwin 22.6.0
+gyp ERR! command "/opt/homebrew/Cellar/node@20/20.20.0/bin/node" "/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/node_modules/.bin/node-gyp" "rebuild"
+gyp ERR! cwd /Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon
+gyp ERR! node -v v20.20.0
+gyp ERR! node-gyp -v v10.3.1
+gyp ERR! not ok 
+
+> zoom-iso-capture@1.0.0 start
+> electron . --no-sandbox --disable-gpu-sandbox
+
+[ZoomMeetingSDK] Native addon not available: Cannot find module './build/Release/zoom_meeting_sdk.node'
+Require stack:
