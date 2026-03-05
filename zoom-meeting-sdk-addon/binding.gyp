@@ -5,10 +5,7 @@
       "cflags!": ["-fno-exceptions"],
       "cflags_cc!": ["-fno-exceptions"],
       "sources": [
-        "src/zoom_addon.cpp",
-        "src/zoom_auth.cpp",
-        "src/zoom_meeting.cpp",
-        "src/zoom_rawdata.cpp"
+        "src/zoom_addon.cpp"
       ],
       "include_dirs": [
         "<!@(node -p \"require('node-addon-api').include\")"
@@ -17,6 +14,11 @@
       "conditions": [
         ["OS=='win'", {
           "defines": ["WIN32"],
+          "sources": [
+            "src/zoom_auth.cpp",
+            "src/zoom_meeting.cpp",
+            "src/zoom_rawdata.cpp"
+          ],
           "include_dirs": [
             "<(module_root_dir)/sdk/h"
           ],
@@ -33,17 +35,15 @@
           ]
         }],
         ["OS=='mac'", {
-          "cflags_cc": [
-            "-x", "objective-c++",
-            "-std=c++17",
-            "-fobjc-arc",
-            "-F<(module_root_dir)/sdk/lib"
+          "sources": [
+            "src/zoom_auth.mm",
+            "src/zoom_meeting.mm",
+            "src/zoom_rawdata.mm"
           ],
           "xcode_settings": {
             "GCC_ENABLE_CPP_EXCEPTIONS": "YES",
             "CLANG_CXX_LIBRARY": "libc++",
             "MACOSX_DEPLOYMENT_TARGET": "10.15",
-            "GCC_INPUT_FILETYPE": "sourcecode.cpp.objcpp",
             "OTHER_CPLUSPLUSFLAGS": [
               "-std=c++17",
               "-fobjc-arc",
@@ -62,15 +62,10 @@
           },
           "libraries": [
             "-F<(module_root_dir)/sdk/lib",
-            "-framework ZoomSDK"
-          ],
-          "link_settings": {
-            "ldflags": [
-              "-Wl,-rpath,@loader_path",
-              "-Wl,-rpath,@loader_path/../../sdk/lib",
-              "-Wl,-rpath,@executable_path/../Frameworks"
-            ]
-          }
+            "-framework ZoomSDK",
+            "-framework Foundation",
+            "-framework AppKit"
+          ]
         }]
       ]
     }
