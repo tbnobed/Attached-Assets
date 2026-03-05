@@ -93,9 +93,7 @@ class ZoomMeetingBridge extends EventEmitter {
 
     const header = { alg: 'HS256', typ: 'JWT' };
     const payload = {
-      sdkKey: sdkKey,
-      mn: 0,
-      role: 1,
+      appKey: sdkKey,
       iat,
       exp,
       tokenExp: exp,
