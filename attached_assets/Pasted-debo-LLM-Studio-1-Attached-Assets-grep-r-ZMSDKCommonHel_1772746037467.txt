@@ -1,0 +1,31 @@
+debo@LLM-Studio-1 Attached-Assets % grep -r "ZMSDKCommonHelper\|delegateMgr\|addAuthDelegate\|authService\|getAuthService" /Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample/ --include="*.m" --include="*.h" | head -30
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/Init/ZMSDKInitHelper.m:#import "ZMSDKCommonHelper.h"
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/Init/ZMSDKInitHelper.m:    [ZMSDKCommonHelper sharedInstance].isUseCutomizeUI = useCustomizedUI;
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/ZMSDKMeetingStatusMgr.m:#import "ZMSDKCommonHelper.h"
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/ZMSDKMeetingStatusMgr.m:        if([ZMSDKCommonHelper sharedInstance].isUseCutomizeUI) {
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/ZMSDKMeetingStatusMgr.m:            if([ZMSDKCommonHelper sharedInstance].isUseCutomizeUI)
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/ZMSDKMeetingStatusMgr.m:            if([ZMSDKCommonHelper sharedInstance].isUseCutomizeUI)
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/ZMSDKMeetingStatusMgr.m:            if([ZMSDKCommonHelper sharedInstance].hasLogin)
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/ZMSDKMeetingStatusMgr.m:            if([ZMSDKCommonHelper sharedInstance].isUseCutomizeUI)
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/ZMSDKMeetingStatusMgr.m:            if([ZMSDKCommonHelper sharedInstance].hasLogin)
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/ZMSDKMeetingStatusMgr.m:            if([ZMSDKCommonHelper sharedInstance].isUseCutomizeUI)
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/ZMSDKMeetingStatusMgr.m:                if([ZMSDKCommonHelper sharedInstance].hasLogin)
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/ZMSDKMeetingStatusMgr.m:            if([ZMSDKCommonHelper sharedInstance].isUseCutomizeUI)
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/ZMSDKMeetingStatusMgr.m:    if([ZMSDKCommonHelper sharedInstance].isUseCutomizeUI)
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/ZMSDKMeetingStatusMgr.m:    if([ZMSDKCommonHelper sharedInstance].isUseCutomizeUI)
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/ZMSDKMeetingStatusMgr.m:    if([ZMSDKCommonHelper sharedInstance].isUseCutomizeUI)
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/ZMSDKMeetingStatusMgr.m:    if([ZMSDKCommonHelper sharedInstance].isUseCutomizeUI)
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/ZMSDKMeetingStatusMgr.m:    if([ZMSDKCommonHelper sharedInstance].isUseCutomizeUI)
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/ZMSDKMeetingStatusMgr.m:    if([ZMSDKCommonHelper sharedInstance].isUseCutomizeUI)
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/ZMSDKMeetingStatusMgr.m:    if([ZMSDKCommonHelper sharedInstance].isUseCutomizeUI)
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/ZMSDKMeetingStatusMgr.m:    if([ZMSDKCommonHelper sharedInstance].isUseCutomizeUI)
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/ZMSDKMeetingStatusMgr.m:    if([ZMSDKCommonHelper sharedInstance].isUseCutomizeUI)
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/ZMSDKMeetingStatusMgr.m:    if([ZMSDKCommonHelper sharedInstance].isUseCutomizeUI)
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/ZMSDKMeetingStatusMgr.m:    if([ZMSDKCommonHelper sharedInstance].isUseCutomizeUI)
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/ZMSDKMeetingStatusMgr.m:    if([ZMSDKCommonHelper sharedInstance].isUseCutomizeUI) {
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/ZMSDKMeetingStatusMgr.m:    if([ZMSDKCommonHelper sharedInstance].isUseCutomizeUI)
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/ZMSDKMeetingStatusMgr.m:    if([ZMSDKCommonHelper sharedInstance].isUseCutomizeUI)
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/ZMSDKUserHelper.m:#import "ZMSDKCommonHelper.h"
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/ZMSDKUserHelper.m:    if (status == ZoomSDKRecordingStatus_Start && [ZMSDKCommonHelper sharedInstance].isUseCutomizeUI) {
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/Auth/ZMSDKAuthHelper.m:#import "ZMSDKCommonHelper.h"
+/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDKSample//ZoomSDKSample/Auth/ZMSDKAuthHelper.m:        [[ZMSDKCommonHelper sharedInstance].delegateMgr addAuthDelegateListener:self];

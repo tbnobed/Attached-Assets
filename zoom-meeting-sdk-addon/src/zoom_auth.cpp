@@ -170,21 +170,14 @@ bool ZoomAddon::Initialize(const ZoomConfig& config) {
     config_ = config;
 
     @autoreleasepool {
-        ZoomSDK* sdk = [ZoomSDK sharedSDK];
-        sdk.videoRawDataMode = ZoomSDKRawDataMemoryMode_Heap;
-        sdk.audioRawDataMode = ZoomSDKRawDataMemoryMode_Heap;
-        sdk.shareRawDataMode = ZoomSDKRawDataMemoryMode_Heap;
-        sdk.enableRawdataIntermediateMode = NO;
-
         ZoomSDKInitParams* params = [[ZoomSDKInitParams alloc] init];
-        params.zoomDomain = @"zoom.us";
-        params.enableLog = YES;
         params.needCustomizedUI = YES;
+        params.zoomDomain = @"zoom.us";
 
-        printf("[ZoomNative] Initializing macOS SDK (customUI=YES, rawdata heap mode)\n");
+        printf("[ZoomNative] Initializing macOS SDK (customUI=YES)\n");
         fflush(stdout);
 
-        ZoomSDKError err = [sdk initSDKWithParams:params];
+        ZoomSDKError err = [[ZoomSDK sharedSDK] initSDKWithParams:params];
         printf("[ZoomNative] InitSDK result=%d\n", (int)err);
         fflush(stdout);
 
@@ -192,6 +185,14 @@ bool ZoomAddon::Initialize(const ZoomConfig& config) {
             state_ = AddonState::Error;
             return false;
         }
+
+        ZoomSDK* sdk = [ZoomSDK sharedSDK];
+        sdk.videoRawDataMode = ZoomSDKRawDataMemoryMode_Heap;
+        sdk.audioRawDataMode = ZoomSDKRawDataMemoryMode_Heap;
+        sdk.shareRawDataMode = ZoomSDKRawDataMemoryMode_Heap;
+        sdk.enableRawdataIntermediateMode = NO;
+        printf("[ZoomNative] Raw data modes set (heap, no intermediate)\n");
+        fflush(stdout);
     }
 
     state_ = AddonState::Initialized;
@@ -213,64 +214,42 @@ bool ZoomAddon::Authenticate() {
         g_authDelegate = [[ZoomAuthDelegateImpl alloc] init];
         authService.delegate = g_authDelegate;
 
+        NSString* jwtNS = [NSString stringWithUTF8String:config_.jwtToken.c_str()];
         printf("[ZoomNative] JWT token length: %zu\n", config_.jwtToken.length());
         fflush(stdout);
-        if (config_.jwtToken.length() > 20) {
-            printf("[ZoomNative] JWT prefix: %.20s...\n", config_.jwtToken.c_str());
+
+        if (!jwtNS || jwtNS.length == 0) {
+            printf("[ZoomNative] ERROR: JWT token is empty!\n");
             fflush(stdout);
+            state_ = AddonState::Error;
+            return false;
         }
 
-        NSString* jwtNS = [NSString stringWithUTF8String:config_.jwtToken.c_str()];
-        printf("[ZoomNative] Scheduling deferred auth (0.5s)\n");
+        ZoomSDKAuthContext* ctx = [[ZoomSDKAuthContext alloc] init];
+        ctx.jwtToken = jwtNS;
+
+        ZoomSDKError err = [authService sdkAuth:ctx];
+        printf("[ZoomNative] SDKAuth result=%d (0=Success, 1=Failed)\n", (int)err);
         fflush(stdout);
 
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-            @autoreleasepool {
-                printf("[ZoomNative] Deferred auth executing...\n");
-                fflush(stdout);
+        if (err != ZoomSDKError_Success) {
+            printf("[ZoomNative] Auth call failed — will retry in 1s\n");
+            fflush(stdout);
 
-                ZoomSDKAuthService* svc = [[ZoomSDK sharedSDK] getAuthService];
-                if (!svc) {
-                    printf("[ZoomNative] Deferred auth: getAuthService returned nil\n");
-                    fflush(stdout);
-                    return;
-                }
-
-                NSString* sdkKeyNS = [NSString stringWithUTF8String:ZoomAddon::Instance().GetConfig().sdkKey.c_str()];
-
-                ZoomSDKAuthContext* ctx = [[ZoomSDKAuthContext alloc] init];
-                ctx.jwtToken = jwtNS;
-
-                ZoomSDKError err = [svc sdkAuth:ctx];
-                printf("[ZoomNative] Deferred SDKAuth (jwt only) result=%d (0=Success, 1=Failed)\n", (int)err);
-                fflush(stdout);
-
-                if (err != ZoomSDKError_Success) {
-                    ZoomSDKAuthContext* ctx1b = [[ZoomSDKAuthContext alloc] init];
-                    ctx1b.jwtToken = jwtNS;
-                    ctx1b.publicAppKey = sdkKeyNS;
-                    err = [svc sdkAuth:ctx1b];
-                    printf("[ZoomNative] SDKAuth (jwt+publicAppKey) result=%d\n", (int)err);
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                @autoreleasepool {
+                    ZoomSDKAuthService* svc = [[ZoomSDK sharedSDK] getAuthService];
+                    if (!svc) return;
+                    svc.delegate = g_authDelegate;
+                    ZoomSDKAuthContext* ctx2 = [[ZoomSDKAuthContext alloc] init];
+                    ctx2.jwtToken = jwtNS;
+                    ZoomSDKError err2 = [svc sdkAuth:ctx2];
+                    printf("[ZoomNative] Retry SDKAuth result=%d\n", (int)err2);
                     fflush(stdout);
                 }
-
-                if (err != ZoomSDKError_Success) {
-                    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-                        @autoreleasepool {
-                            printf("[ZoomNative] Retry auth (1.5s total)...\n");
-                            fflush(stdout);
-                            ZoomSDKAuthService* svc2 = [[ZoomSDK sharedSDK] getAuthService];
-                            if (!svc2) return;
-                            ZoomSDKAuthContext* ctx2 = [[ZoomSDKAuthContext alloc] init];
-                            ctx2.publicAppKey = sdkKeyNS;
-                            ZoomSDKError err2 = [svc2 sdkAuth:ctx2];
-                            printf("[ZoomNative] SDKAuth (publicAppKey only) result=%d\n", (int)err2);
-                            fflush(stdout);
-                        }
-                    });
-                }
-            }
-        });
+            });
+            return true;
+        }
     }
 
     return true;
