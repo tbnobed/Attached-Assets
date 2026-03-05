@@ -4,9 +4,14 @@ const EventEmitter = require('events');
 let nativeAddon = null;
 let addonAvailable = false;
 
-const sdkDllDir = path.join(__dirname, 'build', 'Release');
-if (process.platform === 'win32' && !process.env.PATH.includes(sdkDllDir)) {
-  process.env.PATH = sdkDllDir + ';' + process.env.PATH;
+const sdkLibDir = path.join(__dirname, 'build', 'Release');
+if (process.platform === 'win32' && !process.env.PATH.includes(sdkLibDir)) {
+  process.env.PATH = sdkLibDir + ';' + process.env.PATH;
+} else if (process.platform === 'darwin') {
+  const currentDyldPath = process.env.DYLD_LIBRARY_PATH || '';
+  if (!currentDyldPath.includes(sdkLibDir)) {
+    process.env.DYLD_LIBRARY_PATH = sdkLibDir + (currentDyldPath ? ':' + currentDyldPath : '');
+  }
 }
 
 try {

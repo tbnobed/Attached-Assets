@@ -1,8 +1,12 @@
 #include "zoom_addon.h"
 #include <vector>
 
+#if defined(_WIN32) || defined(__APPLE__)
+
 #ifdef _WIN32
 #include <windows.h>
+#endif
+
 #include "zoom_sdk.h"
 #include "zoom_sdk_raw_data_def.h"
 #include "rawdata/zoom_rawdata_api.h"

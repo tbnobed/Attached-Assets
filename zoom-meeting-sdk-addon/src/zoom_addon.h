@@ -72,7 +72,12 @@ private:
     ZoomConfig config_;
     std::map<uint32_t, ParticipantInfo> participants_;
     mutable std::mutex mutex_;
+
+#ifdef _WIN32
     std::wstring appPrivilegeToken_;
+#else
+    std::string appPrivilegeToken_str_;
+#endif
 
     Napi::ThreadSafeFunction videoCallback_;
     Napi::ThreadSafeFunction audioCallback_;
