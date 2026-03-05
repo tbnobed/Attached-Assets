@@ -124,7 +124,8 @@ npm start
 - InitParam.rawdataOpts.enableRawdataIntermediateMode MUST be false — true produces empty frames
 - Bot's own userId (selfUserId_) is detected via GetMySelfUser() at INMEETING and excluded from video subscriptions, EnumerateParticipants, and onUserVideoStatusChange to avoid wasting renderer slots
 - CRITICAL: Video subscription MUST happen at join time (OnParticipantJoined → SubscribeParticipantVideo → subscribeUserVideo). The SDK only accepts subscribe() calls during the initial join window; deferred subscribes return SDKERR_WRONG_USAGE (2)
-- CRITICAL: Do NOT unSubscribe+subscribe (RE-subscribe) on existing renderers — it fails with sub=2. The initial subscription persists through Video_OFF→Video_ON cycles; the renderer receives frames again automatically
+- CRITICAL: unSubscribe+subscribe on the SAME renderer fails with sub=2. Instead, destroy the old renderer entirely and create a fresh one (createRenderer+subscribe always works with sub=0)
+- On Video_ON: destroy old renderer, create fresh renderer with immediate subscribe — this is required because a renderer subscribed while camera was OFF won't receive RawData_On when camera turns ON
 - RetryVideoSubscriptions runs on periodic 5s interval + burst retries at 500ms/1.5s/3s after each participant join (for users who join after INMEETING)
 - PerUserVideoListener::subscribed_ resets to false on RawData_Off, enabling re-trigger on next RawData_On
 - If bot lacks recording permission, call `RequestLocalRecordingPrivilege()` and wait for `onRecordPrivilegeChanged(true)`

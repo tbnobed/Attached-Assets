@@ -319,14 +319,33 @@ public:
 
         if (status == Video_ON && g_rawDataActive) {
             std::lock_guard<std::mutex> lock(g_videoMutex);
-            if (!g_videoRenderers.count(userId)) {
-                printf("[ZoomNative] onUserVideoStatusChange: userId=%u video ON but no renderer — marking pending\n", userId);
+            if (g_videoRenderers.count(userId)) {
+                auto* oldRenderer = g_videoRenderers[userId].first;
+                auto* oldListener = g_videoRenderers[userId].second;
+                printf("[ZoomNative] onUserVideoStatusChange: userId=%u video ON — destroying old renderer to create fresh\n", userId);
                 fflush(stdout);
-                g_videoPendingResubscribe.insert(userId);
+                oldRenderer->unSubscribe();
+                destroyRenderer(oldRenderer);
+                delete oldListener;
+                g_videoRenderers.erase(userId);
+                g_videoSubscribedOK.erase(userId);
+            }
+            auto* listener = new PerUserVideoListener(userId);
+            IZoomSDKRenderer* renderer = nullptr;
+            auto err = createRenderer(&renderer, listener);
+            if (err == SDKERR_SUCCESS && renderer) {
+                renderer->setRawDataResolution(ZoomSDKResolution_1080P);
+                auto subErr = renderer->subscribe(userId, RAW_DATA_TYPE_VIDEO);
+                g_videoRenderers[userId] = { renderer, listener };
+                printf("[ZoomNative] onUserVideoStatusChange: userId=%u fresh renderer created (sub=%d)\n", userId, (int)subErr);
+                fflush(stdout);
+                if (subErr == SDKERR_SUCCESS) {
+                    g_videoSubscribedOK.insert(userId);
+                }
             } else {
-                printf("[ZoomNative] onUserVideoStatusChange: userId=%u video ON — renderer exists, keeping subscription\n", userId);
+                printf("[ZoomNative] onUserVideoStatusChange: userId=%u createRenderer FAILED (err=%d)\n", userId, (int)err);
                 fflush(stdout);
-                g_videoSubscribedOK.insert(userId);
+                delete listener;
             }
         }
     }
