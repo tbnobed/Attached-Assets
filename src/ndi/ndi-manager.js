@@ -157,6 +157,7 @@ class NDIManager extends EventEmitter {
       }
 
       source.sender.audio({
+        fourCC: this.grandiose.FOURCC_FLTp,
         sampleRate: sr,
         noChannels: ch,
         noSamples: noSamples,
