@@ -44,6 +44,7 @@ Electron desktop application for capturing isolated video/audio feeds from Zoom 
 - ARC enabled via `-fobjc-arc`
 - Framework search path: `-F<addon>/sdk/lib`
 - Runtime: `DYLD_FRAMEWORK_PATH` set by index.js
+- **CRITICAL**: ZoomSDK.framework uses `@executable_path/../Frameworks` rpath to find companion frameworks at runtime. All SDK files from `sdk/lib/` MUST be symlinked into `Electron.app/Contents/Frameworks/`. Without this, auth silently fails with `ZoomSDKError_Failed=1`. Run `npm run link-frameworks` after `npm install`.
 - SDK path: `/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDK/`
 - Init: `[[ZoomSDK sharedSDK] initSDKWithParams:]` with `needCustomizedUI=YES`, heap raw data modes
 - Auth: `ZoomSDKAuthContext.jwtToken` + `[authService sdkAuth:]`
@@ -98,7 +99,8 @@ Electron desktop application for capturing isolated video/audio feeds from Zoom 
 npm install
 cd zoom-meeting-sdk-addon && npm install && cd ..
 node scripts/install-zoom-sdk.js /Users/debo/Documents/zoom-sdk-macos-6.7.6.75900
-cd zoom-meeting-sdk-addon && npx node-gyp rebuild && cd ..
+npm run link-frameworks
+cd zoom-meeting-sdk-addon && CXX="$(pwd)/build-tools/cxx-objcpp.sh" npx node-gyp rebuild && cd ..
 ```
 
 Create `.env` with your ZOOM_SDK_KEY and ZOOM_SDK_SECRET, then:

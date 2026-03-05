@@ -172,7 +172,34 @@ if (platform === 'darwin') {
   }
 }
 
-console.log('');
+if (platform === 'darwin') {
+  console.log('Setting up Electron framework symlinks...');
+  try {
+    const electronFrameworksDir = path.join(__dirname, '..', 'node_modules', 'electron', 'dist', 'Electron.app', 'Contents', 'Frameworks');
+    if (fs.existsSync(path.join(__dirname, '..', 'node_modules', 'electron', 'dist', 'Electron.app'))) {
+      fs.mkdirSync(electronFrameworksDir, { recursive: true });
+      const sdkEntries = fs.readdirSync(destLib);
+      let linkCount = 0;
+      for (const entry of sdkEntries) {
+        const srcPath = path.join(destLib, entry);
+        const linkPath = path.join(electronFrameworksDir, entry);
+        try { fs.unlinkSync(linkPath); } catch (e) {}
+        try { fs.rmSync(linkPath, { recursive: true }); } catch (e) {}
+        fs.symlinkSync(srcPath, linkPath);
+        linkCount++;
+      }
+      console.log(`  Created ${linkCount} symlinks in Electron.app/Contents/Frameworks/`);
+      console.log('  (Required: ZoomSDK uses @executable_path/../Frameworks to find companions)');
+    } else {
+      console.warn('  Electron.app not found — run "npm install" first, then re-run this script');
+    }
+  } catch (err) {
+    console.warn('  Warning: Could not create Electron framework symlinks:', err.message);
+    console.warn('  You may need to manually symlink sdk/lib/* into Electron.app/Contents/Frameworks/');
+  }
+  console.log('');
+}
+
 console.log('=== SDK installed successfully ===');
 console.log('Location:', destBase);
 console.log('');

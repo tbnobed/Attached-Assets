@@ -7,7 +7,8 @@
     "start": "electron . --no-sandbox --disable-gpu-sandbox",
     "dev": "electron . --no-sandbox --disable-gpu-sandbox",
     "install-sdk": "node scripts/install-zoom-sdk.js",
-    "build-addon": "cd zoom-meeting-sdk-addon && npx node-gyp rebuild"
+    "build-addon": "cd zoom-meeting-sdk-addon && npx node-gyp rebuild",
+    "link-frameworks": "node scripts/link-electron-frameworks.js"
   },
   "keywords": [
     "zoom",
