@@ -54,6 +54,7 @@ public:
     void Cleanup();
 
     AddonState GetState() const { return state_; }
+    const ZoomConfig& GetConfig() const { return config_; }
     std::map<uint32_t, ParticipantInfo> GetParticipants() const;
 
     void OnVideoFrame(uint32_t userId, const uint8_t* data, int width, int height);

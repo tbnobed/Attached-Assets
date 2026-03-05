@@ -177,7 +177,7 @@ bool ZoomAddon::Initialize(const ZoomConfig& config) {
         sdk.enableRawdataIntermediateMode = NO;
 
         ZoomSDKInitParams* params = [[ZoomSDKInitParams alloc] init];
-        params.zoomDomain = @"https://zoom.us";
+        params.zoomDomain = @"zoom.us";
         params.enableLog = YES;
         params.needCustomizedUI = YES;
 
@@ -236,12 +236,23 @@ bool ZoomAddon::Authenticate() {
                     return;
                 }
 
+                NSString* sdkKeyNS = [NSString stringWithUTF8String:ZoomAddon::Instance().GetConfig().sdkKey.c_str()];
+
                 ZoomSDKAuthContext* ctx = [[ZoomSDKAuthContext alloc] init];
                 ctx.jwtToken = jwtNS;
 
                 ZoomSDKError err = [svc sdkAuth:ctx];
-                printf("[ZoomNative] Deferred SDKAuth result=%d (0=Success, 1=Failed)\n", (int)err);
+                printf("[ZoomNative] Deferred SDKAuth (jwt only) result=%d (0=Success, 1=Failed)\n", (int)err);
                 fflush(stdout);
+
+                if (err != ZoomSDKError_Success) {
+                    ZoomSDKAuthContext* ctx1b = [[ZoomSDKAuthContext alloc] init];
+                    ctx1b.jwtToken = jwtNS;
+                    ctx1b.publicAppKey = sdkKeyNS;
+                    err = [svc sdkAuth:ctx1b];
+                    printf("[ZoomNative] SDKAuth (jwt+publicAppKey) result=%d\n", (int)err);
+                    fflush(stdout);
+                }
 
                 if (err != ZoomSDKError_Success) {
                     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
@@ -251,9 +262,9 @@ bool ZoomAddon::Authenticate() {
                             ZoomSDKAuthService* svc2 = [[ZoomSDK sharedSDK] getAuthService];
                             if (!svc2) return;
                             ZoomSDKAuthContext* ctx2 = [[ZoomSDKAuthContext alloc] init];
-                            ctx2.jwtToken = jwtNS;
+                            ctx2.publicAppKey = sdkKeyNS;
                             ZoomSDKError err2 = [svc2 sdkAuth:ctx2];
-                            printf("[ZoomNative] Retry SDKAuth result=%d\n", (int)err2);
+                            printf("[ZoomNative] SDKAuth (publicAppKey only) result=%d\n", (int)err2);
                             fflush(stdout);
                         }
                     });
