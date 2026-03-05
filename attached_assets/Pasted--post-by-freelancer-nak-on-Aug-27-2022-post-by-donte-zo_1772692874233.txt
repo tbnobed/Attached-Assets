@@ -1,0 +1,170 @@
+
+post by freelancer.nak on Aug 27, 2022
+post by donte.zoom on Aug 29, 2022
+post by freelancer.nak on Aug 30, 2022
+
+Naeem Ahmed MVP
+freelancer.nak
+Leader
+
+1
+Aug 2022
+I have created separate RendererHelpers for Audio and Video/ScreenShare as below:
+
+RendererHelper.h
+
+#pragma once
+
+#include "RendererHelperBase.h"
+
+class RendererHelper :
+	public RendererHelperBase,
+	public IZoomSDKRendererDelegate
+{
+public:
+	RendererHelper(UINT64 meetingNumber, ZoomSDKRawDataType type, string sourceId);
+	
+	void setUserRendererStatus(SDKError recordingStatus);
+
+	string getRawDataStatus(RawDataStatus status);
+	string getFilePath();
+	string getResolution();
+	SDKError getUserRendererStatus();
+
+private:
+	string resolution;
+	SDKError recordingStatus;
+
+	// Inherited via IZoomSDKRendererDelegate
+	virtual void onRendererBeDestroyed() override;
+	virtual void onRawDataFrameReceived(YUVRawDataI420* data) override;
+	virtual void onRawDataStatusChanged(RawDataStatus status) override;
+};
+AudioRendererHelper.h
+
+#pragma once
+
+#include "RendererHelperBase.h"
+
+class AudioRendererHelper :
+	public RendererHelperBase,
+	public IZoomSDKRendererDelegate,
+	public IZoomSDKAudioRawDataDelegate
+{
+public:
+	AudioRendererHelper(UINT64 meetingNumber, ZoomSDKRawDataType type, string sourceId);
+	virtual string getRawDataStatus(RawDataStatus status) override;
+	string getAudioMeta();
+	string getFilePath();
+	string getResolution();
+
+private:
+	string audioRawMeta;
+
+	// Inherited via IZoomSDKRendererDelegate
+	virtual void onRendererBeDestroyed() override;
+	virtual void onRawDataFrameReceived(YUVRawDataI420* data) override;
+	virtual void onRawDataStatusChanged(RawDataStatus status) override;
+
+	// Inherited via IZoomSDKAudioRawDataDelegate
+	virtual void onMixedAudioRawDataReceived(AudioRawData* data_) override;
+	virtual void onOneWayAudioRawDataReceived(AudioRawData* data_, uint32_t node_id) override;
+};
+and then creating new instances of the above classes once receiving a new participant video/screen share as below:
+
+void CreateUserRenderer(UINT64 userId, ZoomSDKRawDataType type)
+{
+	string raw_type;
+
+	switch (type)
+	{
+	case ZoomSDKRawDataType::RAW_DATA_TYPE_VIDEO:
+		raw_type = "-video";
+		break;
+
+	case ZoomSDKRawDataType::RAW_DATA_TYPE_SHARE:
+		raw_type = "-screenshare";
+		break;
+	}
+
+	string mapKey = to_string(userId) + raw_type;
+	IZoomSDKRendererDelegate* currentUserRenderer = rawData[mapKey];
+
+	if (currentUserRenderer == NULL)
+	{
+		currentUserRenderer = new RendererHelper(meetingNumber, type, to_string(userId));
+	}
+
+	SDKError rendererStatus = createRenderer(&rawRender, currentUserRenderer);
+
+	rawData[mapKey] = currentUserRenderer;
+
+	if (rendererStatus == SDKError::SDKERR_SUCCESS)
+	{
+		rawRender->setRawDataResolution(ZoomSDKResolution::ZoomSDKResolution_1080P);
+		((RendererHelper*)currentUserRenderer)->setUserRendererStatus(rawRender->subscribe(userId, type));
+	}
+}
+and multi-user video/screenshare recording is working concurrently. Thanks
+
+
+post by donte.zoom on Aug 31, 2022
+
+Donte 
+donte.zoom
+Leader
+Aug 2022
+@freelancer.nak,
+
+You’re fantastic! Thank you for sharing your knowledge with the Community. The information you gave is really helpful and we appreciate how you explained it! Thank you so much for taking the time to help.
+
+
+post by freelancer.nak on Aug 31, 2022
+
+Naeem Ahmed MVP
+freelancer.nak
+Leader
+Aug 2022
+Welcome and Thanks :slight_smile:
+
+
+post by donte.zoom on Aug 31, 2022
+
+Donte 
+donte.zoom
+Leader
+Aug 2022
+@freelancer.nak,
+
+It is our pleasure!
+
+Best,
+Donte
+
+
+2 years later
+post by swatantra12singh on Apr 17, 2024
+
+Swatantra
+swatantra12singh
+
+1
+
+Naeem Ahmed MVP
+Apr 2024
+hi can you provide a gitrepo with the same implimentation of multiple user and screen share recording in zoom @freelancer.nak
+
+
+post by freelancer.nak on Apr 18, 2024
+
+Naeem Ahmed MVP
+freelancer.nak
+Leader
+
+1
+Apr 2024
+@swatantra12singh hope you will be fine.
+
+Please connect WhatsApp.
+
+Thanks
