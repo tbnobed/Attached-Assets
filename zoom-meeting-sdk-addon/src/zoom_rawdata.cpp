@@ -163,13 +163,13 @@ public:
     void onOneWayAudioRawDataReceived(AudioRawData* data, uint32_t node_id) override {
         if (!data) return;
 
-        static int audioLogCount = 0;
-        if (audioLogCount < 5 || audioLogCount % 1000 == 0) {
+        auto& count = audioFrameCounts_[node_id];
+        if (count < 5 || count % 1000 == 0) {
             printf("[ZoomNative] Audio frame: nodeId=%u len=%d sr=%d ch=%d (frame #%d)\n",
-                   node_id, data->GetBufferLen(), data->GetSampleRate(), data->GetChannelNum(), audioLogCount);
+                   node_id, data->GetBufferLen(), data->GetSampleRate(), data->GetChannelNum(), count);
             fflush(stdout);
         }
-        audioLogCount++;
+        count++;
 
         ZoomAddon::Instance().OnAudioFrame(
             node_id,
@@ -182,6 +182,9 @@ public:
 
     void onShareAudioRawDataReceived(AudioRawData* data, uint32_t node_id) override {}
     void onOneWayInterpreterAudioRawDataReceived(AudioRawData* data, const zchar_t* pLanguageName) override {}
+
+private:
+    std::map<uint32_t, int> audioFrameCounts_;
 };
 
 class RecordingEventListener : public IMeetingRecordingCtrlEvent {
@@ -265,8 +268,9 @@ void subscribeUserVideo(uint32_t userId) {
     if (g_videoRenderers.count(userId)) {
         auto* renderer = g_videoRenderers[userId].first;
         renderer->unSubscribe();
+        renderer->setRawDataResolution(ZoomSDKResolution_1080P);
         auto subErr = renderer->subscribe(userId, RAW_DATA_TYPE_VIDEO);
-        printf("[ZoomNative] subscribeUserVideo: userId=%u RE-subscribe result=%d\n", userId, (int)subErr);
+        printf("[ZoomNative] subscribeUserVideo: userId=%u RE-subscribe result=%d (1080P)\n", userId, (int)subErr);
         fflush(stdout);
         if (subErr == SDKERR_SUCCESS) {
             g_videoSubscribedOK.insert(userId);
@@ -278,7 +282,7 @@ void subscribeUserVideo(uint32_t userId) {
     IZoomSDKRenderer* renderer = nullptr;
     auto err = createRenderer(&renderer, listener);
     if (err == SDKERR_SUCCESS && renderer) {
-        auto resErr = renderer->setRawDataResolution(ZoomSDKResolution_360P);
+        auto resErr = renderer->setRawDataResolution(ZoomSDKResolution_1080P);
         auto subErr = renderer->subscribe(userId, RAW_DATA_TYPE_VIDEO);
         g_videoRenderers[userId] = { renderer, listener };
         printf("[ZoomNative] subscribeUserVideo: userId=%u renderer created (res=%d sub=%d)\n", userId, (int)resErr, (int)subErr);
