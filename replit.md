@@ -32,9 +32,7 @@ Electron desktop application for capturing isolated video/audio feeds from Zoom 
 - `zoom-meeting-sdk-addon/src/zoom_meeting.cpp` - Meeting join/leave, participant events (platform-specific string handling)
 - `zoom-meeting-sdk-addon/src/zoom_rawdata.cpp` - Raw data capture (I420->RGBA video, PCM audio) — shared between macOS and Windows
 - `zoom-meeting-sdk-addon/binding.gyp` - Build config for node-gyp (macOS dylib / Windows lib+dll)
-- `scripts/install-zoom-sdk.js` - Copies SDK files from download to addon directory (platform-aware)
-- `scripts/scan-zoom-sdk.js` - Lists SDK headers/libs/bins for debugging
-- `scripts/fix-grandiose.js` - Patches grandiose for MSVC const-correctness
+- `scripts/install-zoom-sdk.js` - Copies SDK files from download to addon directory (platform-aware, fixes dylib install_name on macOS)
 
 ## Platform Support
 
@@ -103,13 +101,9 @@ npm start
 ```
 
 ## Quick Setup (Windows)
-One command does everything:
 ```
-setup.bat "C:\path\to\zoom-sdk\x64"
-```
-Or via Node:
-```
-node scripts/setup.js "C:\path\to\zoom-sdk\x64"
+node scripts/install-zoom-sdk.js "C:\path\to\zoom-sdk\x64"
+cd zoom-meeting-sdk-addon && npx node-gyp rebuild
 ```
 
 ## Zoom SDK Notes

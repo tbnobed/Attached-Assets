@@ -6,8 +6,6 @@
   "scripts": {
     "start": "electron . --no-sandbox --disable-gpu-sandbox",
     "dev": "electron . --no-sandbox --disable-gpu-sandbox",
-    "setup": "node scripts/setup.js",
-    "fix-ndi": "node scripts/fix-grandiose.js",
     "install-sdk": "node scripts/install-zoom-sdk.js",
     "build-addon": "cd zoom-meeting-sdk-addon && npx node-gyp rebuild"
   },

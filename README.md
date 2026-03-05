@@ -1,6 +1,6 @@
 # Zoom ISO Capture
 
-Professional broadcast-grade application for capturing isolated video and audio feeds from Zoom Video SDK sessions. Each participant's feed is captured independently with no overlays, enabling NDI output for live switching and local ISO recording.
+Professional broadcast-grade Electron application for capturing isolated video and audio feeds from Zoom meetings. Each participant's feed is captured independently via the Zoom Meeting SDK's raw data API, enabling NDI output for live switching and local ISO recording.
 
 ## Features
 
@@ -9,60 +9,65 @@ Professional broadcast-grade application for capturing isolated video and audio 
 - **NDI Output**: Each participant pushed as named NDI source for OBS/hardware switchers
 - **Local ISO Recording**: Separate MP4 per participant via FFmpeg
 - **Test Pattern Mode**: Generate placeholder NDI sources for infrastructure testing
-- **Session Reconnection**: Automatic reconnect on connection drops
 - **Broadcast-Style UI**: Dark, minimal dashboard with live thumbnails and controls
+
+## Prerequisites
+
+- Node.js 20+
+- macOS 10.15+ (primary) or Windows 10+ (legacy)
+- Zoom Meeting SDK (download from https://marketplace.zoom.us/)
+- FFmpeg (for local recording): https://ffmpeg.org/download.html
+- NDI Tools (optional, for NDI output): https://ndi.video/tools/
 
 ## Setup
 
-### Prerequisites
-
-- Node.js 20+
-- NDI Tools (for NDI output): https://ndi.video/tools/
-- FFmpeg: https://ffmpeg.org/download.html (add bin folder to system PATH)
-- Visual Studio Build Tools with "Desktop development with C++" (for NDI native module)
-
-### Install & Run
+### 1. Install Dependencies
 
 ```bash
 npm install
-npm start
+cd zoom-meeting-sdk-addon && npm install && cd ..
 ```
 
-### Environment Variables
+### 2. Install Zoom Meeting SDK
+
+Download the macOS Meeting SDK from Zoom Marketplace, then:
+
+```bash
+node scripts/install-zoom-sdk.js ~/Downloads/zoom-meeting-sdk-mac-6.x.x
+```
+
+### 3. Build the Native Addon
+
+```bash
+npm run build-addon
+```
+
+### 4. Configure Environment
 
 Create a `.env` file in the project root:
 
 ```
 ZOOM_SDK_KEY=your_sdk_key_here
 ZOOM_SDK_SECRET=your_sdk_secret_here
+ZOOM_ACCOUNT_ID=your_account_id_here
+ZOOM_CLIENT_ID=your_client_id_here
+ZOOM_CLIENT_SECRET=your_client_secret_here
 DEFAULT_OUTPUT_DIR=./recordings
-SESSION_NAME=PlexStudioSession
-SESSION_PASSWORD=optional
 ```
 
-Get your SDK Key and Secret from the Zoom Marketplace (https://marketplace.zoom.us/) — create a "Video SDK" app type.
+Get your SDK Key and Secret from the Zoom Marketplace — create a "Meeting SDK" app type.
 
-### Installing NDI Support
+### 5. Run
 
-After `npm install`, install the NDI module:
+```bash
+npm start
+```
+
+## Installing NDI Support (Optional)
 
 ```bash
 npm install grandiose
 ```
-
-If you get compilation errors about `const char*` (common on newer Visual Studio versions), run the included patch script:
-
-```bash
-npm run fix-ndi
-```
-
-This automatically patches the grandiose source code for MSVC const-correctness and rebuilds the native module.
-
-**Requirements for grandiose to compile:**
-1. NDI Tools installed (https://ndi.video/tools/)
-2. Visual Studio Build Tools with "Desktop development with C++" workload
-3. Python 3.x (required by node-gyp)
-4. Node.js 20+
 
 If NDI support is not installed, the app still runs — recording and all other features work fine. NDI output will show as "Unavailable" in the dashboard.
 
@@ -70,14 +75,14 @@ If NDI support is not installed, the app still runs — recording and all other 
 
 1. Install NDI Tools from https://ndi.video/tools/
 2. Install the OBS NDI plugin (https://github.com/obs-ndi/obs-ndi/releases)
-3. Launch Zoom ISO Capture and join a session
+3. Launch Zoom ISO Capture and join a meeting
 4. In OBS, click "+" under Sources, choose "NDI Source"
-5. Select the participant source (e.g., `ZoomISO_ISO1_Alice_Video`)
+5. Select the participant source (e.g., `ZoomISO_ISO1_Alice`)
 6. Each participant appears as a separate NDI source
 
 Hardware switchers on the same network will also see these sources automatically.
 
-## Testing Without a Zoom Session
+## Testing Without a Zoom Meeting
 
 1. Click "Test Pattern" in the toolbar — creates 8 NDI sources with color bars
 2. Confirm you see them in OBS or your switcher
@@ -89,18 +94,22 @@ Hardware switchers on the same network will also see these sources automatically
 src/
   main/         - Electron main process (session management, NDI, recording)
   renderer/     - Dashboard UI (participant grid, controls, status)
-  zoom/         - Zoom Video SDK session wrapper and JWT generation
+  zoom/         - Zoom Meeting SDK session wrapper and JWT generation
   ndi/          - NDI source management per participant (via grandiose)
   recorder/     - FFmpeg-based ISO recording per participant
   config/       - Settings management
+zoom-meeting-sdk-addon/
+  src/          - C++ native addon wrapping Zoom Meeting SDK raw data API
+  binding.gyp   - Build config (macOS dylib / Windows lib+dll)
+  index.js      - JS bridge with platform-aware library loading
 scripts/
-  fix-grandiose.js - Patches grandiose for MSVC compilation
+  install-zoom-sdk.js - Copies SDK files and fixes dylib paths
 ```
 
 ## Tech Stack
 
 - Electron (desktop runtime)
-- Zoom Video SDK (@zoom/videosdk)
+- Zoom Meeting SDK (native C++ addon via N-API)
 - grandiose (NDI output, optional)
 - FFmpeg (ISO recording)
 - Vanilla JS UI with broadcast-style dark theme
