@@ -114,7 +114,6 @@ class NDIManager extends EventEmitter {
     if (source.mock || !source.sender) return;
 
     try {
-      const fourCC = this.grandiose.FOURCC_BGRA || this.grandiose.FOURCC_RGBA || 0x42475241;
       source.sender.video({
         xres: width,
         yres: height,
@@ -122,7 +121,7 @@ class NDIManager extends EventEmitter {
         frameRateD: 1000,
         pictureAspectRatio: width / height,
         frameFormatType: 1,
-        fourCC: fourCC,
+        fourCC: this.grandiose.FOURCC_BGRA,
         lineStrideBytes: width * 4,
         data: frameBuffer,
       });
@@ -149,13 +148,15 @@ class NDIManager extends EventEmitter {
       if (noSamples <= 0) return;
 
       const floatBuf = Buffer.alloc(noSamples * ch * 4);
-      for (let i = 0; i < noSamples * ch; i++) {
-        const int16 = audioBuffer.readInt16LE(i * 2);
-        floatBuf.writeFloatLE(int16 / 32768.0, i * 4);
+      for (let s = 0; s < noSamples; s++) {
+        for (let c = 0; c < ch; c++) {
+          const int16 = audioBuffer.readInt16LE((s * ch + c) * 2);
+          const planarOffset = (c * noSamples + s) * 4;
+          floatBuf.writeFloatLE(int16 / 32768.0, planarOffset);
+        }
       }
 
       source.sender.audio({
-        fourCC: 0x00000001,
         sampleRate: sr,
         noChannels: ch,
         noSamples: noSamples,
