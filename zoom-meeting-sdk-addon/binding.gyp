@@ -36,15 +36,17 @@
         }],
         ["OS=='mac'", {
           "sources": [
-            "src/zoom_auth.mm",
-            "src/zoom_meeting.mm",
-            "src/zoom_rawdata.mm"
+            "src/zoom_auth.cpp",
+            "src/zoom_meeting.cpp",
+            "src/zoom_rawdata.cpp"
           ],
           "xcode_settings": {
             "GCC_ENABLE_CPP_EXCEPTIONS": "YES",
             "CLANG_CXX_LIBRARY": "libc++",
             "MACOSX_DEPLOYMENT_TARGET": "10.15",
+            "GCC_INPUT_FILETYPE": "sourcecode.cpp.objcpp",
             "OTHER_CPLUSPLUSFLAGS": [
+              "-x", "objective-c++",
               "-std=c++17",
               "-fobjc-arc",
               "-F<(module_root_dir)/sdk/lib"
@@ -52,6 +54,8 @@
             "OTHER_LDFLAGS": [
               "-F<(module_root_dir)/sdk/lib",
               "-framework ZoomSDK",
+              "-framework Foundation",
+              "-framework AppKit",
               "-Wl,-rpath,@loader_path",
               "-Wl,-rpath,@loader_path/../../sdk/lib",
               "-Wl,-rpath,@executable_path/../Frameworks"

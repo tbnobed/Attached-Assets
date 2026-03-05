@@ -1,0 +1,147 @@
+debo@LLM-Studio-1 zoom-meeting-sdk-addon % NODE_TLS_REJECT_UNAUTHORIZED=0 PYTHON=/opt/homebrew/bin/python3.12 npx node-gyp rebuild
+gyp info it worked if it ends with ok
+gyp info using node-gyp@10.3.1
+gyp info using node@20.20.0 | darwin | arm64
+gyp info find Python using Python version 3.12.13 found at "/opt/homebrew/opt/python@3.12/bin/python3.12"
+
+gyp info spawn /opt/homebrew/opt/python@3.12/bin/python3.12
+gyp info spawn args [
+gyp info spawn args '/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/node_modules/node-gyp/gyp/gyp_main.py',
+gyp info spawn args 'binding.gyp',
+gyp info spawn args '-f',
+gyp info spawn args 'make',
+gyp info spawn args '-I',
+gyp info spawn args '/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/build/config.gypi',
+gyp info spawn args '-I',
+gyp info spawn args '/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/node_modules/node-gyp/addon.gypi',
+gyp info spawn args '-I',
+gyp info spawn args '/Users/debo/Library/Caches/node-gyp/20.20.0/include/node/common.gypi',
+gyp info spawn args '-Dlibrary=shared_library',
+gyp info spawn args '-Dvisibility=default',
+gyp info spawn args '-Dnode_root_dir=/Users/debo/Library/Caches/node-gyp/20.20.0',
+gyp info spawn args '-Dnode_gyp_dir=/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/node_modules/node-gyp',
+gyp info spawn args '-Dnode_lib_file=/Users/debo/Library/Caches/node-gyp/20.20.0/<(target_arch)/node.lib',
+gyp info spawn args '-Dmodule_root_dir=/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon',
+gyp info spawn args '-Dnode_engine=v8',
+gyp info spawn args '--depth=.',
+gyp info spawn args '--no-parallel',
+gyp info spawn args '--generator-output',
+gyp info spawn args 'build',
+gyp info spawn args '-Goutput_dir=.'
+gyp info spawn args ]
+gyp info spawn make
+gyp info spawn args [ 'BUILDTYPE=Release', '-C', 'build' ]
+  CXX(target) Release/obj.target/zoom_meeting_sdk/src/zoom_addon.o
+  CXX(target) Release/obj.target/zoom_meeting_sdk/src/zoom_auth.o
+In file included from ../src/zoom_auth.cpp:141:
+In file included from /Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDK.h:10:
+In file included from /Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKErrors.h:11:
+In file included from /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/Foundation.framework/Headers/Foundation.h:8:
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSObjCRuntime.h:601:1: error: expected unqualified-id
+@class NSString, Protocol;
+^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSObjCRuntime.h:603:9: error: unknown type name 'NSString'
+typedef NSString * NSExceptionName NS_TYPED_EXTENSIBLE_ENUM;
+        ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSObjCRuntime.h:604:9: error: unknown type name 'NSString'
+typedef NSString * NSRunLoopMode NS_TYPED_EXTENSIBLE_ENUM;
+        ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSObjCRuntime.h:606:19: error: unknown type name 'NSString'
+FOUNDATION_EXPORT NSString *NSStringFromSelector(SEL aSelector);
+                  ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSObjCRuntime.h:607:44: error: unknown type name 'NSString'
+FOUNDATION_EXPORT SEL NSSelectorFromString(NSString *aSelectorName);
+                                           ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSObjCRuntime.h:609:19: error: unknown type name 'NSString'
+FOUNDATION_EXPORT NSString *NSStringFromClass(Class aClass);
+                  ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSObjCRuntime.h:610:53: error: unknown type name 'NSString'
+FOUNDATION_EXPORT Class _Nullable NSClassFromString(NSString *aClassName);
+                                                    ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSObjCRuntime.h:612:19: error: unknown type name 'NSString'
+FOUNDATION_EXPORT NSString *NSStringFromProtocol(Protocol *proto) API_AVAILABLE(macos(10.5), ios(2.0), watchos(2.0), tvos(9.0));
+                  ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSObjCRuntime.h:612:50: error: unknown type name 'Protocol'
+FOUNDATION_EXPORT NSString *NSStringFromProtocol(Protocol *proto) API_AVAILABLE(macos(10.5), ios(2.0), watchos(2.0), tvos(9.0));
+                                                 ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSObjCRuntime.h:613:19: error: unknown type name 'Protocol'
+FOUNDATION_EXPORT Protocol * _Nullable NSProtocolFromString(NSString *namestr) API_AVAILABLE(macos(10.5), ios(2.0), watchos(2.0), tvos(9.0));
+                  ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSObjCRuntime.h:613:61: error: unknown type name 'NSString'
+FOUNDATION_EXPORT Protocol * _Nullable NSProtocolFromString(NSString *namestr) API_AVAILABLE(macos(10.5), ios(2.0), watchos(2.0), tvos(9.0));
+                                                            ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSObjCRuntime.h:617:30: error: unknown type name 'NSString'
+FOUNDATION_EXPORT void NSLog(NSString *format, ...) NS_FORMAT_FUNCTION(1,2) NS_NO_TAIL_CALL;
+                             ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSObjCRuntime.h:617:53: error: format argument not a string type
+FOUNDATION_EXPORT void NSLog(NSString *format, ...) NS_FORMAT_FUNCTION(1,2) NS_NO_TAIL_CALL;
+                             ~~~~~~~~~~~~~~~~       ^                  ~
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSObjCRuntime.h:94:49: note: expanded from macro 'NS_FORMAT_FUNCTION'
+        #define NS_FORMAT_FUNCTION(F,A) __attribute__((format(__NSString__, F, A)))
+                                                       ^                    ~
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSObjCRuntime.h:618:31: error: unknown type name 'NSString'
+FOUNDATION_EXPORT void NSLogv(NSString *format, va_list args) NS_FORMAT_FUNCTION(1,0) NS_NO_TAIL_CALL;
+                              ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSObjCRuntime.h:618:63: error: format argument not a string type
+FOUNDATION_EXPORT void NSLogv(NSString *format, va_list args) NS_FORMAT_FUNCTION(1,0) NS_NO_TAIL_CALL;
+                              ~~~~~~~~~~~~~~~~                ^                  ~
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSObjCRuntime.h:94:49: note: expanded from macro 'NS_FORMAT_FUNCTION'
+        #define NS_FORMAT_FUNCTION(F,A) __attribute__((format(__NSString__, F, A)))
+                                                       ^                    ~
+In file included from ../src/zoom_auth.cpp:141:
+In file included from /Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDK.h:10:
+In file included from /Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKErrors.h:11:
+In file included from /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/Foundation.framework/Headers/Foundation.h:10:
+In file included from /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSArray.h:5:
+In file included from /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSObject.h:8:
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSZone.h:9:1: error: expected unqualified-id
+@class NSString;
+^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSZone.h:19:63: error: unknown type name 'NSString'
+FOUNDATION_EXPORT void NSSetZoneName(NSZone * _Nullable zone, NSString *name)NS_SWIFT_UNAVAILABLE("Zone-based memory management is unavailable");
+                                                              ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSZone.h:20:19: error: unknown type name 'NSString'
+FOUNDATION_EXPORT NSString *NSZoneName(NSZone * _Nullable zone) NS_SWIFT_UNAVAILABLE("Zone-based memory management is unavailable");
+                  ^
+In file included from ../src/zoom_auth.cpp:141:
+In file included from /Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDK.h:10:
+In file included from /Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKErrors.h:11:
+In file included from /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/Foundation.framework/Headers/Foundation.h:10:
+In file included from /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSArray.h:5:
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSObject.h:10:1: error: expected unqualified-id
+@class NSInvocation, NSMethodSignature, NSCoder, NSString, NSEnumerator;
+^
+fatal error: too many errors emitted, stopping now [-ferror-limit=]
+20 errors generated.
+make: *** [Release/obj.target/zoom_meeting_sdk/src/zoom_auth.o] Error 1
+gyp ERR! build error 
+gyp ERR! stack Error: `make` failed with exit code: 2
+gyp ERR! stack at ChildProcess.<anonymous> (/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/node_modules/node-gyp/lib/build.js:216:23)
+gyp ERR! System Darwin 22.6.0
+gyp ERR! command "/opt/homebrew/Cellar/node@20/20.20.0/bin/node" "/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/node_modules/.bin/node-gyp" "rebuild"
+gyp ERR! cwd /Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon
+gyp ERR! node -v v20.20.0
+gyp ERR! node-gyp -v v10.3.1
+gyp ERR! not ok 
+debo@LLM-Studio-1 zoom-meeting-sdk-addon % NODE_TLS_REJECT_UNAUTHORIZED=0 PYTHON=/opt/homebrew/bin/python3.12 npx node-gyp rebuild
+/opt/homebrew/Cellar/node@20/20.20.0/lib/node_modules/npm/lib/cli/validate-engines.js:31
+    throw err
+    ^
+
+Error: EPERM: operation not permitted, uv_cwd
+    at process.wrappedCwd (node:internal/bootstrap/switches/does_own_process_state:144:28)
+    at process.cwd (/opt/homebrew/Cellar/node@20/20.20.0/lib/node_modules/npm/node_modules/graceful-fs/polyfills.js:10:19)
+    at new Config (/opt/homebrew/Cellar/node@20/20.20.0/lib/node_modules/npm/node_modules/@npmcli/config/lib/index.js:71:19)
+    at new Npm (/opt/homebrew/Cellar/node@20/20.20.0/lib/node_modules/npm/lib/npm.js:67:19)
+    at module.exports (/opt/homebrew/Cellar/node@20/20.20.0/lib/node_modules/npm/lib/cli/entry.js:21:15)
+    at module.exports (/opt/homebrew/Cellar/node@20/20.20.0/lib/node_modules/npm/lib/cli/validate-engines.js:39:10)
+    at module.exports (/opt/homebrew/Cellar/node@20/20.20.0/lib/node_modules/npm/lib/cli.js:4:31)
+    at Object.<anonymous> (/opt/homebrew/Cellar/node@20/20.20.0/lib/node_modules/npm/bin/npx-cli.js:130:1)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10) {
+  errno: -1,
+  code: 'EPERM',
+  syscall: 'uv_cwd'
+}
+
+Node.js v20.20.0
