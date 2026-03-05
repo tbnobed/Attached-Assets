@@ -160,6 +160,9 @@ class SessionManager extends EventEmitter {
     }
 
     console.log('[SessionManager] Attempting to join meeting:', meetingId);
+    console.log('[TokenDebug] appPrivilegeToken type=%s len=%d val=%s',
+      typeof appPrivilegeToken, String(appPrivilegeToken).length,
+      String(appPrivilegeToken).substring(0, 30));
 
     const ok = this.zoomBridge.joinMeeting(
       meetingId,

@@ -111,10 +111,14 @@ class ZoomMeetingBridge extends EventEmitter {
     }
 
     const cleanId = meetingId.replace(/[\s-]/g, '');
+    const args = [cleanId, password, displayName || 'PlexISO', appPrivilegeToken || ''];
+    console.log('[TokenDebug] joinMeeting args:', args.map((a, i) =>
+      `[${i}] type=${typeof a} len=${String(a).length} val=${String(a).substring(0,30)}`
+    ));
     if (appPrivilegeToken) {
       console.log('[ZoomBridge] Joining with app_privilege_token (local recording pre-authorized)');
     }
-    return nativeAddon.joinMeeting(cleanId, password, displayName || 'PlexISO', appPrivilegeToken || '');
+    return nativeAddon.joinMeeting(...args);
   }
 
   leaveMeeting() {

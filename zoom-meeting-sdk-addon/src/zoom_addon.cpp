@@ -174,6 +174,14 @@ static Napi::Value AuthSDK(const Napi::CallbackInfo& info) {
 static Napi::Value JoinMeeting(const Napi::CallbackInfo& info) {
     Napi::Env env = info.Env();
 
+    for (size_t i = 0; i < info.Length(); i++) {
+        std::string val = info[i].IsString() ?
+            info[i].As<Napi::String>().Utf8Value() : "[not a string]";
+        printf("[NativeArgs] arg[%zu] = %.40s (len=%zu)\n",
+            i, val.c_str(), val.length());
+        fflush(stdout);
+    }
+
     if (info.Length() < 2) {
         Napi::TypeError::New(env, "meetingId and password required").ThrowAsJavaScriptException();
         return env.Undefined();
