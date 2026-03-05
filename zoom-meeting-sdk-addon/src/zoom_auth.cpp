@@ -221,12 +221,12 @@ bool ZoomAddon::Authenticate() {
         }
 
         NSString* jwtNS = [NSString stringWithUTF8String:config_.jwtToken.c_str()];
-        printf("[ZoomNative] SDK initialized: %d\n", (int)[[ZoomSDK sharedSDK] isSDKInitialized]);
+        printf("[ZoomNative] Scheduling deferred auth (0.5s)\n");
         fflush(stdout);
 
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
             @autoreleasepool {
-                printf("[ZoomNative] Deferred auth: SDK initialized=%d\n", (int)[[ZoomSDK sharedSDK] isSDKInitialized]);
+                printf("[ZoomNative] Deferred auth executing...\n");
                 fflush(stdout);
 
                 ZoomSDKAuthService* svc = [[ZoomSDK sharedSDK] getAuthService];
@@ -246,7 +246,7 @@ bool ZoomAddon::Authenticate() {
                 if (err != ZoomSDKError_Success) {
                     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
                         @autoreleasepool {
-                            printf("[ZoomNative] Retry auth: SDK initialized=%d\n", (int)[[ZoomSDK sharedSDK] isSDKInitialized]);
+                            printf("[ZoomNative] Retry auth (1.5s total)...\n");
                             fflush(stdout);
                             ZoomSDKAuthService* svc2 = [[ZoomSDK sharedSDK] getAuthService];
                             if (!svc2) return;
