@@ -33,6 +33,12 @@
           ]
         }],
         ["OS=='mac'", {
+          "cflags_cc": [
+            "-x", "objective-c++",
+            "-std=c++17",
+            "-fobjc-arc",
+            "-F<(module_root_dir)/sdk/lib"
+          ],
           "xcode_settings": {
             "GCC_ENABLE_CPP_EXCEPTIONS": "YES",
             "CLANG_CXX_LIBRARY": "libc++",
@@ -52,6 +58,17 @@
             ],
             "FRAMEWORK_SEARCH_PATHS": [
               "<(module_root_dir)/sdk/lib"
+            ]
+          },
+          "libraries": [
+            "-F<(module_root_dir)/sdk/lib",
+            "-framework ZoomSDK"
+          ],
+          "link_settings": {
+            "ldflags": [
+              "-Wl,-rpath,@loader_path",
+              "-Wl,-rpath,@loader_path/../../sdk/lib",
+              "-Wl,-rpath,@executable_path/../Frameworks"
             ]
           }
         }]
