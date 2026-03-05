@@ -1,0 +1,146 @@
+dded support for public app type authentication and restricting cross-join accounts, custom 3D avatar elements, and meeting bot behavior.
+
+Added
+Added new constants, enums, and interfaces to support the new marketplace build flow.
+
+Added interface publicAppKey in class ZoomSDKInitParams to help support public app type authentication.
+
+public String publicAppKey;
+Added MEETING_ERROR_USER_LEVEL_TOKEN_NOT_HAVE_HOST_ZAK_OBF and MEETING_ERROR_APP_CAN_NOT_ANONYMOUS_JOIN_MEETING constants to help support restricting cross-account anonymous join from the Meeting SDK.
+
+public final static int MEETING_ERROR_USER_LEVEL_TOKEN_NOT_HAVE_HOST_ZAK_OBF = 503;
+public final static int MEETING_ERROR_APP_CAN_NOT_ANONYMOUS_JOIN_MEETING = 504;
+Added MEETING_ERROR_ON_BEHALF_TOKEN_INVALID and MEETING_ERROR_ON_BEHALF_TOKEN_NOT_MATCH_MEETING constants to help return different error codes for invalid or incorrect OBF tokens.
+
+public final static int MEETING_ERROR_ON_BEHALF_TOKEN_INVALID = 505
+public final static int MEETING_ERROR_ON_BEHALF_TOKEN_NOT_MATCH_MEETING = 506
+Added new enum ZoomSDKCustom3DAvatarElementImageType to help define the different types of custom 3D avatar element images.
+
+public enum ZoomSDKCustom3DAvatarElementImageType {
+    ZoomSDKCustom3DAvatarElementImageType_None,
+    ZoomSDKCustom3DAvatarElementImageType_Skin,
+    ZoomSDKCustom3DAvatarElementImageType_Face,
+    ZoomSDKCustom3DAvatarElementImageType_Hair,
+    ZoomSDKCustom3DAvatarElementImageType_Eyes,
+    ZoomSDKCustom3DAvatarElementImageType_EyeColor,
+    ZoomSDKCustom3DAvatarElementImageType_Eyelashes,
+    ZoomSDKCustom3DAvatarElementImageType_Eyebrows,
+    ZoomSDKCustom3DAvatarElementImageType_Nose,
+    ZoomSDKCustom3DAvatarElementImageType_Mouth,
+    ZoomSDKCustom3DAvatarElementImageType_LipColor,
+    ZoomSDKCustom3DAvatarElementImageType_Age,
+    ZoomSDKCustom3DAvatarElementImageType_FacialHair,
+    ZoomSDKCustom3DAvatarElementImageType_Body,
+    ZoomSDKCustom3DAvatarElementImageType_Clothing,
+    ZoomSDKCustom3DAvatarElementImageType_HeadCovering,
+    ZoomSDKCustom3DAvatarElementImageType_Glasses
+}
+Added the new enum ZoomSDKCustom3DAvatarElementColorType to help define the different types of custom 3D avatar element colors.
+
+public enum ZoomSDKCustom3DAvatarElementColorType {
+    ZoomSDKCustom3DAvatarElementColorType_None,
+    ZoomSDKCustom3DAvatarElementColorType_Eyebrow,
+    ZoomSDKCustom3DAvatarElementColorType_Mustache,
+    ZoomSDKCustom3DAvatarElementColorType_Hair,
+    ZoomSDKCustom3DAvatarElementColorType_Eyelash
+}
+Added new interfaces in ICustom3DAvatarElementImageInfo to provide information about custom 3D avatar element images.
+
+public interface ICustom3DAvatarElementImageInfo {
+
+    ZoomSDKCustom3DAvatarElementImageType getCustom3DAvatarElementImageType();
+    boolean isSelected();
+    String getImageFilePath();
+    String getImageName();
+    int getIndex();
+}
+Added new interfaces in ICustom3DAvatarElementImageInfo to provide information about custom 3D avatar element colors.
+
+public interface ICustom3DAvatarElementColorInfo {
+
+    ZoomSDKCustom3DAvatarElementColorType getCustom3DAvatarElementColorType();
+    long getColor();
+    boolean isSelected();
+    String getImageName();
+    int getIndex();
+}
+Added new interfaces and callbacks to manage custom 3D avatar element settings.
+
+Added callback events and interface methods to ICustom3DAvatarElementSettingContext to manage custom 3D avatar element settings.
+
+Callbacks
+
+public interface ICustom3DAvatarElementSettingContext {
+
+    interface ICustom3DAvatarElementSettingContextEvent {
+        void onCustom3DAvatarElementItemDataDownloaded(boolean bSuccess, ZoomSDKCustom3DAvatarElementImageType type, int index);
+        void onCustom3DAvatarElementItemDataDownloading(ZoomSDKCustom3DAvatarElementImageType type, int index);
+    }
+}
+Interface methods
+
+public interface ICustom3DAvatarElementSettingContext {
+
+    MobileRTCSDKError setEvent(ICustom3DAvatarElementSettingContextEvent pEvent);
+    List<ICustom3DAvatarElementImageInfo> getCustom3DAvatarElementImageList();
+    boolean isCustom3DAvatarElementImageModelDataReady(ICustom3DAvatarElementImageInfo pImageInfo);
+    MobileRTCSDKError downloadCustom3dAvatarElementImageModelData(ICustom3DAvatarElementImageInfo pImageInfo);
+    MobileRTCSDKError setCustom3DAvatarElementImage(ICustom3DAvatarElementImageInfo pImageInfo);
+    List<ICustom3DAvatarElementColorInfo> getCustom3DAvatarElementColorList();
+    MobileRTCSDKError setCustom3DAvatarElementColor(ICustom3DAvatarElementColorInfo pColor);
+    ICustom3DAvatarPreviewHelper getCustom3DAvatarPreviewHelper();
+}
+Added callback events and interface methods to ICustom3DAvatarPreviewHelper to manage the preview display for custom 3D avatars.
+
+Callbacks
+
+public interface ICustom3DAvatarPreviewHelper {
+
+    public interface ICustom3DAvatarPreviewHelperEvent {
+
+        void onNoViewToShowCustom3DAvatarPreview();
+    }
+}
+Interface methods
+
+public interface ICustom3DAvatarPreviewHelper {
+
+    MobileRTCSDKError setEvent(ICustom3DAvatarPreviewHelperEvent pEvent);
+    MobileRTCSDKError setCustom3DAvatarPreviewParentView(View parentView, ViewGroup.LayoutParams params);
+    MobileRTCSDKError startCustom3DAvatarPreview();
+    MobileRTCSDKError stopCustom3DAvatarPreview();
+}
+Added callback events and interface methods to I3DAvatarSettingContext to manage custom 3D avatars.
+
+Callbacks
+
+public interface I3DAvatarSettingContext {
+    public interface I3DAvatarSettingContextEvent {
+
+        void onCustom3DAvatarItemDataDownloaded(boolean bSuccess, int index);
+        void onCustom3DAvatarAllElementDownloaded(boolean bSuccess);
+        void onCustom3DAvatarItemDataDownloading(int index);
+        void onCustom3DAvatarAllElementDownloading();
+    }
+}
+Interface methods
+
+List<I3DAvatarImageInfo> getCustom3DAvatarImageList();
+boolean isCustom3DAvatarImageModelDataReady(I3DAvatarImageInfo pImageInfo);
+MobileRTCSDKError downloadCustom3DAvatarImageModelData(I3DAvatarImageInfo pImageInfo);
+MobileRTCSDKError setCustom3DAvatarImage(I3DAvatarImageInfo pImageInfo);
+boolean isCustom3DAvatarAllElementsModelDataReady();
+MobileRTCSDKError downloadCustom3DAvatarAllElementsModelData();
+Avatar creation workflow
+
+ICustom3DAvatarElementSettingContext createCustom3DAvatarBegin();
+MobileRTCSDKError createCustom3DAvatarEnd(boolean bSave);
+Avatar editing workflow
+
+ICustom3DAvatarElementSettingContext editCustom3DAvatarBegin(I3DAvatarImageInfo pImageInfo);
+MobileRTCSDKError editCustom3DAvatarEnd(boolean bSave);
+Avatar management operations
+
+
+MobileRTCSDKError duplicateCustom3DAvatarImage(I3DAvatarImageInfo pImage);
+MobileRTCSDKError deleteCustom3DAvatarImage(I3DAvatarImageInfo pImage);

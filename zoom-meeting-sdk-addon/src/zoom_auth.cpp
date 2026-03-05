@@ -175,6 +175,17 @@ bool ZoomAddon::Initialize(const ZoomConfig& config) {
         params.zoomDomain = @"zoom.us";
         params.enableLog = YES;
 
+        NSString* sdkKeyNS = [NSString stringWithUTF8String:config.sdkKey.c_str()];
+
+        @try {
+            [params setValue:sdkKeyNS forKey:@"publicAppKey"];
+            printf("[ZoomNative] Set publicAppKey on ZoomSDKInitParams via KVC: %s\n", config.sdkKey.c_str());
+            fflush(stdout);
+        } @catch (NSException *e) {
+            printf("[ZoomNative] publicAppKey NOT available on ZoomSDKInitParams: %s\n", [[e reason] UTF8String]);
+            fflush(stdout);
+        }
+
         printf("[ZoomNative] Initializing macOS SDK (customUI=YES, logging=YES)\n");
         fflush(stdout);
 
