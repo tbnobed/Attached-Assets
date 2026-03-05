@@ -81,12 +81,6 @@ Electron desktop application for capturing isolated video/audio feeds from Zoom 
 - `ZOOM_MEETING_BOT_NAME` - Display name when joining meetings (default: PlexISO)
 - `DEFAULT_OUTPUT_DIR` - Recording output directory (default: ./recordings)
 
-## Guest Portal (`guest-portal/`)
-- Standalone Express server for remote guests to join sessions via browser (Video SDK mode)
-- Serves a web page using the Zoom Video SDK for Web (CDN-loaded)
-- Generates JWT tokens server-side for guests (role=0, participant)
-- Has its own `package.json` — deployed independently on a Linux server
-
 ## Quick Setup (macOS)
 ```bash
 npm install
