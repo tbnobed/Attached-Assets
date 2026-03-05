@@ -196,6 +196,11 @@ class ZoomMeetingBridge extends EventEmitter {
               displayName: event.displayName,
               isSelf: !!event.isSelf,
             });
+            if (!event.isSelf) {
+              setTimeout(() => this._retrySubscriptions(), 500);
+              setTimeout(() => this._retrySubscriptions(), 1500);
+              setTimeout(() => this._retrySubscriptions(), 3000);
+            }
           }
           break;
         case 'participant-left':
@@ -252,10 +257,18 @@ class ZoomMeetingBridge extends EventEmitter {
         this.emit('meeting-joined');
         setTimeout(() => this._enumerateExistingParticipants(), 500);
         setTimeout(() => this._enumerateExistingParticipants(), 2000);
+        setTimeout(() => this._enumerateExistingParticipants(), 5000);
+        setTimeout(() => this._enumerateExistingParticipants(), 10000);
+        setTimeout(() => this._retrySubscriptions(), 3000);
+        setTimeout(() => this._retrySubscriptions(), 8000);
+        setTimeout(() => this._retrySubscriptions(), 15000);
+        if (this._retryInterval) clearInterval(this._retryInterval);
+        this._retryInterval = setInterval(() => this._retrySubscriptions(), 5000);
         break;
       case 'MEETING_STATUS_ENDED':
       case 'MEETING_STATUS_FAILED':
         this.inMeeting = false;
+        if (this._retryInterval) { clearInterval(this._retryInterval); this._retryInterval = null; }
         this.emit('meeting-ended', { status });
         break;
       case 'MEETING_STATUS_RECONNECTING':
@@ -265,6 +278,10 @@ class ZoomMeetingBridge extends EventEmitter {
         console.log('[ZoomBridge] Raw recording started — video/audio capture active');
         this.emit('raw-recording-started');
         this._enumerateExistingParticipants();
+        this._retrySubscriptions();
+        setTimeout(() => this._retrySubscriptions(), 500);
+        setTimeout(() => this._retrySubscriptions(), 1500);
+        setTimeout(() => this._retrySubscriptions(), 3000);
         break;
       case 'RAW_RECORDING_ERROR':
         console.warn(`[ZoomBridge] Raw recording error (code=${data && data.errorCode}) — retries will continue`);

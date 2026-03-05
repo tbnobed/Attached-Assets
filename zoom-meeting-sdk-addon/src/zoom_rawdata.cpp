@@ -20,10 +20,11 @@ extern IMeetingService* g_meetingService;
 
 void subscribeUserVideo(uint32_t userId);
 extern std::mutex g_videoMutex;
+extern std::set<uint32_t> g_videoPendingResubscribe;
 
 class PerUserVideoListener : public IZoomSDKRendererDelegate {
 public:
-    explicit PerUserVideoListener(uint32_t userId) : userId_(userId), frameLogCount_(0), rawDataOnReceived_(false) {}
+    explicit PerUserVideoListener(uint32_t userId) : userId_(userId), frameLogCount_(0), subscribed_(false), rawDataOnReceived_(false) {}
 
     void onRawDataFrameReceived(YUVRawDataI420* data) override {
         if (!data) return;
@@ -132,8 +133,19 @@ public:
         printf("[ZoomNative] onRawDataStatusChanged: userId=%u status=%s\n", userId_, statusName);
         fflush(stdout);
 
-        if (status == RawData_On) {
+        if (status == RawData_Off) {
+            subscribed_ = false;
+        }
+
+        if (status == RawData_On && !subscribed_) {
+            subscribed_ = true;
             rawDataOnReceived_ = true;
+            printf("[ZoomNative] onRawDataStatusChanged: userId=%u video is ON — marking pending resubscribe\n", userId_);
+            fflush(stdout);
+            {
+                std::lock_guard<std::mutex> lock(g_videoMutex);
+                g_videoPendingResubscribe.insert(userId_);
+            }
         }
     }
 
@@ -148,6 +160,7 @@ public:
 private:
     uint32_t userId_;
     int frameLogCount_;
+    bool subscribed_;
     bool rawDataOnReceived_;
 };
 
@@ -233,8 +246,8 @@ static AudioRawDataListener* g_audioListener = nullptr;
 static RecordingEventListener* g_recordingListener = nullptr;
 std::mutex g_videoMutex;
 static std::map<uint32_t, std::pair<IZoomSDKRenderer*, PerUserVideoListener*>> g_videoRenderers;
-static uint32_t g_activeVideoUserId = 0;
-static std::vector<uint32_t> g_videoQueue;
+static std::set<uint32_t> g_videoSubscribedOK;
+std::set<uint32_t> g_videoPendingResubscribe;
 static bool g_rawDataActive = false;
 static bool g_rawRecordingStarted = false;
 
@@ -247,10 +260,12 @@ bool isUserVideoOn(uint32_t userId) {
     return !info->IsVideoOn() ? false : true;
 }
 
-void activateNextInQueue();
-
 void subscribeUserVideo(uint32_t userId) {
     std::lock_guard<std::mutex> lock(g_videoMutex);
+
+    if (g_videoSubscribedOK.count(userId)) {
+        return;
+    }
 
     if (!g_rawDataActive) {
         printf("[ZoomNative] subscribeUserVideo: userId=%u deferred — raw data not active yet\n", userId);
@@ -258,22 +273,10 @@ void subscribeUserVideo(uint32_t userId) {
         return;
     }
 
-    if (g_activeVideoUserId == userId && g_videoRenderers.count(userId)) {
-        printf("[ZoomNative] subscribeUserVideo: userId=%u already active\n", userId);
+    if (g_videoRenderers.count(userId)) {
+        printf("[ZoomNative] subscribeUserVideo: userId=%u renderer already exists — keeping existing subscription\n", userId);
         fflush(stdout);
-        return;
-    }
-
-    if (g_activeVideoUserId != 0) {
-        bool alreadyQueued = false;
-        for (auto id : g_videoQueue) {
-            if (id == userId) { alreadyQueued = true; break; }
-        }
-        if (!alreadyQueued) {
-            g_videoQueue.push_back(userId);
-            printf("[ZoomNative] subscribeUserVideo: userId=%u queued (active=%u, queueSize=%zu)\n", userId, g_activeVideoUserId, g_videoQueue.size());
-            fflush(stdout);
-        }
+        g_videoSubscribedOK.insert(userId);
         return;
     }
 
@@ -284,14 +287,12 @@ void subscribeUserVideo(uint32_t userId) {
         auto resErr = renderer->setRawDataResolution(ZoomSDKResolution_1080P);
         auto subErr = renderer->subscribe(userId, RAW_DATA_TYPE_VIDEO);
         g_videoRenderers[userId] = { renderer, listener };
-        printf("[ZoomNative] subscribeUserVideo: userId=%u renderer=%p delegate=%p created (res=%d sub=%d)\n", userId, (void*)renderer, (void*)listener, (int)resErr, (int)subErr);
+        printf("[ZoomNative] subscribeUserVideo: userId=%u renderer=%p delegate=%p created (res=%d sub=%d) totalRenderers=%zu\n", userId, (void*)renderer, (void*)listener, (int)resErr, (int)subErr, g_videoRenderers.size());
         fflush(stdout);
         if (subErr == SDKERR_SUCCESS) {
-            g_activeVideoUserId = userId;
-            printf("[ZoomNative] subscribeUserVideo: userId=%u is now ACTIVE\n", userId);
-            fflush(stdout);
+            g_videoSubscribedOK.insert(userId);
         } else {
-            printf("[ZoomNative] subscribeUserVideo: userId=%u sub=%d — renderer left in place, will not retry\n", userId, (int)subErr);
+            printf("[ZoomNative] subscribeUserVideo: userId=%u sub failed — will retry on RawData_On or video status change\n", userId);
             fflush(stdout);
         }
     } else {
@@ -299,40 +300,6 @@ void subscribeUserVideo(uint32_t userId) {
         fflush(stdout);
         delete listener;
     }
-}
-
-void activateNextInQueue() {
-    while (!g_videoQueue.empty()) {
-        uint32_t nextId = g_videoQueue.front();
-        g_videoQueue.erase(g_videoQueue.begin());
-        if (isUserVideoOn(nextId)) {
-            printf("[ZoomNative] activateNextInQueue: activating userId=%u from queue\n", nextId);
-            fflush(stdout);
-            auto* listener = new PerUserVideoListener(nextId);
-            IZoomSDKRenderer* renderer = nullptr;
-            auto err = createRenderer(&renderer, listener);
-            if (err == SDKERR_SUCCESS && renderer) {
-                renderer->setRawDataResolution(ZoomSDKResolution_1080P);
-                auto subErr = renderer->subscribe(nextId, RAW_DATA_TYPE_VIDEO);
-                g_videoRenderers[nextId] = { renderer, listener };
-                printf("[ZoomNative] activateNextInQueue: userId=%u renderer=%p sub=%d\n", nextId, (void*)renderer, (int)subErr);
-                fflush(stdout);
-                if (subErr == SDKERR_SUCCESS) {
-                    g_activeVideoUserId = nextId;
-                    return;
-                }
-            } else {
-                printf("[ZoomNative] activateNextInQueue: userId=%u createRenderer FAILED\n", nextId);
-                fflush(stdout);
-                delete listener;
-            }
-        } else {
-            printf("[ZoomNative] activateNextInQueue: userId=%u video OFF — skipping\n", nextId);
-            fflush(stdout);
-        }
-    }
-    printf("[ZoomNative] activateNextInQueue: queue empty, no active video\n");
-    fflush(stdout);
 }
 
 class MeetingVideoCtrlEventListener : public IMeetingVideoCtrlEvent {
@@ -348,27 +315,50 @@ public:
         fflush(stdout);
 
         if (userId == ZoomAddon::Instance().GetSelfUserId()) {
+            printf("[ZoomNative] onUserVideoStatusChange: userId=%u is SELF — ignoring\n", userId);
+            fflush(stdout);
             return;
         }
 
         if (status == Video_ON && g_rawDataActive) {
-            subscribeUserVideo(userId);
-        }
-
-        if (status == Video_OFF) {
             std::lock_guard<std::mutex> lock(g_videoMutex);
-            if (g_activeVideoUserId == userId) {
-                printf("[ZoomNative] onUserVideoStatusChange: userId=%u Video_OFF — was active, cleaning up and activating next\n", userId);
-                fflush(stdout);
-                auto it = g_videoRenderers.find(userId);
-                if (it != g_videoRenderers.end()) {
-                    it->second.first->unSubscribe();
-                    destroyRenderer(it->second.first);
-                    delete it->second.second;
-                    g_videoRenderers.erase(it);
+            if (g_videoSubscribedOK.count(userId) && g_videoRenderers.count(userId)) {
+                auto* existingListener = g_videoRenderers[userId].second;
+                if (existingListener->HasRawDataOn()) {
+                    printf("[ZoomNative] onUserVideoStatusChange: userId=%u video ON — already subscribed OK with RawData_On, keeping renderer\n", userId);
+                    fflush(stdout);
+                    return;
                 }
-                g_activeVideoUserId = 0;
-                activateNextInQueue();
+                printf("[ZoomNative] onUserVideoStatusChange: userId=%u video ON — subscribed OK but RawData_On never fired, destroying to recreate\n", userId);
+                fflush(stdout);
+            }
+            if (g_videoRenderers.count(userId)) {
+                auto* oldRenderer = g_videoRenderers[userId].first;
+                auto* oldListener = g_videoRenderers[userId].second;
+                printf("[ZoomNative] onUserVideoStatusChange: userId=%u video ON — destroying old renderer to create fresh\n", userId);
+                fflush(stdout);
+                oldRenderer->unSubscribe();
+                destroyRenderer(oldRenderer);
+                delete oldListener;
+                g_videoRenderers.erase(userId);
+                g_videoSubscribedOK.erase(userId);
+            }
+            auto* listener = new PerUserVideoListener(userId);
+            IZoomSDKRenderer* renderer = nullptr;
+            auto err = createRenderer(&renderer, listener);
+            if (err == SDKERR_SUCCESS && renderer) {
+                renderer->setRawDataResolution(ZoomSDKResolution_1080P);
+                auto subErr = renderer->subscribe(userId, RAW_DATA_TYPE_VIDEO);
+                g_videoRenderers[userId] = { renderer, listener };
+                printf("[ZoomNative] onUserVideoStatusChange: userId=%u renderer=%p delegate=%p fresh created (sub=%d)\n", userId, (void*)renderer, (void*)listener, (int)subErr);
+                fflush(stdout);
+                if (subErr == SDKERR_SUCCESS) {
+                    g_videoSubscribedOK.insert(userId);
+                }
+            } else {
+                printf("[ZoomNative] onUserVideoStatusChange: userId=%u createRenderer FAILED (err=%d)\n", userId, (int)err);
+                fflush(stdout);
+                delete listener;
             }
         }
     }
@@ -389,18 +379,17 @@ static MeetingVideoCtrlEventListener* g_videoCtrlListener = nullptr;
 
 void unsubscribeUserVideo(uint32_t userId) {
     std::lock_guard<std::mutex> lock(g_videoMutex);
+    g_videoSubscribedOK.erase(userId);
+    g_videoPendingResubscribe.erase(userId);
     auto it = g_videoRenderers.find(userId);
     if (it != g_videoRenderers.end()) {
-        it->second.first->unSubscribe();
-        destroyRenderer(it->second.first);
-        delete it->second.second;
+        auto* renderer = it->second.first;
+        auto* listener = it->second.second;
+        renderer->unSubscribe();
+        destroyRenderer(renderer);
+        delete listener;
         g_videoRenderers.erase(it);
     }
-    if (g_activeVideoUserId == userId) {
-        g_activeVideoUserId = 0;
-        activateNextInQueue();
-    }
-    g_videoQueue.erase(std::remove(g_videoQueue.begin(), g_videoQueue.end(), userId), g_videoQueue.end());
 }
 
 void unsubscribeAllVideo() {
@@ -411,8 +400,8 @@ void unsubscribeAllVideo() {
         delete pair.second;
     }
     g_videoRenderers.clear();
-    g_activeVideoUserId = 0;
-    g_videoQueue.clear();
+    g_videoSubscribedOK.clear();
+    g_videoPendingResubscribe.clear();
 }
 
 bool ZoomAddon::StartRawRecording() {
@@ -603,14 +592,78 @@ void ZoomAddon::RetryVideoSubscriptions() {
         printf("[ZoomNative] RetryVideoSubscriptions: raw data not active, trying StartRawDataCapture\n");
         fflush(stdout);
         StartRawDataCapture();
+        if (!g_rawDataActive) return;
     }
 
-    if (!g_audioListener && g_rawDataActive) {
+    std::set<uint32_t> pending;
+    {
+        std::lock_guard<std::mutex> lock(g_videoMutex);
+        pending = g_videoPendingResubscribe;
+        g_videoPendingResubscribe.clear();
+    }
+    for (auto uid : pending) {
+        printf("[ZoomNative] RetryVideoSubscriptions: processing pending resubscribe for userId=%u\n", uid);
+        fflush(stdout);
+        subscribeUserVideo(uid);
+    }
+
+    std::lock_guard<std::mutex> lock(mutex_);
+    int needSub = 0;
+    int stuckRecreated = 0;
+    for (const auto& [userId, info] : participants_) {
+        if (userId == selfUserId_) continue;
+        bool isSubscribedOK = false;
+        bool hasRawDataOn = false;
+        {
+            std::lock_guard<std::mutex> vlock(g_videoMutex);
+            isSubscribedOK = g_videoSubscribedOK.count(userId) > 0;
+            if (isSubscribedOK && g_videoRenderers.count(userId)) {
+                hasRawDataOn = g_videoRenderers[userId].second->HasRawDataOn();
+            }
+        }
+        if (isSubscribedOK && !hasRawDataOn && isUserVideoOn(userId)) {
+            stuckRecreated++;
+            printf("[ZoomNative] RetryVideoSubscriptions: userId=%u subscribed OK but RawData_On never fired — destroying to recreate\n", userId);
+            fflush(stdout);
+            {
+                std::lock_guard<std::mutex> vlock(g_videoMutex);
+                if (g_videoRenderers.count(userId)) {
+                    auto* oldRenderer = g_videoRenderers[userId].first;
+                    auto* oldListener = g_videoRenderers[userId].second;
+                    oldRenderer->unSubscribe();
+                    destroyRenderer(oldRenderer);
+                    delete oldListener;
+                    g_videoRenderers.erase(userId);
+                }
+                g_videoSubscribedOK.erase(userId);
+            }
+            subscribeUserVideo(userId);
+            continue;
+        }
+        if (isSubscribedOK) continue;
+        if (isUserVideoOn(userId)) {
+            needSub++;
+            printf("[ZoomNative] RetryVideoSubscriptions: userId=%u video ON but not subscribed — subscribing\n", userId);
+            fflush(stdout);
+            subscribeUserVideo(userId);
+        }
+    }
+    {
+        std::lock_guard<std::mutex> vlock(g_videoMutex);
+        printf("[ZoomNative] RetryVideoSubscriptions: %zu participants, %d needed retry, %d stuck recreated, %zu already OK\n",
+               participants_.size(), needSub, stuckRecreated, g_videoSubscribedOK.size());
+        fflush(stdout);
+    }
+
+    if (!g_audioListener) {
         g_audioListener = new AudioRawDataListener();
         SDKError subErr = SDKERR_WRONG_USAGE;
+
         auto* rawDataHelper = GetAudioRawdataHelper();
         if (rawDataHelper) {
             subErr = rawDataHelper->subscribe(g_audioListener);
+            printf("[ZoomNative] RetryVideoSubscriptions: audio subscribe=%d\n", (int)subErr);
+            fflush(stdout);
         }
         if (subErr != SDKERR_SUCCESS) {
             printf("[ZoomNative] RetryVideoSubscriptions: audio subscribe FAILED (err=%d)\n", (int)subErr);
