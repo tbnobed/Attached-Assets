@@ -1,4 +1,5 @@
 #include "zoom_addon.h"
+#include <vector>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -526,7 +527,20 @@ bool ZoomAddon::StartRawDataCapture() {
         }
     }
 
-    printf("[ZoomNative] StartRawDataCapture: NO upfront video subscriptions — waiting for onUserVideoStatusChange / onRawDataStatusChanged events\n");
+    std::vector<uint32_t> toSubscribe;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        for (const auto& [userId, info] : participants_) {
+            if (userId == selfUserId_) continue;
+            toSubscribe.push_back(userId);
+        }
+    }
+    for (auto uid : toSubscribe) {
+        printf("[ZoomNative] StartRawDataCapture: subscribing existing participant userId=%u\n", uid);
+        fflush(stdout);
+        subscribeUserVideo(uid);
+    }
+    printf("[ZoomNative] StartRawDataCapture: subscribed %zu existing participants\n", toSubscribe.size());
     fflush(stdout);
 
     return true;
