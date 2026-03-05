@@ -70,6 +70,11 @@ async function getLocalRecordingToken(meetingId, accountId, clientId, clientSecr
     },
   });
 
+  console.log('[TokenDebug] Full API response status:', result.statusCode);
+  console.log('[TokenDebug] Full API response body:', JSON.stringify(result.body));
+  console.log('[TokenDebug] Token field:', result.body.token);
+  console.log('[TokenDebug] Token type:', typeof result.body.token, 'len:', result.body.token ? String(result.body.token).length : 0);
+
   if (result.statusCode !== 200 || !result.body.token) {
     throw new Error(`Local recording token request failed (${result.statusCode}): ${JSON.stringify(result.body)}`);
   }
