@@ -270,15 +270,9 @@ void subscribeUserVideo(uint32_t userId) {
     }
 
     if (g_videoRenderers.count(userId)) {
-        auto* oldRenderer = g_videoRenderers[userId].first;
-        oldRenderer->unSubscribe();
-        oldRenderer->setRawDataResolution(ZoomSDKResolution_1080P);
-        auto subErr = oldRenderer->subscribe(userId, RAW_DATA_TYPE_VIDEO);
-        printf("[ZoomNative] subscribeUserVideo: userId=%u RE-subscribe result=%d (1080P)\n", userId, (int)subErr);
+        printf("[ZoomNative] subscribeUserVideo: userId=%u renderer already exists — keeping existing subscription\n", userId);
         fflush(stdout);
-        if (subErr == SDKERR_SUCCESS) {
-            g_videoSubscribedOK.insert(userId);
-        }
+        g_videoSubscribedOK.insert(userId);
         return;
     }
 
@@ -322,21 +316,17 @@ public:
             return;
         }
 
-        if (status == Video_OFF) {
-            std::lock_guard<std::mutex> lock(g_videoMutex);
-            g_videoSubscribedOK.erase(userId);
-            printf("[ZoomNative] onUserVideoStatusChange: userId=%u video OFF — cleared subscription OK state\n", userId);
-            fflush(stdout);
-        }
-
         if (status == Video_ON && g_rawDataActive) {
-            {
-                std::lock_guard<std::mutex> lock(g_videoMutex);
-                g_videoSubscribedOK.erase(userId);
+            std::lock_guard<std::mutex> lock(g_videoMutex);
+            if (!g_videoRenderers.count(userId)) {
+                printf("[ZoomNative] onUserVideoStatusChange: userId=%u video ON but no renderer — marking pending\n", userId);
+                fflush(stdout);
                 g_videoPendingResubscribe.insert(userId);
+            } else {
+                printf("[ZoomNative] onUserVideoStatusChange: userId=%u video ON — renderer exists, keeping subscription\n", userId);
+                fflush(stdout);
+                g_videoSubscribedOK.insert(userId);
             }
-            printf("[ZoomNative] onUserVideoStatusChange: userId=%u video ON — marked pending (will subscribe via RetryVideoSubscriptions)\n", userId);
-            fflush(stdout);
         }
     }
     void onSpotlightedUserListChangeNotification(IList<unsigned int>* lstSpotlightedUserID) override {}
