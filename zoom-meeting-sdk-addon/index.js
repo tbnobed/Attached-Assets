@@ -308,7 +308,6 @@ class ZoomMeetingBridge extends EventEmitter {
   _retrySubscriptions() {
     if (!addonAvailable || !this.inMeeting) return;
     try {
-      console.log('[ZoomBridge] Retrying video/audio subscriptions...');
       nativeAddon.retryVideoSubscriptions();
     } catch (err) {
       console.error('[ZoomBridge] Error retrying subscriptions:', err.message);
@@ -359,8 +358,9 @@ class ZoomMeetingBridge extends EventEmitter {
         setTimeout(() => this._retrySubscriptions(), 3000);
         setTimeout(() => this._retrySubscriptions(), 8000);
         setTimeout(() => this._retrySubscriptions(), 15000);
+        setTimeout(() => this._retrySubscriptions(), 25000);
         if (this._retryInterval) clearInterval(this._retryInterval);
-        this._retryInterval = setInterval(() => this._retrySubscriptions(), 5000);
+        this._retryInterval = null;
         break;
       case 'MEETING_STATUS_ENDED':
       case 'MEETING_STATUS_FAILED':

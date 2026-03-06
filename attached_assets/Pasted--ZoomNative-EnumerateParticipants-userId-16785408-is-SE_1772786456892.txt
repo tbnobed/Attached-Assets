@@ -1,0 +1,90 @@
+[ZoomNative] EnumerateParticipants: userId=16785408 is SELF — skipping
+[ZoomNative] EnumerateParticipants: userId=16778240 already known
+[ZoomNative] RetryVideoSubscriptions: 1 participants, 0 needed retry, 1 already OK
+[ZoomNative] EnumerateParticipants called
+[ZoomNative] EnumerateParticipants: 2 participants in SDK list
+[ZoomNative] EnumerateParticipants: userId=16785408 is SELF — skipping
+[ZoomNative] EnumerateParticipants: userId=16778240 already known
+[ZoomBridge] Enumerating existing participants: 1
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] EnumerateParticipants called
+[ZoomNative] EnumerateParticipants: 2 participants in SDK list
+[ZoomNative] EnumerateParticipants: userId=16785408 is SELF — skipping
+[ZoomNative] EnumerateParticipants: userId=16778240 already known
+[ZoomNative] RetryVideoSubscriptions: 1 participants, 0 needed retry, 1 already OK
+[ZoomNative] Video frame: userId=16778240 640x360 (frame #4) src=Y/U/V
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] EnumerateParticipants called
+[ZoomNative] EnumerateParticipants: 2 participants in SDK list
+[ZoomNative] EnumerateParticipants: userId=16785408 is SELF — skipping
+[ZoomNative] EnumerateParticipants: userId=16778240 already known
+[ZoomNative] RetryVideoSubscriptions: 1 participants, 0 needed retry, 1 already OK
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] EnumerateParticipants called
+[ZoomNative] EnumerateParticipants: 2 participants in SDK list
+[ZoomNative] EnumerateParticipants: userId=16785408 is SELF — skipping
+[ZoomNative] EnumerateParticipants: userId=16778240 already known
+[ZoomNative] RetryVideoSubscriptions: 1 participants, 0 needed retry, 1 already OK
+[ZoomNative] EnumerateParticipants called
+[ZoomNative] EnumerateParticipants: 2 participants in SDK list
+[ZoomNative] EnumerateParticipants: userId=16785408 is SELF — skipping
+[ZoomNative] EnumerateParticipants: userId=16778240 already known
+[ZoomBridge] Enumerating existing participants: 1
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] EnumerateParticipants called
+[ZoomNative] EnumerateParticipants: 2 participants in SDK list
+[ZoomNative] EnumerateParticipants: userId=16785408 is SELF — skipping
+[ZoomNative] EnumerateParticipants: userId=16778240 already known
+[ZoomNative] RetryVideoSubscriptions: 1 participants, 0 needed retry, 1 already OK
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] EnumerateParticipants called
+[ZoomNative] EnumerateParticipants: 2 participants in SDK list
+[ZoomNative] EnumerateParticipants: userId=16785408 is SELF — skipping
+[ZoomNative] EnumerateParticipants: userId=16778240 already known
+[ZoomNative] RetryVideoSubscriptions: 1 participants, 0 needed retry, 1 already OK
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] EnumerateParticipants called
+[ZoomNative] EnumerateParticipants: 2 participants in SDK list
+[ZoomNative] EnumerateParticipants: userId=16785408 is SELF — skipping
+[ZoomNative] EnumerateParticipants: userId=16778240 already known
+[ZoomNative] RetryVideoSubscriptions: 1 participants, 0 needed retry, 1 already OK
+[ZoomNative] EnumerateParticipants called
+[ZoomNative] EnumerateParticipants: 2 participants in SDK list
+[ZoomNative] EnumerateParticipants: userId=16785408 is SELF — skipping
+[ZoomNative] EnumerateParticipants: userId=16778240 already known
+[ZoomBridge] Enumerating existing participants: 1
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] EnumerateParticipants called
+[ZoomNative] EnumerateParticipants: 2 participants in SDK list
+[ZoomNative] EnumerateParticipants: userId=16785408 is SELF — skipping
+[ZoomNative] EnumerateParticipants: userId=16778240 already known
+[ZoomNative] RetryVideoSubscriptions: 1 participants, 0 needed retry, 1 already OK
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] EnumerateParticipants called
+[ZoomNative] EnumerateParticipants: 2 participants in SDK list
+[ZoomNative] EnumerateParticipants: userId=16785408 is SELF — skipping
+[ZoomNative] EnumerateParticipants: userId=16778240 already known
+[ZoomNative] RetryVideoSubscriptions: 1 participants, 0 needed retry, 1 already OK
+[ZoomNative] EnumerateParticipants called
+[ZoomNative] EnumerateParticipants: 2 participants in SDK list
+[ZoomNative] EnumerateParticipants: userId=16785408 is SELF — skipping
+[ZoomNative] EnumerateParticipants: userId=16778240 already known
+[ZoomBridge] Enumerating existing participants: 1
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] EnumerateParticipants called
+[ZoomNative] EnumerateParticipants: 2 participants in SDK list
+[ZoomNative] EnumerateParticipants: userId=16785408 is SELF — skipping
+[ZoomNative] EnumerateParticipants: userId=16778240 already known
+[ZoomNative] RetryVideoSubscriptions: 1 participants, 0 needed retry, 1 already OK
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] EnumerateParticipants called
+[ZoomNative] EnumerateParticipants: 2 participants in SDK list
+[ZoomNative] EnumerateParticipants: userId=16785408 is SELF — skipping
+[ZoomNative] EnumerateParticipants: userId=16778240 already known
+[ZoomNative] RetryVideoSubscriptions: 1 participants, 0 needed retry, 1 already OK
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] EnumerateParticipants called
+[ZoomNative] EnumerateParticipants: 2 participants in SDK list
+[ZoomNative] EnumerateParticipants: userId=16785408 is SELF — skipping
+[ZoomNative] EnumerateParticipants: userId=16778240 already known
+[ZoomNative] RetryVideoSubscriptions: 1 participants, 0 needed retry, 1 already OK
