@@ -63,25 +63,52 @@ class DeckLinkManager extends EventEmitter {
       return;
     }
 
-    const fs = require('fs');
-    const decklinkPaths = [
-      '/Library/Frameworks/DeckLinkAPI.framework',
-      '/Library/Frameworks/DeckLinkAPI.framework/DeckLinkAPI',
-    ];
-    const hasDeckLinkRuntime = decklinkPaths.some(p => fs.existsSync(p));
-    if (!hasDeckLinkRuntime) {
-      console.warn('[DeckLink] macadam loaded but DeckLink API framework not found at /Library/Frameworks/');
-      console.warn('[DeckLink] Install Blackmagic Desktop Video from https://www.blackmagicdesign.com/support');
+    const nativePath = path.join(
+      __dirname, '..', '..', 'node_modules', 'macadam', 'build', 'Release', 'macadam.node'
+    );
+
+    const { spawnSync } = require('child_process');
+    const testScript = `
+      try {
+        const m = require(${JSON.stringify(nativePath)});
+        const devices = m.getDeviceInfo ? m.getDeviceInfo() : [];
+        process.stdout.write(JSON.stringify({ ok: true, count: devices ? devices.length : 0, devices: devices || [] }));
+      } catch (e) {
+        process.stdout.write(JSON.stringify({ ok: false, error: e.message }));
+      }
+    `;
+    const result = spawnSync(process.execPath, ['-e', testScript], {
+      timeout: 5000,
+      encoding: 'utf8',
+      env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },
+    });
+
+    if (result.status !== 0 || result.signal) {
+      console.warn(`[DeckLink] DeckLink API probe crashed (signal=${result.signal || 'none'})`);
+      console.warn('[DeckLink] Blackmagic Desktop Video may not be installed or is incompatible');
+      console.warn('[DeckLink] Install from https://www.blackmagicdesign.com/support');
       this.available = false;
       return;
     }
 
     try {
-      this._refreshDevices();
+      const probe = JSON.parse(result.stdout);
+      if (!probe.ok) {
+        console.warn('[DeckLink] DeckLink API probe failed:', probe.error);
+        this.available = false;
+        return;
+      }
+      this.devices = (probe.devices || []).map((d, i) => ({
+        index: i,
+        name: d.displayName || d.modelName || `Output ${i + 1}`,
+        modelName: d.modelName || `DeckLink ${i}`,
+        displayName: d.displayName || d.modelName || `Output ${i + 1}`,
+        hasOutput: true,
+      }));
       this.available = true;
       console.log(`[DeckLink] Initialized — ${this.devices.length} device(s) found`);
     } catch (err) {
-      console.warn('[DeckLink] Failed to initialize:', err.message);
+      console.warn('[DeckLink] Failed to parse DeckLink probe result:', err.message);
       this.available = false;
     }
   }
