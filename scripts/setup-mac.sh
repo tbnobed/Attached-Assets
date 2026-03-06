@@ -274,6 +274,36 @@ else
 fi
 
 # ===========================================================
+step "Macadam (DeckLink SDI)"
+# ===========================================================
+MACADAM_DIR="$PROJECT_DIR/node_modules/macadam"
+
+if [ -f "$MACADAM_DIR/build/Release/macadam.node" ]; then
+    skip
+else
+    echo "  Installing macadam for DeckLink SDI output..."
+    cd "$PROJECT_DIR"
+    npm install macadam --ignore-scripts 2>/dev/null
+
+    if [ -d "$MACADAM_DIR" ]; then
+        cd "$MACADAM_DIR"
+        PYTHON="$PYTHON_PATH" npx node-gyp rebuild 2>&1 || {
+            echo -e "${YELLOW}  macadam build failed — DeckLink output will be unavailable${NC}"
+            echo -e "${YELLOW}  This is OK if you don't have Blackmagic Desktop Video installed${NC}"
+        }
+        cd "$PROJECT_DIR"
+
+        if [ -f "$MACADAM_DIR/build/Release/macadam.node" ]; then
+            echo -e "${GREEN}  macadam built OK${NC}"
+        else
+            echo -e "${YELLOW}  macadam.node not produced — DeckLink features disabled${NC}"
+        fi
+    else
+        echo -e "${YELLOW}  macadam package not found — DeckLink features disabled${NC}"
+    fi
+fi
+
+# ===========================================================
 step "Build Zoom native addon"
 # ===========================================================
 ADDON_NODE="$PROJECT_DIR/zoom-meeting-sdk-addon/build/Release/zoom_meeting_sdk.node"
@@ -328,6 +358,12 @@ check "FFmpeg"         command -v ffmpeg
 check "Node.js"        command -v node
 check "Python"         test -f "$PYTHON_PATH"
 check "Git"            command -v git
+
+if [ -f "$MACADAM_DIR/build/Release/macadam.node" ]; then
+    echo -e "${GREEN}  ✓ Macadam (DeckLink)${NC}"
+else
+    echo -e "${YELLOW}  ~ Macadam (DeckLink) — not built (optional, needs Blackmagic drivers)${NC}"
+fi
 
 echo ""
 if [ "$ALL_OK" = true ]; then
