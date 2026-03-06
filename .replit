@@ -28,3 +28,7 @@ args = "npx electron . --no-sandbox --disable-gpu-sandbox"
 
 [workflows.workflow.metadata]
 outputType = "vnc"
+
+[[ports]]
+localPort = 5904
+externalPort = 80

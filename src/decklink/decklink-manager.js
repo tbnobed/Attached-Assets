@@ -4,6 +4,38 @@ const path = require('path');
 let macadam = null;
 let macadamAvailable = false;
 
+function bmCodeToInt(s) {
+  return ((s.charCodeAt(0) << 24) | (s.charCodeAt(1) << 16) | (s.charCodeAt(2) << 8) | s.charCodeAt(3)) >>> 0;
+}
+
+const MACADAM_CONSTANTS = {
+  bmdModeNTSC:           bmCodeToInt('ntsc'),
+  bmdModeNTSC2398:       bmCodeToInt('nt23'),
+  bmdModePAL:            bmCodeToInt('pal '),
+  bmdModeNTSCp:          bmCodeToInt('ntsp'),
+  bmdModePALp:           bmCodeToInt('palp'),
+  bmdModeHD1080p2398:    bmCodeToInt('23ps'),
+  bmdModeHD1080p24:      bmCodeToInt('24ps'),
+  bmdModeHD1080p25:      bmCodeToInt('Hp25'),
+  bmdModeHD1080p2997:    bmCodeToInt('Hp29'),
+  bmdModeHD1080p30:      bmCodeToInt('Hp30'),
+  bmdModeHD1080i50:      bmCodeToInt('Hi50'),
+  bmdModeHD1080i5994:    bmCodeToInt('Hi59'),
+  bmdModeHD1080i6000:    bmCodeToInt('Hi60'),
+  bmdModeHD1080p50:      bmCodeToInt('Hp50'),
+  bmdModeHD1080p5994:    bmCodeToInt('Hp59'),
+  bmdModeHD1080p6000:    bmCodeToInt('Hp60'),
+  bmdModeHD720p50:       bmCodeToInt('hp50'),
+  bmdModeHD720p5994:     bmCodeToInt('hp59'),
+  bmdModeHD720p60:       bmCodeToInt('hp60'),
+  bmdFormat8BitYUV:      bmCodeToInt('2vuy'),
+  bmdFormat8BitBGRA:     bmCodeToInt('BGRA'),
+  bmdFormat10BitYUV:     bmCodeToInt('v210'),
+  bmdAudioSampleRate48kHz: 48000,
+  bmdAudioSampleType16bitInteger: 16,
+  bmdAudioSampleType32bitInteger: 32,
+};
+
 try {
   macadam = require('macadam');
   macadamAvailable = true;
@@ -17,9 +49,10 @@ try {
     );
     if (fs.existsSync(nativePath)) {
       console.log('[DeckLink] Found native binary at:', nativePath);
-      macadam = require(nativePath);
+      const nativeBinding = require(nativePath);
+      macadam = Object.assign({}, MACADAM_CONSTANTS, nativeBinding);
       macadamAvailable = true;
-      console.log('[DeckLink] Loaded macadam native binding directly (playback-only build)');
+      console.log('[DeckLink] Loaded macadam native binding with constants applied');
     } else {
       console.warn('[DeckLink] Native binary not found at:', nativePath);
     }
