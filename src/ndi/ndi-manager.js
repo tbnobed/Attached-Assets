@@ -178,16 +178,16 @@ class NDIManager extends EventEmitter {
 
     try {
       const bytesPerSample = 2;
-      const noSamples = Math.floor(audioBuffer.length / (bytesPerSample * ch));
-      if (noSamples <= 0) return;
+      const srcSamples = Math.floor(audioBuffer.length / (bytesPerSample * ch));
+      if (srcSamples <= 0) return;
 
-      const floatBuf = Buffer.alloc(noSamples * ch * 4);
-      for (let s = 0; s < noSamples; s++) {
-        for (let c = 0; c < ch; c++) {
-          const int16 = audioBuffer.readInt16LE((s * ch + c) * 2);
-          const planarOffset = (c * noSamples + s) * 4;
-          floatBuf.writeFloatLE(int16 / 32768.0, planarOffset);
-        }
+      const outCh = 2;
+      const floatBuf = Buffer.alloc(srcSamples * outCh * 4);
+      for (let s = 0; s < srcSamples; s++) {
+        const int16 = audioBuffer.readInt16LE(s * ch * 2);
+        const floatVal = int16 / 32768.0;
+        floatBuf.writeFloatLE(floatVal, s * 4);
+        floatBuf.writeFloatLE(floatVal, (srcSamples + s) * 4);
       }
 
       if (!source._audioSentCount) source._audioSentCount = 0;
@@ -196,15 +196,15 @@ class NDIManager extends EventEmitter {
       const fourCC = this.grandiose.FOURCC_FLTp || 0x70544C46;
 
       if (source._audioSentCount <= 5 || source._audioSentCount % 1000 === 0) {
-        console.log(`[NDI] Audio send #${source._audioSentCount}: userId=${userId} samples=${noSamples} sr=${sr} ch=${ch} bufLen=${floatBuf.length} fourCC=${fourCC}`);
+        console.log(`[NDI] Audio send #${source._audioSentCount}: userId=${userId} samples=${srcSamples} sr=${sr} outCh=${outCh} bufLen=${floatBuf.length} fourCC=${fourCC}`);
       }
 
       source.sender.audio({
         fourCC: fourCC,
         sampleRate: sr,
-        noChannels: ch,
-        noSamples: noSamples,
-        channelStrideBytes: noSamples * 4,
+        noChannels: outCh,
+        noSamples: srcSamples,
+        channelStrideBytes: srcSamples * 4,
         data: floatBuf,
       });
     } catch (err) {
