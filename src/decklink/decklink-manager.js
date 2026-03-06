@@ -63,6 +63,19 @@ class DeckLinkManager extends EventEmitter {
       return;
     }
 
+    const fs = require('fs');
+    const decklinkPaths = [
+      '/Library/Frameworks/DeckLinkAPI.framework',
+      '/Library/Frameworks/DeckLinkAPI.framework/DeckLinkAPI',
+    ];
+    const hasDeckLinkRuntime = decklinkPaths.some(p => fs.existsSync(p));
+    if (!hasDeckLinkRuntime) {
+      console.warn('[DeckLink] macadam loaded but DeckLink API framework not found at /Library/Frameworks/');
+      console.warn('[DeckLink] Install Blackmagic Desktop Video from https://www.blackmagicdesign.com/support');
+      this.available = false;
+      return;
+    }
+
     try {
       this._refreshDevices();
       this.available = true;
