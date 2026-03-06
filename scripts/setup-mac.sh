@@ -200,13 +200,30 @@ else
         cd "$MACADAM_DIR"
 
         echo "  Patching macadam for Node 20 N-API compatibility..."
+        cat > src/napi_compat.h << 'COMPATEOF'
+#ifndef NAPI_COMPAT_H
+#define NAPI_COMPAT_H
+#include <node_api.h>
+typedef void (*_macadam_old_BF)(napi_env env, void* data, void* hint);
+static inline napi_status _mc_create_ext(napi_env env, void* data,
+    _macadam_old_BF fin, void* hint, napi_value* result) {
+  return napi_create_external(env, data, (node_api_basic_finalize)fin, hint, result);
+}
+static inline napi_status _mc_create_ext_buf(napi_env env, size_t len,
+    void* data, _macadam_old_BF fin, void* hint, napi_value* result) {
+  return napi_create_external_buffer(env, len, data, (node_api_basic_finalize)fin, hint, result);
+}
+#define napi_create_external _mc_create_ext
+#define napi_create_external_buffer _mc_create_ext_buf
+#endif
+COMPATEOF
+        echo "    Created napi_compat.h"
         for srcf in src/capture_promise.cc src/playback_promise.cc src/macadam.cc; do
             if [ -f "$srcf" ]; then
-                sed -i '' 's/finalizeCaptureCarrier,/(node_api_basic_finalize)finalizeCaptureCarrier,/g' "$srcf"
-                sed -i '' 's/finalizePlaybackCarrier,/(node_api_basic_finalize)finalizePlaybackCarrier,/g' "$srcf"
-                sed -i '' 's/freeVideoBuffer,/(node_api_basic_finalize)freeVideoBuffer,/g' "$srcf"
-                sed -i '' 's/freeAudioBuffer,/(node_api_basic_finalize)freeAudioBuffer,/g' "$srcf"
-                echo "    Patched $srcf"
+                if ! grep -q 'napi_compat.h' "$srcf"; then
+                    sed -i '' '1s/^/#include "napi_compat.h"\n/' "$srcf"
+                    echo "    Patched $srcf"
+                fi
             fi
         done
 
