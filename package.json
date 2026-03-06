@@ -20,7 +20,6 @@
   "license": "MIT",
   "dependencies": {
     "electron": "^40.6.1",
-    "grandiose": "github:rse/grandiose",
     "jsonwebtoken": "^9.0.3"
   }
 }
