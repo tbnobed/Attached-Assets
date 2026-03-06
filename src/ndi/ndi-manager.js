@@ -178,6 +178,12 @@ class NDIManager extends EventEmitter {
         }
       }
 
+      if (!source._audioSentCount) source._audioSentCount = 0;
+      source._audioSentCount++;
+      if (source._audioSentCount <= 5 || source._audioSentCount % 1000 === 0) {
+        console.log(`[NDI] Audio send #${source._audioSentCount}: userId=${userId} samples=${noSamples} sr=${sr} ch=${ch} bufLen=${floatBuf.length}`);
+      }
+
       source.sender.audio({
         fourCC: this.grandiose.FOURCC_FLTp,
         sampleRate: sr,

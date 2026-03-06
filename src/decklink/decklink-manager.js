@@ -393,10 +393,19 @@ class DeckLinkManager extends EventEmitter {
         stereoBuf = audioBuffer;
       }
 
+      if (!output._audioSampleTime) output._audioSampleTime = 0;
+      if (!output._audioSentCount) output._audioSentCount = 0;
+
       output.playback.schedule({
         audio: stereoBuf,
-        time: output.framesSent * 1000,
+        time: output._audioSampleTime,
       });
+
+      output._audioSampleTime += noSamples;
+      output._audioSentCount++;
+      if (output._audioSentCount <= 5 || output._audioSentCount % 1000 === 0) {
+        console.log(`[DeckLink] Audio schedule #${output._audioSentCount}: device=${deviceIndex} samples=${noSamples} time=${output._audioSampleTime}`);
+      }
     } catch (err) {
       if (!output._audioErrorLogged) {
         console.error(`[DeckLink] Error sending audio to device ${deviceIndex}:`, err.message);

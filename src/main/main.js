@@ -133,7 +133,12 @@ function initManagers() {
     }
   });
 
+  let _audioLogCount = 0;
   streamHandler.on('audio-data', ({ userId, audioData }) => {
+    _audioLogCount++;
+    if (_audioLogCount <= 5 || _audioLogCount % 1000 === 0) {
+      console.log(`[Main] audio-data #${_audioLogCount}: userId=${userId} bufLen=${audioData.buffer.length} sr=${audioData.sampleRate} ch=${audioData.channels}`);
+    }
     ndiManager.sendAudioData(userId, audioData.buffer, audioData.sampleRate, audioData.channels);
     deckLinkManager.sendAudioData(userId, audioData.buffer, audioData.sampleRate, audioData.channels);
     recorderManager.writeAudioData(userId, audioData.buffer);
