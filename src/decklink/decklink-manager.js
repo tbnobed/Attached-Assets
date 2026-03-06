@@ -1,4 +1,5 @@
 const EventEmitter = require('events');
+const path = require('path');
 
 let macadam = null;
 let macadamAvailable = false;
@@ -7,7 +8,16 @@ try {
   macadam = require('macadam');
   macadamAvailable = true;
 } catch (err) {
-  // DeckLink SDK not installed — will run in stub mode
+  try {
+    const nativePath = path.join(
+      __dirname, '..', '..', 'node_modules', 'macadam', 'build', 'Release', 'macadam.node'
+    );
+    macadam = require(nativePath);
+    macadamAvailable = true;
+    console.log('[DeckLink] Loaded macadam native binding directly (playback-only build)');
+  } catch (err2) {
+    // DeckLink SDK not installed — will run in stub mode
+  }
 }
 
 const DISPLAY_MODES = {
