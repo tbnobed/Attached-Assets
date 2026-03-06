@@ -200,18 +200,15 @@ else
         cd "$MACADAM_DIR"
 
         echo "  Patching macadam for Node 20 N-API compatibility..."
-        if [ -f src/capture_promise.cc ]; then
-            sed -i '' 's/void finalizeCaptureCarrier(napi_env env/void finalizeCaptureCarrier(const napi_env env/g' src/capture_promise.cc
-            sed -i '' 's/void freeVideoBuffer(napi_env env/void freeVideoBuffer(const napi_env env/g' src/capture_promise.cc
-            sed -i '' 's/void freeAudioBuffer(napi_env env/void freeAudioBuffer(const napi_env env/g' src/capture_promise.cc
-            echo "    Fixed finalize callback signatures in capture_promise.cc"
-        fi
-        if [ -f src/playback_promise.cc ]; then
-            sed -i '' 's/void finalizePlaybackCarrier(napi_env env/void finalizePlaybackCarrier(const napi_env env/g' src/playback_promise.cc
-            sed -i '' 's/void freeVideoBuffer(napi_env env/void freeVideoBuffer(const napi_env env/g' src/playback_promise.cc
-            sed -i '' 's/void freeAudioBuffer(napi_env env/void freeAudioBuffer(const napi_env env/g' src/playback_promise.cc
-            echo "    Fixed finalize callback signatures in playback_promise.cc"
-        fi
+        for srcf in src/capture_promise.cc src/playback_promise.cc src/macadam.cc; do
+            if [ -f "$srcf" ]; then
+                sed -i '' 's/finalizeCaptureCarrier,/(node_api_basic_finalize)finalizeCaptureCarrier,/g' "$srcf"
+                sed -i '' 's/finalizePlaybackCarrier,/(node_api_basic_finalize)finalizePlaybackCarrier,/g' "$srcf"
+                sed -i '' 's/freeVideoBuffer,/(node_api_basic_finalize)freeVideoBuffer,/g' "$srcf"
+                sed -i '' 's/freeAudioBuffer,/(node_api_basic_finalize)freeAudioBuffer,/g' "$srcf"
+                echo "    Patched $srcf"
+            fi
+        done
 
         PYTHON="$PYTHON_PATH" npx node-gyp rebuild 2>&1 || {
             echo -e "${YELLOW}  macadam build failed — DeckLink output will be unavailable${NC}"
