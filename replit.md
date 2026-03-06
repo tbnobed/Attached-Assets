@@ -119,6 +119,10 @@ cd zoom-meeting-sdk-addon && npx node-gyp rebuild
 - macOS: `enableRawdataIntermediateMode = NO` on ZoomSDK sharedSDK
 - Windows: `InitParam.rawdataOpts.enableRawdataIntermediateMode = false`
 - Bot's own userId (selfUserId_) detected early in onUserJoin via getMyself/GetMySelfUser (fallback at INMEETING), excluded from video/audio subscriptions. PurgeSelfFromParticipants() cleans up if self was added before detection.
+- JS bridge (`index.js`) BUFFERS participant-joined events until self-detection is complete (`_selfDetected=true`). Events are flushed after INMEETING or self-purge, filtering out the bot's own userId. This prevents the bot from appearing as a participant in the UI.
+- `getSelfUserId()` is exposed from the native addon so the JS bridge can query it directly.
+- NDI is AUTO-ENABLED for every participant on join (`ndiManager.toggleSource(userId, true)` in main.js).
+- Status bar in UI shows meeting progress: Connecting → Waiting for permission → Raw recording active.
 - Self audio frames are filtered at the native level (both platforms) to prevent bot's own audio from being sent to NDI
 - RetryVideoSubscriptions calls EnumerateParticipants each cycle to discover pre-existing participants that were missed
 - CRITICAL ORDERING: EnumerateParticipants MUST run inside OnRawRecordingStarted, NOT at MEETING_STATUS_INMEETING

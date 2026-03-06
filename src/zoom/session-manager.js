@@ -49,7 +49,11 @@ class SessionManager extends EventEmitter {
         this.addParticipant({ userId, displayName });
       });
 
-      this.zoomBridge.on('participant-left', ({ userId }) => {
+      this.zoomBridge.on('participant-left', ({ userId, displayName }) => {
+        if (displayName === '_self_purged_') {
+          console.log(`[SessionManager] Self-purge event for userId=${userId} — ignoring`);
+          return;
+        }
         this.removeParticipant(userId);
       });
 

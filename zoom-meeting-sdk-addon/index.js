@@ -34,6 +34,11 @@ class ZoomMeetingBridge extends EventEmitter {
     this.initialized = false;
     this.authenticated = false;
     this.inMeeting = false;
+    this._selfDetected = false;
+    this._selfUserId = 0;
+    this._pendingJoins = [];
+    this._knownParticipants = new Set();
+    this._retryInterval = null;
   }
 
   isAvailable() {
@@ -124,6 +129,11 @@ class ZoomMeetingBridge extends EventEmitter {
       return true;
     }
 
+    this._selfDetected = false;
+    this._selfUserId = 0;
+    this._pendingJoins = [];
+    this._knownParticipants = new Set();
+
     const cleanId = meetingId.replace(/[\s-]/g, '');
     const args = [cleanId, password, displayName || 'PlexISO', appPrivilegeToken || ''];
     console.log('[TokenDebug] joinMeeting args:', args.map((a, i) =>
@@ -142,7 +152,11 @@ class ZoomMeetingBridge extends EventEmitter {
     }
     const ok = nativeAddon.leaveMeeting();
     this.inMeeting = false;
+    this._selfDetected = false;
+    this._selfUserId = 0;
+    this._pendingJoins = [];
     this._knownParticipants = new Set();
+    if (this._retryInterval) { clearInterval(this._retryInterval); this._retryInterval = null; }
     return ok;
   }
 
@@ -173,6 +187,10 @@ class ZoomMeetingBridge extends EventEmitter {
     this.initialized = false;
     this.authenticated = false;
     this.inMeeting = false;
+    this._selfDetected = false;
+    this._selfUserId = 0;
+    this._pendingJoins = [];
+    if (this._retryInterval) { clearInterval(this._retryInterval); this._retryInterval = null; }
   }
 
   _setupCallbacks() {
@@ -188,6 +206,7 @@ class ZoomMeetingBridge extends EventEmitter {
     });
 
     nativeAddon.onAudioFrame((userId, buffer, sampleRate, channels) => {
+      if (this._selfUserId && userId === this._selfUserId) return;
       this.emit('audio-frame', {
         userId,
         audioData: {
@@ -202,34 +221,87 @@ class ZoomMeetingBridge extends EventEmitter {
       console.log('[ZoomBridge] Event:', event.type, event.status || '', event.displayName || '', event.userId || '');
       switch (event.type) {
         case 'participant-joined':
-          if (!this._knownParticipants) this._knownParticipants = new Set();
-          if (!this._knownParticipants.has(event.userId)) {
-            this._knownParticipants.add(event.userId);
-            this.emit('participant-joined', {
-              userId: event.userId,
-              displayName: event.displayName,
-              isSelf: !!event.isSelf,
-            });
-            if (!event.isSelf) {
-              setTimeout(() => this._retrySubscriptions(), 500);
-              setTimeout(() => this._retrySubscriptions(), 1500);
-              setTimeout(() => this._retrySubscriptions(), 3000);
-            }
-          }
+          this._handleParticipantJoined(event);
           break;
         case 'participant-left':
-          if (this._knownParticipants) {
-            this._knownParticipants.delete(event.userId);
-          }
-          this.emit('participant-left', {
-            userId: event.userId,
-            displayName: event.displayName,
-          });
+          this._handleParticipantLeft(event);
           break;
         case 'meeting-status':
           this._handleMeetingStatus(event.status, event);
           break;
       }
+    });
+  }
+
+  _handleParticipantJoined(event) {
+    const userId = event.userId;
+    const displayName = event.displayName || 'Participant';
+    const isSelf = !!event.isSelf;
+
+    if (isSelf) {
+      console.log(`[ZoomBridge] Participant ${displayName} (${userId}) flagged as self — ignoring`);
+      this._selfUserId = userId;
+      this._selfDetected = true;
+      return;
+    }
+
+    if (this._selfUserId && userId === this._selfUserId) {
+      console.log(`[ZoomBridge] Participant ${displayName} (${userId}) matches self — ignoring`);
+      return;
+    }
+
+    if (!this._selfDetected) {
+      console.log(`[ZoomBridge] Buffering participant ${displayName} (${userId}) — self not yet detected`);
+      this._pendingJoins.push({ userId, displayName });
+      return;
+    }
+
+    this._emitParticipantJoined(userId, displayName);
+  }
+
+  _emitParticipantJoined(userId, displayName) {
+    if (this._knownParticipants.has(userId)) return;
+    if (this._selfUserId && userId === this._selfUserId) return;
+
+    this._knownParticipants.add(userId);
+    console.log(`[ZoomBridge] Emitting participant-joined: ${displayName} (${userId})`);
+    this.emit('participant-joined', { userId, displayName, isSelf: false });
+
+    setTimeout(() => this._retrySubscriptions(), 500);
+    setTimeout(() => this._retrySubscriptions(), 1500);
+    setTimeout(() => this._retrySubscriptions(), 3000);
+  }
+
+  _flushPendingJoins() {
+    if (this._pendingJoins.length === 0) return;
+    console.log(`[ZoomBridge] Flushing ${this._pendingJoins.length} buffered participant-joined events (selfUserId=${this._selfUserId})`);
+
+    const pending = this._pendingJoins.splice(0);
+    for (const p of pending) {
+      if (this._selfUserId && p.userId === this._selfUserId) {
+        console.log(`[ZoomBridge] Flushing: skipping self ${p.displayName} (${p.userId})`);
+        continue;
+      }
+      this._emitParticipantJoined(p.userId, p.displayName);
+    }
+  }
+
+  _handleParticipantLeft(event) {
+    const userId = event.userId;
+
+    if (event.displayName === '_self_purged_') {
+      console.log(`[ZoomBridge] Self purged (${userId}) — updating self detection`);
+      this._selfUserId = userId;
+      this._selfDetected = true;
+      this._knownParticipants.delete(userId);
+      this._flushPendingJoins();
+      return;
+    }
+
+    this._knownParticipants.delete(userId);
+    this.emit('participant-left', {
+      userId,
+      displayName: event.displayName,
     });
   }
 
@@ -251,15 +323,8 @@ class ZoomMeetingBridge extends EventEmitter {
       const participants = nativeAddon.getParticipants();
       console.log('[ZoomBridge] Enumerating existing participants:', participants.length);
       for (const p of participants) {
-        if (!this._knownParticipants) this._knownParticipants = new Set();
-        if (!this._knownParticipants.has(p.userId)) {
-          this._knownParticipants.add(p.userId);
-          console.log('[ZoomBridge] Found participant:', p.displayName, '(id:', p.userId, ')');
-          this.emit('participant-joined', {
-            userId: p.userId,
-            displayName: p.displayName,
-          });
-        }
+        if (this._selfUserId && p.userId === this._selfUserId) continue;
+        this._emitParticipantJoined(p.userId, p.displayName);
       }
     } catch (err) {
       console.error('[ZoomBridge] Error enumerating participants:', err.message);
@@ -271,11 +336,26 @@ class ZoomMeetingBridge extends EventEmitter {
       case 'MEETING_STATUS_INMEETING':
         this.inMeeting = true;
         console.log('[ZoomBridge] In meeting — initiating raw recording and participant enumeration');
+
+        if (!this._selfDetected) {
+          try {
+            const selfId = nativeAddon.getSelfUserId ? nativeAddon.getSelfUserId() : 0;
+            if (selfId) {
+              this._selfUserId = selfId;
+              this._selfDetected = true;
+              console.log(`[ZoomBridge] Self detected from native: userId=${selfId}`);
+            }
+          } catch (e) {}
+        }
+
+        this._flushPendingJoins();
+
         this.emit('meeting-joined');
-        setTimeout(() => this._enumerateExistingParticipants(), 500);
-        setTimeout(() => this._enumerateExistingParticipants(), 2000);
-        setTimeout(() => this._enumerateExistingParticipants(), 5000);
-        setTimeout(() => this._enumerateExistingParticipants(), 10000);
+
+        setTimeout(() => { this._detectSelfAndFlush(); this._enumerateExistingParticipants(); }, 500);
+        setTimeout(() => { this._detectSelfAndFlush(); this._enumerateExistingParticipants(); }, 2000);
+        setTimeout(() => { this._detectSelfAndFlush(); this._enumerateExistingParticipants(); }, 5000);
+        setTimeout(() => { this._detectSelfAndFlush(); this._enumerateExistingParticipants(); }, 10000);
         setTimeout(() => this._retrySubscriptions(), 3000);
         setTimeout(() => this._retrySubscriptions(), 8000);
         setTimeout(() => this._retrySubscriptions(), 15000);
@@ -321,6 +401,19 @@ class ZoomMeetingBridge extends EventEmitter {
         this.emit('status-change', status);
         break;
     }
+  }
+
+  _detectSelfAndFlush() {
+    if (this._selfDetected) return;
+    try {
+      const selfId = nativeAddon.getSelfUserId ? nativeAddon.getSelfUserId() : 0;
+      if (selfId) {
+        this._selfUserId = selfId;
+        this._selfDetected = true;
+        console.log(`[ZoomBridge] Delayed self detection: userId=${selfId}`);
+        this._flushPendingJoins();
+      }
+    } catch (e) {}
   }
 }
 

@@ -327,6 +327,11 @@ static Napi::Value GetState(const Napi::CallbackInfo& info) {
     }
 }
 
+static Napi::Value GetSelfUserId(const Napi::CallbackInfo& info) {
+    Napi::Env env = info.Env();
+    return Napi::Number::New(env, ZoomAddon::Instance().GetSelfUserId());
+}
+
 static Napi::Value CleanupSDK(const Napi::CallbackInfo& info) {
     ZoomAddon::Instance().Cleanup();
     return info.Env().Undefined();
@@ -345,6 +350,7 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
     exports.Set("enumerateParticipants", Napi::Function::New(env, EnumerateParticipants));
     exports.Set("getParticipants", Napi::Function::New(env, GetParticipants));
     exports.Set("getState", Napi::Function::New(env, GetState));
+    exports.Set("getSelfUserId", Napi::Function::New(env, GetSelfUserId));
     exports.Set("cleanup", Napi::Function::New(env, CleanupSDK));
     return exports;
 }
