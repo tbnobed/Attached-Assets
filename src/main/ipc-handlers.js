@@ -8,6 +8,7 @@ function setupIpcHandlers(ipcMain, context) {
     sessionManager,
     streamHandler,
     ndiManager,
+    deckLinkManager,
     recorderManager,
     sendStatusUpdate,
     getMainWindow,
@@ -18,6 +19,7 @@ function setupIpcHandlers(ipcMain, context) {
       session: sessionManager.getStatus(),
       streams: streamHandler.getStatus(),
       ndi: ndiManager.getStatus(),
+      decklink: deckLinkManager.getStatus(),
       recording: recorderManager.getStatus(),
     };
   });
@@ -28,6 +30,7 @@ function setupIpcHandlers(ipcMain, context) {
       outputDir: getOutputDir(),
       hasCredentials: !!(settings.zoomSdkKey && settings.zoomSdkSecret),
       ndiAvailable: ndiManager.isAvailable(),
+      decklinkAvailable: deckLinkManager.isAvailable(),
       maxParticipants: settings.maxParticipants,
       video: settings.video,
       audio: settings.audio,
@@ -60,6 +63,7 @@ function setupIpcHandlers(ipcMain, context) {
   ipcMain.handle('leave-meeting', () => {
     streamHandler.stopAll();
     recorderManager.stopAll();
+    deckLinkManager.stopAll();
     ndiManager.destroyAll();
     sessionManager.leaveMeeting();
     sendStatusUpdate();
@@ -188,6 +192,39 @@ function setupIpcHandlers(ipcMain, context) {
     recorderManager.setOutputDir(dir);
     sendStatusUpdate();
     return { success: true, outputDir: dir };
+  });
+
+  ipcMain.handle('decklink-get-devices', () => {
+    return {
+      success: true,
+      available: deckLinkManager.isAvailable(),
+      devices: deckLinkManager.getDevices(),
+      displayModes: deckLinkManager.getDisplayModes(),
+    };
+  });
+
+  ipcMain.handle('decklink-start-output', async (_event, deviceIndex, modeKey) => {
+    const result = await deckLinkManager.startOutput(deviceIndex, modeKey);
+    sendStatusUpdate();
+    return result;
+  });
+
+  ipcMain.handle('decklink-stop-output', (_event, deviceIndex) => {
+    deckLinkManager.stopOutput(deviceIndex);
+    sendStatusUpdate();
+    return { success: true };
+  });
+
+  ipcMain.handle('decklink-assign-participant', (_event, userId, deviceIndex) => {
+    const result = deckLinkManager.assignParticipant(userId, deviceIndex);
+    sendStatusUpdate();
+    return result;
+  });
+
+  ipcMain.handle('decklink-unassign-participant', (_event, userId) => {
+    deckLinkManager.unassignParticipant(userId);
+    sendStatusUpdate();
+    return { success: true };
   });
 
   ipcMain.handle('add-simulated-participant', (_event, name) => {

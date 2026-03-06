@@ -1,0 +1,355 @@
+const EventEmitter = require('events');
+
+let macadam = null;
+let macadamAvailable = false;
+
+try {
+  macadam = require('macadam');
+  macadamAvailable = true;
+} catch (err) {
+  // DeckLink SDK not installed — will run in stub mode
+}
+
+const DISPLAY_MODES = {
+  '1080i50':  { label: '1080i 50',    mode: 'bmdModeHD1080i50',    width: 1920, height: 1080, fps: 25 },
+  '1080i5994': { label: '1080i 59.94', mode: 'bmdModeHD1080i5994',  width: 1920, height: 1080, fps: 29.97 },
+  '1080p24':  { label: '1080p 24',    mode: 'bmdModeHD1080p24',    width: 1920, height: 1080, fps: 24 },
+  '1080p25':  { label: '1080p 25',    mode: 'bmdModeHD1080p25',    width: 1920, height: 1080, fps: 25 },
+  '1080p2997': { label: '1080p 29.97', mode: 'bmdModeHD1080p2997',  width: 1920, height: 1080, fps: 29.97 },
+  '1080p30':  { label: '1080p 30',    mode: 'bmdModeHD1080p30',    width: 1920, height: 1080, fps: 30 },
+  '720p50':   { label: '720p 50',     mode: 'bmdModeHD720p50',     width: 1280, height: 720,  fps: 50 },
+  '720p5994': { label: '720p 59.94',  mode: 'bmdModeHD720p5994',   width: 1280, height: 720,  fps: 59.94 },
+  '720p60':   { label: '720p 60',     mode: 'bmdModeHD720p60',     width: 1280, height: 720,  fps: 60 },
+};
+
+const DEFAULT_MODE = '1080p2997';
+
+class DeckLinkManager extends EventEmitter {
+  constructor(settings) {
+    super();
+    this.settings = settings;
+    this.devices = [];
+    this.outputs = new Map();
+    this.assignments = new Map();
+    this.available = false;
+    this._init();
+  }
+
+  _init() {
+    if (!macadamAvailable) {
+      console.warn('[DeckLink] macadam not available — DeckLink output disabled');
+      console.warn('[DeckLink] Install with: npm install macadam');
+      return;
+    }
+
+    try {
+      this._refreshDevices();
+      this.available = true;
+      console.log(`[DeckLink] Initialized — ${this.devices.length} device(s) found`);
+    } catch (err) {
+      console.warn('[DeckLink] Failed to initialize:', err.message);
+      this.available = false;
+    }
+  }
+
+  isAvailable() {
+    return this.available;
+  }
+
+  _refreshDevices() {
+    if (!macadamAvailable) return;
+
+    try {
+      const info = macadam.getDeviceInfo();
+      this.devices = (info || []).map((d, i) => ({
+        index: i,
+        name: d.displayName || d.modelName || `Output ${i + 1}`,
+        modelName: d.modelName || `DeckLink ${i}`,
+        displayName: d.displayName || d.modelName || `Output ${i + 1}`,
+        hasOutput: true,
+      }));
+    } catch (err) {
+      console.warn('[DeckLink] Error enumerating devices:', err.message);
+      this.devices = [];
+    }
+  }
+
+  getDevices() {
+    this._refreshDevices();
+    return this.devices;
+  }
+
+  getDisplayModes() {
+    const modes = {};
+    for (const [key, val] of Object.entries(DISPLAY_MODES)) {
+      modes[key] = val.label;
+    }
+    return modes;
+  }
+
+  async startOutput(deviceIndex, modeKey) {
+    if (!this.available) {
+      return { success: false, error: 'DeckLink not available' };
+    }
+
+    if (this.outputs.has(deviceIndex)) {
+      return { success: false, error: `Device ${deviceIndex} already has an active output` };
+    }
+
+    const modeInfo = DISPLAY_MODES[modeKey] || DISPLAY_MODES[DEFAULT_MODE];
+    const modeConst = macadam[modeInfo.mode];
+
+    if (modeConst === undefined) {
+      return { success: false, error: `Display mode ${modeInfo.mode} not supported by this macadam version` };
+    }
+
+    try {
+      const playback = await macadam.playback({
+        deviceIndex: deviceIndex,
+        displayMode: modeConst,
+        pixelFormat: macadam.bmdFormat8BitYUV,
+        channels: 2,
+        sampleRate: macadam.bmdAudioSampleRate48kHz,
+        sampleType: macadam.bmdAudioSampleType16bitInteger,
+      });
+
+      const output = {
+        deviceIndex,
+        modeKey,
+        modeInfo,
+        playback,
+        assignedUserId: null,
+        framesSent: 0,
+        active: true,
+        startedAt: Date.now(),
+        _lastFrameTime: 0,
+        _frameInterval: 1000 / modeInfo.fps,
+        _scaledFrameBuf: null,
+        _uyvyBuf: null,
+      };
+
+      this.outputs.set(deviceIndex, output);
+      this.emit('output-started', {
+        deviceIndex,
+        mode: modeInfo.label,
+        width: modeInfo.width,
+        height: modeInfo.height,
+      });
+
+      console.log(`[DeckLink] Output started on device ${deviceIndex}: ${modeInfo.label}`);
+      return { success: true };
+    } catch (err) {
+      console.error(`[DeckLink] Failed to start output on device ${deviceIndex}:`, err.message);
+      return { success: false, error: err.message };
+    }
+  }
+
+  stopOutput(deviceIndex) {
+    const output = this.outputs.get(deviceIndex);
+    if (!output) return;
+
+    try {
+      if (output.playback && typeof output.playback.stop === 'function') {
+        output.playback.stop();
+      }
+    } catch (err) {
+      console.warn(`[DeckLink] Error stopping output on device ${deviceIndex}:`, err.message);
+    }
+
+    const userId = output.assignedUserId;
+    if (userId !== null) {
+      this.assignments.delete(userId);
+    }
+
+    this.outputs.delete(deviceIndex);
+    this.emit('output-stopped', { deviceIndex });
+    console.log(`[DeckLink] Output stopped on device ${deviceIndex}`);
+  }
+
+  assignParticipant(userId, deviceIndex) {
+    const output = this.outputs.get(deviceIndex);
+    if (!output) {
+      return { success: false, error: `No active output on device ${deviceIndex}` };
+    }
+
+    const prevDevice = this.assignments.get(userId);
+    if (prevDevice !== undefined) {
+      const prevOutput = this.outputs.get(prevDevice);
+      if (prevOutput) {
+        prevOutput.assignedUserId = null;
+      }
+    }
+
+    if (output.assignedUserId !== null && output.assignedUserId !== userId) {
+      this.assignments.delete(output.assignedUserId);
+    }
+
+    output.assignedUserId = userId;
+    this.assignments.set(userId, deviceIndex);
+
+    this.emit('assignment-changed', { userId, deviceIndex });
+    console.log(`[DeckLink] Assigned participant ${userId} to device ${deviceIndex}`);
+    return { success: true };
+  }
+
+  unassignParticipant(userId) {
+    const deviceIndex = this.assignments.get(userId);
+    if (deviceIndex === undefined) return;
+
+    const output = this.outputs.get(deviceIndex);
+    if (output) {
+      output.assignedUserId = null;
+    }
+
+    this.assignments.delete(userId);
+    this.emit('assignment-changed', { userId, deviceIndex: null });
+    console.log(`[DeckLink] Unassigned participant ${userId}`);
+  }
+
+  sendVideoFrame(userId, frameBuffer, width, height) {
+    const deviceIndex = this.assignments.get(userId);
+    if (deviceIndex === undefined) return;
+
+    const output = this.outputs.get(deviceIndex);
+    if (!output || !output.active || !output.playback) return;
+
+    const now = Date.now();
+    if (now - output._lastFrameTime < output._frameInterval * 0.8) return;
+    output._lastFrameTime = now;
+
+    try {
+      const outW = output.modeInfo.width;
+      const outH = output.modeInfo.height;
+      const uyvySize = outW * outH * 2;
+
+      if (!output._uyvyBuf || output._uyvyBuf.length !== uyvySize) {
+        output._uyvyBuf = Buffer.alloc(uyvySize);
+      }
+
+      this._bgraToUyvy(frameBuffer, width, height, output._uyvyBuf, outW, outH);
+
+      output.playback.displayFrame({ video: output._uyvyBuf });
+      output.framesSent++;
+    } catch (err) {
+      if (!output._videoErrorLogged) {
+        console.error(`[DeckLink] Error sending frame to device ${deviceIndex}:`, err.message);
+        output._videoErrorLogged = true;
+      }
+    }
+  }
+
+  sendAudioData(userId, audioBuffer, sampleRate, channels) {
+    const deviceIndex = this.assignments.get(userId);
+    if (deviceIndex === undefined) return;
+
+    const output = this.outputs.get(deviceIndex);
+    if (!output || !output.active || !output.playback) return;
+
+    try {
+      const srcCh = channels || 1;
+      const bytesPerSample = 2;
+      const noSamples = Math.floor(audioBuffer.length / (bytesPerSample * srcCh));
+      if (noSamples <= 0) return;
+
+      let stereoBuf;
+      if (srcCh === 1) {
+        stereoBuf = Buffer.alloc(noSamples * 2 * bytesPerSample);
+        for (let s = 0; s < noSamples; s++) {
+          const sample = audioBuffer.readInt16LE(s * 2);
+          stereoBuf.writeInt16LE(sample, s * 4);
+          stereoBuf.writeInt16LE(sample, s * 4 + 2);
+        }
+      } else {
+        stereoBuf = audioBuffer;
+      }
+
+      output.playback.schedule({
+        audio: stereoBuf,
+        time: output.framesSent * 1000,
+      });
+    } catch (err) {
+      if (!output._audioErrorLogged) {
+        console.error(`[DeckLink] Error sending audio to device ${deviceIndex}:`, err.message);
+        output._audioErrorLogged = true;
+      }
+    }
+  }
+
+  _bgraToUyvy(srcBuf, srcW, srcH, dstBuf, dstW, dstH) {
+    for (let y = 0; y < dstH; y++) {
+      const srcY = Math.min(Math.floor(y * srcH / dstH), srcH - 1);
+
+      for (let x = 0; x < dstW; x += 2) {
+        const srcX0 = Math.min(Math.floor(x * srcW / dstW), srcW - 1);
+        const srcX1 = Math.min(Math.floor((x + 1) * srcW / dstW), srcW - 1);
+
+        const srcOff0 = (srcY * srcW + srcX0) * 4;
+        const srcOff1 = (srcY * srcW + srcX1) * 4;
+
+        const b0 = srcBuf[srcOff0];
+        const g0 = srcBuf[srcOff0 + 1];
+        const r0 = srcBuf[srcOff0 + 2];
+
+        const b1 = srcBuf[srcOff1];
+        const g1 = srcBuf[srcOff1 + 1];
+        const r1 = srcBuf[srcOff1 + 2];
+
+        const y0 = Math.max(16, Math.min(235, ((66 * r0 + 129 * g0 + 25 * b0 + 128) >> 8) + 16));
+        const y1 = Math.max(16, Math.min(235, ((66 * r1 + 129 * g1 + 25 * b1 + 128) >> 8) + 16));
+
+        const avgR = (r0 + r1) >> 1;
+        const avgG = (g0 + g1) >> 1;
+        const avgB = (b0 + b1) >> 1;
+
+        const u = Math.max(16, Math.min(240, ((-38 * avgR - 74 * avgG + 112 * avgB + 128) >> 8) + 128));
+        const v = Math.max(16, Math.min(240, ((112 * avgR - 94 * avgG - 18 * avgB + 128) >> 8) + 128));
+
+        const dstOff = (y * dstW + x) * 2;
+        dstBuf[dstOff]     = u;
+        dstBuf[dstOff + 1] = y0;
+        dstBuf[dstOff + 2] = v;
+        dstBuf[dstOff + 3] = y1;
+      }
+    }
+  }
+
+  getStatus() {
+    const outputList = {};
+    for (const [deviceIndex, output] of this.outputs) {
+      outputList[deviceIndex] = {
+        deviceIndex,
+        mode: output.modeInfo.label,
+        assignedUserId: output.assignedUserId,
+        framesSent: output.framesSent,
+        active: output.active,
+      };
+    }
+
+    const assignmentList = {};
+    for (const [userId, deviceIndex] of this.assignments) {
+      assignmentList[userId] = deviceIndex;
+    }
+
+    return {
+      available: this.available,
+      deviceCount: this.devices.length,
+      devices: this.devices,
+      outputs: outputList,
+      assignments: assignmentList,
+    };
+  }
+
+  stopAll() {
+    for (const [deviceIndex] of this.outputs) {
+      this.stopOutput(deviceIndex);
+    }
+    this.assignments.clear();
+  }
+
+  destroy() {
+    this.stopAll();
+    this.removeAllListeners();
+  }
+}
+
+module.exports = { DeckLinkManager };

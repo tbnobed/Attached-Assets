@@ -450,6 +450,99 @@
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
+
+    .decklink-panel {
+      padding: 12px 20px;
+    }
+
+    .decklink-controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .decklink-controls select {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 13px;
+    }
+
+    .decklink-controls button {
+      background: var(--accent-purple);
+      color: white;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .decklink-controls button:hover {
+      opacity: 0.85;
+    }
+
+    .decklink-output-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .decklink-output-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+
+    .decklink-output-item .dl-label {
+      font-weight: 600;
+      font-size: 13px;
+      min-width: 140px;
+    }
+
+    .decklink-output-item .dl-mode {
+      font-size: 12px;
+      color: var(--text-secondary);
+      min-width: 100px;
+    }
+
+    .decklink-output-item select {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      flex: 1;
+    }
+
+    .decklink-output-item .dl-frames {
+      font-size: 11px;
+      color: var(--text-muted);
+      min-width: 80px;
+      text-align: right;
+    }
+
+    .decklink-output-item button {
+      background: var(--accent-red);
+      color: white;
+      border: none;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .overlay-badge.dl {
+      background: var(--accent-purple);
+    }
   </style>
 </head>
 <body>
@@ -524,6 +617,10 @@
           <span class="config-label">Meeting SDK</span>
           <span class="config-value" id="zoomSdkStatusDisplay">Checking...</span>
         </div>
+        <div class="config-row">
+          <span class="config-label">DeckLink</span>
+          <span class="config-value" id="decklinkStatusDisplay">Checking...</span>
+        </div>
       </div>
 
       <div class="section-title">Participant Feeds (<span id="feedCount">0</span>)</div>
@@ -536,6 +633,17 @@
           <h3>No Participants</h3>
           <p>Join a Zoom meeting by entering a Meeting ID and passcode, or add simulated participants to test.</p>
         </div>
+      </div>
+
+      <div class="section-title" id="decklinkSectionTitle" style="display:none;">DeckLink Outputs</div>
+      <div id="decklinkPanel" class="decklink-panel" style="display:none;">
+        <div class="decklink-controls">
+          <select id="decklinkDeviceSelect"><option value="">No devices found</option></select>
+          <select id="decklinkModeSelect"><option value="1080p2997">1080p 29.97</option></select>
+          <button id="btnDecklinkStart">Start Output</button>
+          <button id="btnDecklinkRefresh">Refresh</button>
+        </div>
+        <div id="decklinkOutputList" class="decklink-output-list"></div>
       </div>
 
       <div class="section-title">Activity Log</div>
@@ -759,6 +867,96 @@
       }
     });
 
+    state.decklinkDevices = [];
+    state.decklinkModes = {};
+    state.decklinkOutputs = {};
+
+    async function refreshDecklinkDevices() {
+      const result = await window.zoomISO.decklinkGetDevices();
+      if (!result.success) return;
+      state.decklinkDevices = result.devices || [];
+      state.decklinkModes = result.displayModes || {};
+      const devSelect = document.getElementById('decklinkDeviceSelect');
+      devSelect.innerHTML = state.decklinkDevices.length === 0
+        ? '<option value="">No devices found</option>'
+        : state.decklinkDevices.map((d, i) => `<option value="${i}">${d.name}</option>`).join('');
+      const modeSelect = document.getElementById('decklinkModeSelect');
+      const modes = state.decklinkModes;
+      modeSelect.innerHTML = Object.entries(modes).map(([k, v]) => `<option value="${k}">${v}</option>`).join('');
+    }
+
+    function renderDecklinkOutputs() {
+      const list = document.getElementById('decklinkOutputList');
+      const entries = Object.entries(state.decklinkOutputs);
+      if (entries.length === 0) {
+        list.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:8px 0;">No active DeckLink outputs</div>';
+        return;
+      }
+      list.innerHTML = entries.map(([idx, output]) => {
+        const participants = Array.from(state.participants.entries());
+        const optionsHtml = '<option value="">— unassigned —</option>' +
+          participants.map(([uid, p]) => `<option value="${uid}" ${output.assignedUser === uid ? 'selected' : ''}>${p.displayName}</option>`).join('');
+        return `
+          <div class="decklink-output-item">
+            <span class="dl-label">${output.deviceName || 'Output ' + idx}</span>
+            <span class="dl-mode">${output.mode || ''}</span>
+            <select onchange="assignDecklinkParticipant(this.value, ${idx})">${optionsHtml}</select>
+            <span class="dl-frames">${output.framesSent ? output.framesSent + ' frames' : ''}</span>
+            <button onclick="stopDecklinkOutput(${idx})">Stop</button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function assignDecklinkParticipant(userId, deviceIndex) {
+      if (!userId) {
+        await window.zoomISO.decklinkUnassignParticipant(state.decklinkOutputs[deviceIndex]?.assignedUser);
+        delete state.decklinkOutputs[deviceIndex].assignedUser;
+        renderDecklinkOutputs();
+        log(`DeckLink output ${deviceIndex}: unassigned`, 'warn');
+        return;
+      }
+      const result = await window.zoomISO.decklinkAssignParticipant(userId, deviceIndex);
+      if (result.success) {
+        state.decklinkOutputs[deviceIndex].assignedUser = userId;
+        const p = state.participants.get(userId);
+        log(`DeckLink output ${deviceIndex}: assigned to ${p?.displayName || userId}`, 'success');
+        renderDecklinkOutputs();
+      } else {
+        log(`DeckLink assign failed: ${result.error}`, 'error');
+      }
+    }
+
+    async function stopDecklinkOutput(deviceIndex) {
+      await window.zoomISO.decklinkStopOutput(deviceIndex);
+      delete state.decklinkOutputs[deviceIndex];
+      renderDecklinkOutputs();
+      log(`DeckLink output ${deviceIndex} stopped`, 'warn');
+    }
+
+    document.getElementById('btnDecklinkStart').addEventListener('click', async () => {
+      const devIdx = parseInt(document.getElementById('decklinkDeviceSelect').value);
+      const mode = document.getElementById('decklinkModeSelect').value;
+      if (isNaN(devIdx)) { log('Select a DeckLink device first', 'error'); return; }
+      const result = await window.zoomISO.decklinkStartOutput(devIdx, mode);
+      if (result.success) {
+        state.decklinkOutputs[devIdx] = {
+          deviceName: state.decklinkDevices[devIdx]?.name || 'Output ' + devIdx,
+          mode: mode,
+          framesSent: 0,
+        };
+        renderDecklinkOutputs();
+        log(`DeckLink output started on ${state.decklinkDevices[devIdx]?.name || 'device ' + devIdx}`, 'success');
+      } else {
+        log(`DeckLink start failed: ${result.error}`, 'error');
+      }
+    });
+
+    document.getElementById('btnDecklinkRefresh').addEventListener('click', () => {
+      refreshDecklinkDevices();
+      log('DeckLink devices refreshed', 'info');
+    });
+
     document.getElementById('btnLeaveMeeting').addEventListener('click', async () => {
       await window.zoomISO.leaveMeeting();
       updateConnectionUI(false);
@@ -925,6 +1123,14 @@
         document.getElementById('ndiStatusDisplay').textContent = s.ndiAvailable ? 'Available (grandiose loaded)' : 'Unavailable (grandiose not installed)';
         document.getElementById('zoomSdkStatusDisplay').textContent = s.zoomAvailable ? 'Available (native addon loaded)' : 'Unavailable (native addon not built)';
         document.getElementById('sdkStatusDisplay').textContent = s.hasCredentials ? 'Configured' : 'Not configured - set ZOOM_SDK_KEY and ZOOM_SDK_SECRET in .env';
+        if (s.decklinkAvailable) {
+          document.getElementById('decklinkStatusDisplay').textContent = 'Available';
+          document.getElementById('decklinkSectionTitle').style.display = '';
+          document.getElementById('decklinkPanel').style.display = '';
+          refreshDecklinkDevices();
+        } else {
+          document.getElementById('decklinkStatusDisplay').textContent = 'Unavailable (macadam not installed)';
+        }
         log('Application initialized', 'success');
       });
 

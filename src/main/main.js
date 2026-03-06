@@ -4,6 +4,7 @@ const { settings, ensureOutputDir, getOutputDir } = require('../config/settings'
 const { SessionManager } = require('../zoom/session-manager');
 const { StreamHandler } = require('../zoom/stream-handler');
 const { NDIManager } = require('../ndi/ndi-manager');
+const { DeckLinkManager } = require('../decklink/decklink-manager');
 const { RecorderManager } = require('../recorder/recorder-manager');
 const { setupIpcHandlers } = require('./ipc-handlers');
 
@@ -11,6 +12,7 @@ let mainWindow = null;
 let sessionManager = null;
 let streamHandler = null;
 let ndiManager = null;
+let deckLinkManager = null;
 let recorderManager = null;
 
 function createWindow() {
@@ -39,6 +41,7 @@ function initManagers() {
   sessionManager = new SessionManager(settings);
   streamHandler = new StreamHandler(settings);
   ndiManager = new NDIManager(settings);
+  deckLinkManager = new DeckLinkManager(settings);
   recorderManager = new RecorderManager(settings);
 
   sessionManager.setStreamHandler(streamHandler);
@@ -57,6 +60,7 @@ function initManagers() {
     streamHandler.stopVideoCapture(participant.userId);
     streamHandler.stopAudioCapture(participant.userId);
     recorderManager.stopRecording(participant.userId);
+    deckLinkManager.unassignParticipant(participant.userId);
     ndiManager.destroySource(participant.userId);
     sendToRenderer('participant-left', participant);
     sendStatusUpdate();
@@ -105,6 +109,7 @@ function initManagers() {
 
   streamHandler.on('video-frame', ({ userId, frameData }) => {
     ndiManager.sendVideoFrame(userId, frameData.buffer, frameData.width, frameData.height);
+    deckLinkManager.sendVideoFrame(userId, frameData.buffer, frameData.width, frameData.height);
     recorderManager.writeVideoFrame(userId, frameData.buffer);
 
     const now = Date.now();
@@ -124,6 +129,7 @@ function initManagers() {
 
   streamHandler.on('audio-data', ({ userId, audioData }) => {
     ndiManager.sendAudioData(userId, audioData.buffer, audioData.sampleRate, audioData.channels);
+    deckLinkManager.sendAudioData(userId, audioData.buffer, audioData.sampleRate, audioData.channels);
     recorderManager.writeAudioData(userId, audioData.buffer);
   });
 
@@ -163,6 +169,7 @@ function sendStatusUpdate() {
     session: sessionManager.getStatus(),
     streams: streamHandler.getStatus(),
     ndi: ndiManager.getStatus(),
+    decklink: deckLinkManager.getStatus(),
     recording: recorderManager.getStatus(),
   };
   sendToRenderer('status-update', status);
@@ -174,6 +181,7 @@ app.whenReady().then(() => {
     sessionManager,
     streamHandler,
     ndiManager,
+    deckLinkManager,
     recorderManager,
     sendStatusUpdate,
     getMainWindow: () => mainWindow,
@@ -186,6 +194,7 @@ app.whenReady().then(() => {
 app.on('window-all-closed', () => {
   streamHandler.destroy();
   recorderManager.destroy();
+  deckLinkManager.destroy();
   ndiManager.destroy();
   sessionManager.destroy();
   app.quit();

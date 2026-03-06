@@ -23,6 +23,12 @@ contextBridge.exposeInMainWorld('zoomISO', {
   setOutputDir: (dir) => ipcRenderer.invoke('set-output-dir', dir),
   selectOutputDir: () => ipcRenderer.invoke('select-output-dir'),
 
+  decklinkGetDevices: () => ipcRenderer.invoke('decklink-get-devices'),
+  decklinkStartOutput: (deviceIndex, modeKey) => ipcRenderer.invoke('decklink-start-output', deviceIndex, modeKey),
+  decklinkStopOutput: (deviceIndex) => ipcRenderer.invoke('decklink-stop-output', deviceIndex),
+  decklinkAssignParticipant: (userId, deviceIndex) => ipcRenderer.invoke('decklink-assign-participant', userId, deviceIndex),
+  decklinkUnassignParticipant: (userId) => ipcRenderer.invoke('decklink-unassign-participant', userId),
+
   addSimulatedParticipant: (name) => ipcRenderer.invoke('add-simulated-participant', name),
   removeSimulatedParticipant: (userId) => ipcRenderer.invoke('remove-simulated-participant', userId),
 

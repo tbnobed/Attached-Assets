@@ -10,6 +10,7 @@ Electron desktop application for capturing isolated video/audio feeds from Zoom 
 - **Zoom Integration** (`src/zoom/`): Session manager wrapping the native Meeting SDK addon, stream handler, JWT generator
 - **Native Addon** (`zoom-meeting-sdk-addon/`): C++/ObjC++ N-API wrapper around the Zoom Meeting SDK. macOS uses Objective-C ZoomSDK.framework API; Windows uses C++ zoom_sdk API. Both provide raw data callbacks (video I420, audio PCM) per participant via ThreadSafeFunction
 - **NDI** (`src/ndi/`): NDI source management via grandiose (graceful fallback if unavailable)
+- **DeckLink** (`src/decklink/`): SDI output via macadam (graceful fallback if unavailable). Enumerates DeckLink devices, maps participants to physical outputs, converts BGRA→UYVY with scaling, upmixes mono audio to stereo. UI allows per-output participant assignment.
 - **Recorder** (`src/recorder/`): FFmpeg-based per-participant MP4 recording
 - **Config** (`src/config/`): Settings loader from environment variables
 
@@ -23,6 +24,7 @@ Electron desktop application for capturing isolated video/audio feeds from Zoom 
 - `src/zoom/jwt-generator.js` - JWT token generation (no external deps)
 - `src/zoom/recording-token.js` - Fetches local recording join token via Zoom REST API (Server-to-Server OAuth)
 - `src/ndi/ndi-manager.js` - NDI source creation/destruction
+- `src/decklink/decklink-manager.js` - DeckLink SDI output, BGRA→UYVY conversion, participant→device mapping
 - `src/recorder/recorder-manager.js` - FFmpeg spawn and pipe management
 - `src/config/settings.js` - Environment variable loader
 - `zoom-meeting-sdk-addon/index.js` - JS bridge for the native addon (handles DLL/dylib/framework paths per platform)
@@ -77,11 +79,12 @@ Electron desktop application for capturing isolated video/audio feeds from Zoom 
 10. Per-participant PCM audio → sent via ThreadSafeFunction to JS
 11. SessionManager receives frames → routes to StreamHandler
 12. StreamHandler emits video-frame/audio-data events
-13. main.js routes to NDIManager (BGRA frames → NDI sources) and RecorderManager (FFmpeg pipes)
+13. main.js routes to NDIManager (BGRA frames → NDI sources), DeckLinkManager (BGRA→UYVY for SDI output), and RecorderManager (FFmpeg pipes)
 
 ## Dependencies
 - electron - Desktop app framework
 - grandiose - NDI output (native module, requires NDI SDK)
+- macadam - DeckLink/SDI output (native module, requires Blackmagic Desktop Video drivers)
 - node-addon-api - For the Zoom Meeting SDK native addon
 - ffmpeg - System dependency for recording
 
