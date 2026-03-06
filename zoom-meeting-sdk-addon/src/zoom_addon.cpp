@@ -146,6 +146,41 @@ void ZoomAddon::OnMeetingStatusChanged(const std::string& status) {
     }
 }
 
+void ZoomAddon::SetSelfUserId(uint32_t userId) {
+    uint32_t oldSelf = selfUserId_;
+    selfUserId_ = userId;
+    if (oldSelf == 0 && userId != 0) {
+        PurgeSelfFromParticipants();
+    }
+}
+
+void ZoomAddon::PurgeSelfFromParticipants() {
+    bool wasThere = false;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        auto it = participants_.find(selfUserId_);
+        if (it != participants_.end()) {
+            wasThere = true;
+            participants_.erase(it);
+        }
+    }
+    if (wasThere) {
+        printf("[ZoomNative] PurgeSelfFromParticipants: removed self userId=%u from participants\n", selfUserId_);
+        fflush(stdout);
+        UnsubscribeParticipantVideo(selfUserId_);
+        if (eventCallback_) {
+            uint32_t selfId = selfUserId_;
+            eventCallback_.NonBlockingCall([selfId](Napi::Env env, Napi::Function jsCallback) {
+                auto obj = Napi::Object::New(env);
+                obj.Set("type", Napi::String::New(env, "participant-left"));
+                obj.Set("userId", Napi::Number::New(env, selfId));
+                obj.Set("displayName", Napi::String::New(env, "_self_purged_"));
+                jsCallback.Call({ obj });
+            });
+        }
+    }
+}
+
 static Napi::Value InitSDK(const Napi::CallbackInfo& info) {
     Napi::Env env = info.Env();
 

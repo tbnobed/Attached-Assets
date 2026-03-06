@@ -118,7 +118,9 @@ cd zoom-meeting-sdk-addon && npx node-gyp rebuild
 - Raw data requires StartRawRecording() BEFORE createRenderer/audio subscribe
 - macOS: `enableRawdataIntermediateMode = NO` on ZoomSDK sharedSDK
 - Windows: `InitParam.rawdataOpts.enableRawdataIntermediateMode = false`
-- Bot's own userId (selfUserId_) detected via getMyself/GetMySelfUser at INMEETING, excluded from video subscriptions
+- Bot's own userId (selfUserId_) detected early in onUserJoin via getMyself/GetMySelfUser (fallback at INMEETING), excluded from video/audio subscriptions. PurgeSelfFromParticipants() cleans up if self was added before detection.
+- Self audio frames are filtered at the native level (both platforms) to prevent bot's own audio from being sent to NDI
+- RetryVideoSubscriptions calls EnumerateParticipants each cycle to discover pre-existing participants that were missed
 - CRITICAL ORDERING: EnumerateParticipants MUST run inside OnRawRecordingStarted, NOT at MEETING_STATUS_INMEETING
 - RetryVideoSubscriptions detects stuck renderers and recreates them
 - If bot lacks recording permission, request privilege and wait for grant callback

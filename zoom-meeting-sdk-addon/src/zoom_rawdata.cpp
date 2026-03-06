@@ -172,6 +172,10 @@ public:
     void onOneWayAudioRawDataReceived(AudioRawData* data, uint32_t node_id) override {
         if (!data) return;
 
+        if (node_id == ZoomAddon::Instance().GetSelfUserId()) {
+            return;
+        }
+
         auto& count = audioFrameCounts_[node_id];
         if (count < 5 || count % 1000 == 0) {
             printf("[ZoomNative] Audio frame: nodeId=%u len=%d sr=%d ch=%d (frame #%d)\n",
@@ -596,6 +600,8 @@ void ZoomAddon::RetryVideoSubscriptions() {
         if (!g_rawDataActive) return;
     }
 
+    EnumerateParticipants();
+
     std::set<uint32_t> pending;
     {
         std::lock_guard<std::mutex> lock(g_videoMutex);
@@ -895,6 +901,10 @@ static NSMutableDictionary<NSNumber*, ZoomSDKRenderer*>* g_macVideoRenderers = n
 
 - (void)handleOneWayAudio:(ZoomSDKAudioRawData*)data userID:(unsigned int)userID {
     if (!data) return;
+
+    if (userID == ZoomAddon::Instance().GetSelfUserId()) {
+        return;
+    }
 
     auto& count = _audioFrameCounts[userID];
     if (count < 5 || count % 1000 == 0) {
@@ -1291,6 +1301,8 @@ void ZoomAddon::RetryVideoSubscriptions() {
         StartRawDataCapture();
         if (!g_macRawDataActive) return;
     }
+
+    EnumerateParticipants();
 
     std::set<uint32_t> pending;
     {

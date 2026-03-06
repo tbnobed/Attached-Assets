@@ -218,6 +218,9 @@ class ZoomMeetingBridge extends EventEmitter {
           }
           break;
         case 'participant-left':
+          if (this._knownParticipants) {
+            this._knownParticipants.delete(event.userId);
+          }
           this.emit('participant-left', {
             userId: event.userId,
             displayName: event.displayName,

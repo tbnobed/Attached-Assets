@@ -69,6 +69,22 @@ public:
         }
         printf("[ZoomNative] onUserJoin: %d users\n", lstUserID->GetCount());
         fflush(stdout);
+
+        if (ZoomAddon::Instance().GetSelfUserId() == 0 && g_meetingService) {
+            auto* pCtrl = g_meetingService->GetMeetingParticipantsController();
+            if (pCtrl) {
+                auto* selfInfo = pCtrl->GetMySelfUser();
+                if (selfInfo) {
+                    uint32_t selfId = selfInfo->GetUserID();
+                    if (selfId != 0) {
+                        ZoomAddon::Instance().SetSelfUserId(selfId);
+                        printf("[ZoomNative] onUserJoin: early self-detection selfUserId=%u\n", selfId);
+                        fflush(stdout);
+                    }
+                }
+            }
+        }
+
         for (int i = 0; i < lstUserID->GetCount(); i++) {
             unsigned int userId = lstUserID->GetItem(i);
             if (g_meetingService) {
@@ -327,6 +343,18 @@ bool ZoomAddon::LeaveMeeting() {
     @autoreleasepool {
         ZoomSDKMeetingService* meetingSvc = [[ZoomSDK sharedSDK] getMeetingService];
         ZoomSDKMeetingActionController* actionCtrl = meetingSvc ? [meetingSvc getMeetingActionController] : nil;
+
+        if (ZoomAddon::Instance().GetSelfUserId() == 0 && actionCtrl) {
+            ZoomSDKUserInfo* myself = [actionCtrl getMyself];
+            if (myself) {
+                uint32_t selfId = [myself getUserID];
+                if (selfId != 0) {
+                    ZoomAddon::Instance().SetSelfUserId(selfId);
+                    printf("[ZoomNative] onUserJoin: early self-detection selfUserId=%u\n", selfId);
+                    fflush(stdout);
+                }
+            }
+        }
 
         for (NSNumber* uid in array) {
             unsigned int userId = [uid unsignedIntValue];

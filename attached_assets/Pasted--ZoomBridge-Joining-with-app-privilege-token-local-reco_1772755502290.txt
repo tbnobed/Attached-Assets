@@ -1,0 +1,291 @@
+[ZoomBridge] Joining with app_privilege_token (local recording pre-authorized)
+[NativeArgs] arg[0] = 96592682352 (len=11)
+[NativeArgs] arg[1] = 557276 (len=6)
+[NativeArgs] arg[2] = PlexISO (len=7)
+[NativeArgs] arg[3] = lrqldmr2t (len=9)
+[ZoomNative] JoinMeeting: app_privilege_token set (len=9)
+[ZoomNative] JoinMeeting: Join result=0
+[ZoomNative] Meeting status: MEETING_STATUS_CONNECTING (error=101)
+[ZoomBridge] Event: meeting-status MEETING_STATUS_CONNECTING  
+[ZoomNative] onUserJoin: 1 users
+[ZoomNative] onUserJoin: userId=16778240 name=Participant
+[ZoomNative] OnParticipantJoined: userId=16778240 name=Participant
+[ZoomNative] onUserJoin: 1 users
+[ZoomNative] onUserJoin: userId=16778240 name=Participant
+[ZoomNative] OnParticipantJoined: userId=16778240 name=Participant
+[ZoomBridge] Event: participant-joined  Participant 16778240
+[ZoomBridge] Event: participant-joined  Participant 16778240
+[NDI] Created source: ZoomISO_ISO1_Participant
+[ZoomNative] onVideoStatusChange: userId=16778240 status=0
+[ZoomNative] onVideoStatusChange: userId=16778240 status=0
+[ZoomNative] onVideoStatusChange: userId=16778240 status=0
+[ZoomNative] onVideoStatusChange: userId=16778240 status=0
+[ZoomNative] Meeting status: MEETING_STATUS_UNKNOWN (error=101)
+[ZoomNative] Meeting status: MEETING_STATUS_INMEETING (error=101)
+[ZoomNative] Self userId detected: 16778240
+[ZoomNative] StartRawRecording: recording delegate set
+[ZoomNative] StartRawRecording: result=0
+[ZoomNative] StartRawRecording succeeded — starting data capture
+[ZoomNative] StartRawDataCapture: attempting audio subscribe + video renderers
+[ZoomNative] StartRawDataCapture: JoinVoip sent
+[ZoomNative] StartRawDataCapture: audio subscribe result=0
+[ZoomNative] StartRawDataCapture: audio subscribe SUCCESS
+[ZoomNative] StartRawDataCapture: subscribed 0 existing participants
+[ZoomNative] StartRawRecording: OK
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #0)
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #1)
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #2)
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #3)
+[ZoomBridge] Event: meeting-status MEETING_STATUS_UNKNOWN  
+[ZoomBridge] Event: meeting-status MEETING_STATUS_INMEETING  
+[ZoomBridge] In meeting — initiating raw recording and participant enumeration
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #4)
+[ZoomNative] onLocalRecordStatus: Recording_Start (1) userId=16778240
+[ZoomNative] Raw recording started — now subscribing raw data
+[ZoomNative] StartRawDataCapture: already active
+[ZoomNative] EnumerateParticipants called
+[ZoomNative] EnumerateParticipants: 1 participants in SDK list
+[ZoomNative] EnumerateParticipants: userId=16778240 is SELF — skipping
+[ZoomBridge] Event: meeting-status RAW_RECORDING_STARTED  
+[ZoomBridge] Raw recording started — video/audio capture active
+[SessionManager] Raw recording started — capturing video/audio
+[ZoomNative] EnumerateParticipants called
+[ZoomNative] EnumerateParticipants: 1 participants in SDK list
+[ZoomNative] EnumerateParticipants: userId=16778240 is SELF — skipping
+[ZoomBridge] Enumerating existing participants: 1
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 1 participants, 0 needed retry, 0 already OK
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 1 participants, 0 needed retry, 0 already OK
+[ZoomNative] EnumerateParticipants called
+[ZoomNative] EnumerateParticipants: 1 participants in SDK list
+[ZoomNative] EnumerateParticipants: userId=16778240 is SELF — skipping
+[ZoomBridge] Enumerating existing participants: 1
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 1 participants, 0 needed retry, 0 already OK
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 1 participants, 0 needed retry, 0 already OK
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 1 participants, 0 needed retry, 0 already OK
+[ZoomNative] EnumerateParticipants called
+[ZoomNative] EnumerateParticipants: 1 participants in SDK list
+[ZoomNative] EnumerateParticipants: userId=16778240 is SELF — skipping
+[ZoomBridge] Enumerating existing participants: 1
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 1 participants, 0 needed retry, 0 already OK
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 1 participants, 0 needed retry, 0 already OK
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 1 participants, 0 needed retry, 0 already OK
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #1000)
+[ZoomNative] EnumerateParticipants called
+[ZoomNative] EnumerateParticipants: 1 participants in SDK list
+[ZoomNative] EnumerateParticipants: userId=16778240 is SELF — skipping
+[ZoomBridge] Enumerating existing participants: 1
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 1 participants, 0 needed retry, 0 already OK
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 1 participants, 0 needed retry, 0 already OK
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #2000)
+[ZoomNative] EnumerateParticipants called
+[ZoomNative] EnumerateParticipants: 1 participants in SDK list
+[ZoomNative] EnumerateParticipants: userId=16778240 is SELF — skipping
+[ZoomBridge] Enumerating existing participants: 1
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 1 participants, 0 needed retry, 0 already OK
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #3000)
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 1 participants, 0 needed retry, 0 already OK
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 1 participants, 0 needed retry, 0 already OK
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #4000)
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 1 participants, 0 needed retry, 0 already OK
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #5000)
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 1 participants, 0 needed retry, 0 already OK
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #6000)
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 1 participants, 0 needed retry, 0 already OK
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #7000)
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 1 participants, 0 needed retry, 0 already OK
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #8000)
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 1 participants, 0 needed retry, 0 already OK
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #9000)
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 1 participants, 0 needed retry, 0 already OK
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #10000)
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 1 participants, 0 needed retry, 0 already OK
+[ZoomNative] onUserJoin: 1 users
+[ZoomNative] onUserJoin: userId=16783360 name=Obed
+[ZoomNative] OnParticipantJoined: userId=16783360 name=Obed
+[ZoomNative] subscribeUserVideo: userId=16783360 renderer=0x1040dac2e20 delegate=0x1040db4b940 created (sub=0)
+[ZoomBridge] Event: participant-joined  Obed 16783360
+[NDI] Created source: ZoomISO_ISO2_Obed
+[ZoomNative] onSubscribedUserDataOff: userId=16783360
+[ZoomNative] onVideoStatusChange: userId=16783360 status=0
+[ZoomNative] onVideoStatusChange: userId=16783360 status=0
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 2 participants, 0 needed retry, 1 already OK
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #11000)
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 2 participants, 0 needed retry, 1 already OK
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 2 participants, 0 needed retry, 1 already OK
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 2 participants, 0 needed retry, 1 already OK
+[ZoomNative] onVideoStatusChange: userId=16783360 status=1
+[ZoomNative] Audio frame: userId=16783360 len=960 sr=48000 ch=1 (frame #0)
+[ZoomNative] Audio frame: userId=16783360 len=960 sr=48000 ch=1 (frame #1)
+[ZoomNative] Audio frame: userId=16783360 len=960 sr=48000 ch=1 (frame #2)
+[ZoomNative] Audio frame: userId=16783360 len=960 sr=48000 ch=1 (frame #3)
+[ZoomNative] Audio frame: userId=16783360 len=960 sr=48000 ch=1 (frame #4)
+[ZoomNative] onSubscribedUserDataOn: userId=16783360
+[ZoomNative] Video frame: userId=16783360 640x360 (frame #0) src=Y/U/V
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #12000)
+[ZoomNative] onVideoStatusChange: userId=16783360 status=1
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 2 participants, 0 needed retry, 1 already OK
+[ZoomNative] Video frame: userId=16783360 640x360 (frame #1) src=Y/U/V
+[ZoomNative] Video frame: userId=16783360 640x360 (frame #2) src=Y/U/V
+[ZoomNative] Video frame: userId=16783360 640x360 (frame #3) src=Y/U/V
+[ZoomNative] Video frame: userId=16783360 640x360 (frame #4) src=Y/U/V
+[ZoomNative] Audio frame: userId=16783360 len=960 sr=48000 ch=1 (frame #1000)
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #13000)
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 2 participants, 0 needed retry, 1 already OK
+[ZoomNative] Audio frame: userId=16783360 len=960 sr=48000 ch=1 (frame #2000)
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #14000)
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 2 participants, 0 needed retry, 1 already OK
+[ZoomNative] Audio frame: userId=16783360 len=960 sr=48000 ch=1 (frame #3000)
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #15000)
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 2 participants, 0 needed retry, 1 already OK
+[ZoomNative] Video frame: userId=16783360 640x360 (frame #300) src=Y/U/V
+[ZoomNative] Audio frame: userId=16783360 len=960 sr=48000 ch=1 (frame #4000)
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #16000)
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 2 participants, 0 needed retry, 1 already OK
+[ZoomNative] Audio frame: userId=16783360 len=960 sr=48000 ch=1 (frame #5000)
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #17000)
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 2 participants, 0 needed retry, 1 already OK
+[ZoomNative] Video frame: userId=16783360 640x360 (frame #600) src=Y/U/V
+[ZoomNative] Audio frame: userId=16783360 len=960 sr=48000 ch=1 (frame #6000)
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #18000)
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 2 participants, 0 needed retry, 1 already OK
+[ZoomNative] Audio frame: userId=16783360 len=960 sr=48000 ch=1 (frame #7000)
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #19000)
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 2 participants, 0 needed retry, 1 already OK
+[ZoomNative] Video frame: userId=16783360 640x360 (frame #900) src=Y/U/V
+[ZoomNative] Audio frame: userId=16783360 len=960 sr=48000 ch=1 (frame #8000)
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #20000)
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 2 participants, 0 needed retry, 1 already OK
+[ZoomNative] Audio frame: userId=16783360 len=960 sr=48000 ch=1 (frame #9000)
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #21000)
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 2 participants, 0 needed retry, 1 already OK
+[ZoomNative] Video frame: userId=16783360 640x360 (frame #1200) src=Y/U/V
+[ZoomNative] Audio frame: userId=16783360 len=960 sr=48000 ch=1 (frame #10000)
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #22000)
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 2 participants, 0 needed retry, 1 already OK
+[ZoomNative] onUserJoin: 1 users
+[ZoomNative] onUserJoin: userId=16784384 name=obed cell
+[ZoomNative] OnParticipantJoined: userId=16784384 name=obed cell
+[ZoomNative] subscribeUserVideo: userId=16784384 renderer=0x10410437f50 delegate=0x104102a14d0 created (sub=0)
+[ZoomBridge] Event: participant-joined  obed cell 16784384
+[NDI] Created source: ZoomISO_ISO3_obed_cell
+[ZoomNative] onSubscribedUserDataOff: userId=16784384
+[ZoomNative] onVideoStatusChange: userId=16784384 status=0
+[ZoomNative] onVideoStatusChange: userId=16784384 status=0
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 3 participants, 0 needed retry, 2 already OK
+[ZoomNative] Audio frame: userId=16783360 len=960 sr=48000 ch=1 (frame #11000)
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 3 participants, 0 needed retry, 2 already OK
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #23000)
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 3 participants, 0 needed retry, 2 already OK
+[ZoomNative] onVideoStatusChange: userId=16784384 status=1
+[ZoomNative] Audio frame: userId=16784384 len=960 sr=48000 ch=1 (frame #0)
+[ZoomNative] Audio frame: userId=16784384 len=960 sr=48000 ch=1 (frame #1)
+[ZoomNative] Audio frame: userId=16784384 len=960 sr=48000 ch=1 (frame #2)
+[ZoomNative] Audio frame: userId=16784384 len=960 sr=48000 ch=1 (frame #3)
+[ZoomNative] Audio frame: userId=16784384 len=960 sr=48000 ch=1 (frame #4)
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 3 participants, 0 needed retry, 2 already OK
+[ZoomNative] Audio frame: userId=16783360 len=960 sr=48000 ch=1 (frame #12000)
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #24000)
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 3 participants, 0 needed retry, 2 already OK
+[ZoomNative] Video frame: userId=16783360 640x360 (frame #1500) src=Y/U/V
+[ZoomNative] Audio frame: userId=16783360 len=960 sr=48000 ch=1 (frame #13000)
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #25000)
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 3 participants, 0 needed retry, 2 already OK
+[ZoomNative] onVideoStatusChange: userId=16784384 status=0
+[ZoomNative] onSubscribedUserDataOff: userId=16784384
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #26000)
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 3 participants, 0 needed retry, 2 already OK
+[ZoomNative] onVideoStatusChange: userId=16784384 status=1
+[ZoomNative] Video frame: userId=16783360 640x360 (frame #1800) src=Y/U/V
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #27000)
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 3 participants, 0 needed retry, 2 already OK
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #28000)
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 3 participants, 0 needed retry, 2 already OK
+[ZoomNative] Video frame: userId=16783360 640x360 (frame #2100) src=Y/U/V
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #29000)
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 3 participants, 0 needed retry, 2 already OK
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #30000)
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 3 participants, 0 needed retry, 2 already OK
+[ZoomNative] Video frame: userId=16783360 640x360 (frame #2400) src=Y/U/V
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #31000)
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 3 participants, 0 needed retry, 2 already OK
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #32000)
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 3 participants, 0 needed retry, 2 already OK
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #33000)
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 3 participants, 0 needed retry, 2 already OK
+[ZoomNative] Video frame: userId=16783360 640x360 (frame #2700) src=Y/U/V
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #34000)
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 3 participants, 0 needed retry, 2 already OK
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #35000)
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 3 participants, 0 needed retry, 2 already OK
+[ZoomNative] Video frame: userId=16783360 640x360 (frame #3000) src=Y/U/V
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #36000)
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 3 participants, 0 needed retry, 2 already OK
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #37000)
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 3 participants, 0 needed retry, 2 already OK
+[ZoomNative] Video frame: userId=16783360 640x360 (frame #3300) src=Y/U/V
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #38000)
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 3 participants, 0 needed retry, 2 already OK
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #39000)
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 3 participants, 0 needed retry, 2 already OK
+[ZoomNative] Video frame: userId=16783360 640x360 (frame #3600) src=Y/U/V
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #40000)
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 3 participants, 0 needed retry, 2 already OK
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #41000)
+[ZoomBridge] Retrying video/audio subscriptions...
+[ZoomNative] RetryVideoSubscriptions: 3 participants, 0 needed retry, 2 already OK

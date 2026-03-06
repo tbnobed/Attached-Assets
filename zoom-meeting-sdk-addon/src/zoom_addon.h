@@ -62,7 +62,8 @@ public:
     void OnParticipantJoined(uint32_t userId, const std::string& name);
     void OnParticipantLeft(uint32_t userId);
     void OnMeetingStatusChanged(const std::string& status);
-    void SetSelfUserId(uint32_t userId) { selfUserId_ = userId; }
+    void SetSelfUserId(uint32_t userId);
+    void PurgeSelfFromParticipants();
     uint32_t GetSelfUserId() const { return selfUserId_; }
 
 private:
