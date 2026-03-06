@@ -199,9 +199,20 @@ else
     if [ -d "$MACADAM_DIR" ]; then
         cd "$MACADAM_DIR"
 
-        echo "  Patching binding.gyp to remove capture sources (playback-only)..."
+        echo "  Patching macadam for playback-only build..."
         if [ -f binding.gyp ]; then
             sed -i '' '/"src\/capture/d' binding.gyp
+            echo "    Removed capture sources from binding.gyp"
+        fi
+        if [ -f src/macadam.cc ]; then
+            sed -i '' '/"capture"/d' src/macadam.cc
+            sed -i '' '/napi_value capture/d' src/macadam.cc
+            sed -i '' '/^napi_value capture/d' src/macadam.cc
+            echo "    Removed capture function registration from macadam.cc"
+        fi
+        if [ -f src/macadam.h ]; then
+            sed -i '' '/capture/d' src/macadam.h
+            echo "    Removed capture declarations from macadam.h"
         fi
 
         PYTHON="$PYTHON_PATH" npx node-gyp rebuild 2>&1 || {
