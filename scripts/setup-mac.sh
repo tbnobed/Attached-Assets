@@ -199,21 +199,17 @@ else
     if [ -d "$MACADAM_DIR" ]; then
         cd "$MACADAM_DIR"
 
-        echo "  Patching macadam for playback-only build..."
-        if [ -f binding.gyp ]; then
-            sed -i '' '/"src\/capture/d' binding.gyp
-            echo "    Removed capture sources from binding.gyp"
-        fi
-        if [ -f src/macadam.cc ]; then
-            sed -i '' '/"capture"/d' src/macadam.cc
-            sed -i '' '/napi_value capture/d' src/macadam.cc
-            sed -i '' '/^napi_value capture/d' src/macadam.cc
-            echo "    Removed capture function registration from macadam.cc"
-        fi
-        if [ -f src/macadam.h ]; then
-            sed -i '' '/capture/d' src/macadam.h
-            echo "    Removed capture declarations from macadam.h"
-        fi
+        echo "  Stubbing out capture function (playback-only build)..."
+        cat > src/capture_promise.cc << 'STUBEOF'
+#include "macadam_util.h"
+#include "node_api.h"
+napi_value capture(napi_env env, napi_callback_info info) {
+  napi_value result;
+  napi_get_undefined(env, &result);
+  return result;
+}
+STUBEOF
+        echo "    Replaced capture_promise.cc with stub"
 
         PYTHON="$PYTHON_PATH" npx node-gyp rebuild 2>&1 || {
             echo -e "${YELLOW}  macadam build failed — DeckLink output will be unavailable${NC}"
