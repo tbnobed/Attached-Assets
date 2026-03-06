@@ -892,7 +892,6 @@ static NSMutableDictionary<NSNumber*, ZoomSDKRenderer*>* g_macVideoRenderers = n
 - (void)onMixedAudioRawDataReceived:(ZoomSDKAudioRawData*)data {}
 
 - (void)onOneWayAudioRawDataReceived:(ZoomSDKAudioRawData*)data nodeID:(unsigned int)nodeID {
-    [self handleOneWayAudio:data userID:nodeID];
 }
 
 - (void)onOneWayAudioRawDataReceived:(ZoomSDKAudioRawData*)data userID:(unsigned int)userID {
