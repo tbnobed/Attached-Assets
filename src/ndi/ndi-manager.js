@@ -196,10 +196,15 @@ class NDIManager extends EventEmitter {
       const fourCC = this.grandiose.FOURCC_FLTp || 0x70544C46;
 
       if (source._audioSentCount <= 5 || source._audioSentCount % 1000 === 0) {
-        console.log(`[NDI] Audio send #${source._audioSentCount}: userId=${userId} samples=${srcSamples} sr=${sr} outCh=${outCh} bufLen=${floatBuf.length} fourCC=${fourCC}`);
+        let maxSample = 0;
+        for (let i = 0; i < srcSamples; i++) {
+          const v = Math.abs(floatBuf.readFloatLE(i * 4));
+          if (v > maxSample) maxSample = v;
+        }
+        console.log(`[NDI] Audio send #${source._audioSentCount}: userId=${userId} samples=${srcSamples} sr=${sr} outCh=${outCh} bufLen=${floatBuf.length} fourCC=${fourCC} peak=${maxSample.toFixed(4)}`);
       }
 
-      source.sender.audio({
+      const result = source.sender.audio({
         fourCC: fourCC,
         sampleRate: sr,
         noChannels: outCh,
@@ -207,6 +212,14 @@ class NDIManager extends EventEmitter {
         channelStrideBytes: srcSamples * 4,
         data: floatBuf,
       });
+      if (result && typeof result.catch === 'function') {
+        result.catch(err => {
+          if (!source._audioPromiseErrorLogged) {
+            console.error(`[NDI] Audio send promise rejected for ${source.displayName}:`, err.message || err);
+            source._audioPromiseErrorLogged = true;
+          }
+        });
+      }
     } catch (err) {
       if (!source._audioErrorLogged) {
         console.error(`[NDI] Error sending audio for ${source.displayName}:`, err.message);

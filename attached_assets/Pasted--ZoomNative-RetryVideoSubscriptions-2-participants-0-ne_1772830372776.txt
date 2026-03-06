@@ -1,0 +1,136 @@
+[ZoomNative] RetryVideoSubscriptions: 2 participants, 0 needed retry, 2 already OK
+[ZoomNative] EnumerateParticipants called
+[ZoomNative] EnumerateParticipants: 3 participants in SDK list
+[ZoomNative] EnumerateParticipants: userId=16784384 is SELF — skipping
+[ZoomNative] RetryVideoSubscriptions: 2 participants, 0 needed retry, 2 already OK
+[ZoomNative] EnumerateParticipants called
+[ZoomNative] EnumerateParticipants: 3 participants in SDK list
+[ZoomNative] EnumerateParticipants: userId=16784384 is SELF — skipping
+[ZoomNative] RetryVideoSubscriptions: 2 participants, 0 needed retry, 2 already OK
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #1000)
+[Main] audio-data #1000: userId=16778240 bufLen=960 sr=48000 ch=1
+[ZoomNative] EnumerateParticipants called
+[ZoomNative] EnumerateParticipants: 3 participants in SDK list
+[ZoomNative] EnumerateParticipants: userId=16784384 is SELF — skipping
+[ZoomBridge] Enumerating existing participants: 2
+[NDI] Audio send #1000: userId=16778240 samples=480 sr=48000 outCh=2 bufLen=3840 fourCC=1884572742
+[ZoomNative] EnumerateParticipants called
+[ZoomNative] EnumerateParticipants: 3 participants in SDK list
+[ZoomNative] EnumerateParticipants: userId=16784384 is SELF — skipping
+[ZoomNative] RetryVideoSubscriptions: 2 participants, 0 needed retry, 2 already OK
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #2000)
+[Main] audio-data #2000: userId=16778240 bufLen=960 sr=48000 ch=1
+[ZoomNative] EnumerateParticipants called
+[ZoomNative] EnumerateParticipants: 3 participants in SDK list
+[ZoomNative] EnumerateParticipants: userId=16784384 is SELF — skipping
+[ZoomBridge] Enumerating existing participants: 2
+[NDI] Audio send #2000: userId=16778240 samples=480 sr=48000 outCh=2 bufLen=3840 fourCC=1884572742
+[DeckLink] Output started on device 0: 1080i 59.94
+[ZoomNative] Video frame: userId=16778240 640x360 (frame #300) src=Y/U/V
+[DeckLink] Assigned participant 16778240 to device 0
+[DeckLink] Sent frame #1 to device 0 (1920x1080 UYVY)
+[DeckLink] Sent frame #2 to device 0 (1920x1080 UYVY)
+[DeckLink] Sent frame #3 to device 0 (1920x1080 UYVY)
+[DeckLink] Sent frame #4 to device 0 (1920x1080 UYVY)
+[DeckLink] Sent frame #5 to device 0 (1920x1080 UYVY)
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #3000)
+[Main] audio-data #3000: userId=16778240 bufLen=960 sr=48000 ch=1
+[ZoomNative] EnumerateParticipants called
+[ZoomNative] EnumerateParticipants: 3 participants in SDK list
+[ZoomNative] EnumerateParticipants: userId=16784384 is SELF — skipping
+[ZoomNative] RetryVideoSubscriptions: 2 participants, 0 needed retry, 2 already OK
+[NDI] Audio send #3000: userId=16778240 samples=480 sr=48000 outCh=2 bufLen=3840 fourCC=1884572742
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #4000)
+[Main] audio-data #4000: userId=16778240 bufLen=960 sr=48000 ch=1
+[NDI] Audio send #4000: userId=16778240 samples=480 sr=48000 outCh=2 bufLen=3840 fourCC=1884572742
+[ZoomNative] Video frame: userId=16783360 640x360 (frame #300) src=Y/U/V
+[ZoomNative] Video frame: userId=16778240 640x360 (frame #600) src=Y/U/V
+[DeckLink] Sent frame #300 to device 0 (1920x1080 UYVY)
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #5000)
+[Main] audio-data #5000: userId=16778240 bufLen=960 sr=48000 ch=1
+[ZoomNative] EnumerateParticipants called
+[ZoomNative] EnumerateParticipants: 3 participants in SDK list
+[ZoomNative] EnumerateParticipants: userId=16784384 is SELF — skipping
+[ZoomNative] RetryVideoSubscriptions: 2 participants, 0 needed retry, 2 already OK
+[NDI] Audio send #5000: userId=16778240 samples=480 sr=48000 outCh=2 bufLen=3840 fourCC=1884572742
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #6000)
+[Main] audio-data #6000: userId=16778240 bufLen=960 sr=48000 ch=1
+[NDI] Audio send #6000: userId=16778240 samples=480 sr=48000 outCh=2 bufLen=3840 fourCC=1884572742
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #7000)
+[Main] audio-data #7000: userId=16778240 bufLen=960 sr=48000 ch=1
+[NDI] Audio send #7000: userId=16778240 samples=480 sr=48000 outCh=2 bufLen=3840 fourCC=1884572742
+[ZoomNative] Video frame: userId=16778240 640x360 (frame #900) src=Y/U/V
+[DeckLink] Sent frame #600 to device 0 (1920x1080 UYVY)
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #8000)
+[Main] audio-data #8000: userId=16778240 bufLen=960 sr=48000 ch=1
+[NDI] Audio send #8000: userId=16778240 samples=480 sr=48000 outCh=2 bufLen=3840 fourCC=1884572742
+[ZoomNative] Video frame: userId=16783360 640x360 (frame #600) src=Y/U/V
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #9000)
+[Main] audio-data #9000: userId=16778240 bufLen=960 sr=48000 ch=1
+[NDI] Audio send #9000: userId=16778240 samples=480 sr=48000 outCh=2 bufLen=3840 fourCC=1884572742
+[ZoomNative] Video frame: userId=16778240 640x360 (frame #1200) src=Y/U/V
+[DeckLink] Sent frame #900 to device 0 (1920x1080 UYVY)
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #10000)
+[Main] audio-data #10000: userId=16778240 bufLen=960 sr=48000 ch=1
+[NDI] Audio send #10000: userId=16778240 samples=480 sr=48000 outCh=2 bufLen=3840 fourCC=1884572742
+[DeckLink] Output started on device 1: 1080i 59.94
+[DeckLink] Assigned participant 16783360 to device 1
+[DeckLink] Sent frame #1 to device 1 (1920x1080 UYVY)
+[DeckLink] Sent frame #2 to device 1 (1920x1080 UYVY)
+[DeckLink] Sent frame #3 to device 1 (1920x1080 UYVY)
+[DeckLink] Sent frame #4 to device 1 (1920x1080 UYVY)
+[DeckLink] Sent frame #5 to device 1 (1920x1080 UYVY)
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #11000)
+[Main] audio-data #11000: userId=16778240 bufLen=960 sr=48000 ch=1
+[NDI] Audio send #11000: userId=16778240 samples=480 sr=48000 outCh=2 bufLen=3840 fourCC=1884572742
+[ZoomNative] Video frame: userId=16778240 640x360 (frame #1500) src=Y/U/V
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #12000)
+[Main] audio-data #12000: userId=16778240 bufLen=960 sr=48000 ch=1
+[NDI] Audio send #12000: userId=16778240 samples=480 sr=48000 outCh=2 bufLen=3840 fourCC=1884572742
+[DeckLink] Sent frame #1200 to device 0 (1920x1080 UYVY)
+[ZoomNative] Video frame: userId=16783360 640x360 (frame #900) src=Y/U/V
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #13000)
+[Main] audio-data #13000: userId=16778240 bufLen=960 sr=48000 ch=1
+[NDI] Audio send #13000: userId=16778240 samples=480 sr=48000 outCh=2 bufLen=3840 fourCC=1884572742
+[ZoomNative] Video frame: userId=16778240 640x360 (frame #1800) src=Y/U/V
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #14000)
+[Main] audio-data #14000: userId=16778240 bufLen=960 sr=48000 ch=1
+[NDI] Audio send #14000: userId=16778240 samples=480 sr=48000 outCh=2 bufLen=3840 fourCC=1884572742
+[DeckLink] Sent frame #1500 to device 0 (1920x1080 UYVY)
+[DeckLink] Sent frame #300 to device 1 (1920x1080 UYVY)
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #15000)
+[Main] audio-data #15000: userId=16778240 bufLen=960 sr=48000 ch=1
+[NDI] Audio send #15000: userId=16778240 samples=480 sr=48000 outCh=2 bufLen=3840 fourCC=1884572742
+[ZoomNative] Video frame: userId=16778240 640x360 (frame #2100) src=Y/U/V
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #16000)
+[Main] audio-data #16000: userId=16778240 bufLen=960 sr=48000 ch=1
+[NDI] Audio send #16000: userId=16778240 samples=480 sr=48000 outCh=2 bufLen=3840 fourCC=1884572742
+[ZoomNative] Video frame: userId=16783360 640x360 (frame #1200) src=Y/U/V
+[DeckLink] Sent frame #1800 to device 0 (1920x1080 UYVY)
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #17000)
+[Main] audio-data #17000: userId=16778240 bufLen=960 sr=48000 ch=1
+[NDI] Audio send #17000: userId=16778240 samples=480 sr=48000 outCh=2 bufLen=3840 fourCC=1884572742
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #18000)
+[Main] audio-data #18000: userId=16778240 bufLen=960 sr=48000 ch=1
+[NDI] Audio send #18000: userId=16778240 samples=480 sr=48000 outCh=2 bufLen=3840 fourCC=1884572742
+[ZoomNative] Video frame: userId=16778240 640x360 (frame #2400) src=Y/U/V
+[DeckLink] Sent frame #600 to device 1 (1920x1080 UYVY)
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #19000)
+[Main] audio-data #19000: userId=16778240 bufLen=960 sr=48000 ch=1
+[NDI] Audio send #19000: userId=16778240 samples=480 sr=48000 outCh=2 bufLen=3840 fourCC=1884572742
+[DeckLink] Sent frame #2100 to device 0 (1920x1080 UYVY)
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #20000)
+[Main] audio-data #20000: userId=16778240 bufLen=960 sr=48000 ch=1
+[NDI] Audio send #20000: userId=16778240 samples=480 sr=48000 outCh=2 bufLen=3840 fourCC=1884572742
+[ZoomNative] Video frame: userId=16783360 640x360 (frame #1500) src=Y/U/V
+[ZoomNative] Video frame: userId=16778240 640x360 (frame #2700) src=Y/U/V
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #21000)
+[Main] audio-data #21000: userId=16778240 bufLen=960 sr=48000 ch=1
+[NDI] Audio send #21000: userId=16778240 samples=480 sr=48000 outCh=2 bufLen=3840 fourCC=1884572742
+[DeckLink] Sent frame #2400 to device 0 (1920x1080 UYVY)
+[ZoomNative] Audio frame: userId=16778240 len=960 sr=48000 ch=1 (frame #22000)
+[Main] audio-data #22000: userId=16778240 bufLen=960 sr=48000 ch=1
+[NDI] Audio send #22000: userId=16778240 samples=480 sr=48000 outCh=2 bufLen=3840 fourCC=1884572742
+[ZoomNative] Video frame: userId=16778240 640x360 (frame #3000) src=Y/U/V
+[DeckLink] Sent frame #900 to device 1 (1920x1080 UYVY)
+[
