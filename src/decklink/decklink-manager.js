@@ -50,7 +50,12 @@ try {
     if (fs.existsSync(nativePath)) {
       console.log('[DeckLink] Found native binary at:', nativePath);
       const nativeBinding = require(nativePath);
-      macadam = Object.assign({}, MACADAM_CONSTANTS, nativeBinding);
+      macadam = nativeBinding;
+      for (const [k, v] of Object.entries(MACADAM_CONSTANTS)) {
+        if (macadam[k] === undefined) {
+          macadam[k] = v;
+        }
+      }
       macadamAvailable = true;
       console.log('[DeckLink] Loaded macadam native binding with constants applied');
     } else {
