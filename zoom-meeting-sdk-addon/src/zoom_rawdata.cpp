@@ -1058,6 +1058,7 @@ static void macUnsubscribeUserVideo(uint32_t userId) {
         NSNumber* key = @(userId);
         ZoomSDKRenderer* renderer = g_macVideoRenderers[key];
         if (renderer) {
+            renderer.delegate = nil;
             [renderer unSubscribe];
 
             ZoomSDKRawDataController* rawCtrl = [[ZoomSDK sharedSDK] getRawDataController];
@@ -1079,6 +1080,7 @@ static void macUnsubscribeAllVideo() {
         for (NSNumber* key in [g_macVideoRenderers allKeys]) {
             ZoomSDKRenderer* renderer = g_macVideoRenderers[key];
             if (renderer) {
+                renderer.delegate = nil;
                 [renderer unSubscribe];
                 if (rawCtrl) {
                     [rawCtrl destroyRender:renderer];
@@ -1382,6 +1384,7 @@ void ZoomAddon::StopRawDataCapture() {
 
     @autoreleasepool {
         if (g_macAudioHelper) {
+            g_macAudioHelper.delegate = nil;
             [g_macAudioHelper unSubscribe];
             g_macAudioHelper = nil;
         }
@@ -1392,6 +1395,7 @@ void ZoomAddon::StopRawDataCapture() {
             if (meetingSvc) {
                 ZoomSDKMeetingRecordController* recCtrl = [meetingSvc getRecordController];
                 if (recCtrl) {
+                    recCtrl.delegate = nil;
                     [recCtrl stopRawRecording];
                     printf("[ZoomNative] StopRawRecording called\n");
                     fflush(stdout);

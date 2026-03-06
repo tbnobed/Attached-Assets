@@ -558,6 +558,13 @@ bool ZoomAddon::LeaveMeeting() {
     @autoreleasepool {
         ZoomSDKMeetingService* meetingSvc = [[ZoomSDK sharedSDK] getMeetingService];
         if (meetingSvc) {
+            meetingSvc.delegate = nil;
+
+            ZoomSDKMeetingActionController* actionCtrl = [meetingSvc getMeetingActionController];
+            if (actionCtrl) {
+                actionCtrl.delegate = nil;
+            }
+
             [meetingSvc leaveMeetingWithCmd:LeaveMeetingCmd_Leave];
         }
     }
@@ -566,7 +573,11 @@ bool ZoomAddon::LeaveMeeting() {
     g_actionDelegate = nil;
 
     state_ = AddonState::Authenticated;
-    participants_.clear();
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        participants_.clear();
+    }
+    selfUserId_ = 0;
     return true;
 }
 
