@@ -10,7 +10,7 @@ Electron desktop application for capturing isolated video/audio feeds from Zoom 
 - **Zoom Integration** (`src/zoom/`): Session manager wrapping the native Meeting SDK addon, stream handler, JWT generator
 - **Native Addon** (`zoom-meeting-sdk-addon/`): C++/ObjC++ N-API wrapper around the Zoom Meeting SDK. macOS uses Objective-C ZoomSDK.framework API; Windows uses C++ zoom_sdk API. Both provide raw data callbacks (video I420, audio PCM) per participant via ThreadSafeFunction
 - **NDI** (`src/ndi/`): NDI source management via grandiose (graceful fallback if unavailable)
-- **DeckLink** (`src/decklink/`): SDI output via macadam (graceful fallback if unavailable). Enumerates DeckLink devices, maps participants to physical outputs, converts BGRA→UYVY with scaling, upmixes mono audio to stereo. UI allows per-output participant assignment.
+- **DeckLink** (`src/decklink/`): SDI output via macadam (graceful fallback if unavailable). Enumerates DeckLink devices, maps participants to physical outputs, converts BGRA→UYVY with scaling, upmixes mono audio to stereo. UI allows per-output participant assignment. Desktop Video v15+ renames `CreateDeckLinkIteratorInstance` to versioned symbols (`_0002`/`_0003`/`_0004`); macadam is patched at build time with `decklink_compat.c` dispatch + a `libdecklink-shim.dylib` fallback for runtime DYLD_INSERT. Probe runs in a child process to avoid uncatchable SIGABRT.
 - **Recorder** (`src/recorder/`): FFmpeg-based per-participant MP4 recording
 - **Config** (`src/config/`): Settings loader from environment variables
 

@@ -67,7 +67,12 @@ class DeckLinkManager extends EventEmitter {
       __dirname, '..', '..', 'node_modules', 'macadam', 'build', 'Release', 'macadam.node'
     );
 
+    const fs = require('fs');
     const { spawnSync } = require('child_process');
+
+    const shimPath = path.join(__dirname, 'libdecklink-shim.dylib');
+    const shimExists = fs.existsSync(shimPath);
+
     const testScript = `
       try {
         const m = require(${JSON.stringify(nativePath)});
@@ -77,10 +82,17 @@ class DeckLinkManager extends EventEmitter {
         process.stdout.write(JSON.stringify({ ok: false, error: e.message }));
       }
     `;
+
+    const probeEnv = { ...process.env, ELECTRON_RUN_AS_NODE: '1' };
+    if (shimExists) {
+      probeEnv.DYLD_INSERT_LIBRARIES = shimPath;
+      console.log('[DeckLink] Using API compatibility shim:', shimPath);
+    }
+
     const result = spawnSync(process.execPath, ['-e', testScript], {
       timeout: 5000,
       encoding: 'utf8',
-      env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },
+      env: probeEnv,
     });
 
     if (result.status !== 0 || result.signal) {

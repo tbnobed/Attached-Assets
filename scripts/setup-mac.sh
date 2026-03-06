@@ -227,6 +227,47 @@ COMPATEOF
             fi
         done
 
+        echo "  Adding DeckLink API v15 compatibility dispatch..."
+        cat > src/decklink_compat.c << 'DISPATCHEOF'
+#include <dlfcn.h>
+#include <stdio.h>
+#define DECKLINK_FW "/Library/Frameworks/DeckLinkAPI.framework/DeckLinkAPI"
+typedef void* (*CreateIterFn)(void);
+void* CreateDeckLinkIteratorInstance(void) {
+    static CreateIterFn cached = NULL;
+    static int tried = 0;
+    if (!tried) {
+        tried = 1;
+        void* h = dlopen(DECKLINK_FW, RTLD_LAZY | RTLD_GLOBAL);
+        if (h) {
+            const char* names[] = {
+                "CreateDeckLinkIteratorInstance_0004",
+                "CreateDeckLinkIteratorInstance_0003",
+                "CreateDeckLinkIteratorInstance_0002",
+                "CreateDeckLinkIterator",
+                NULL
+            };
+            for (int i = 0; names[i]; i++) {
+                cached = (CreateIterFn)dlsym(h, names[i]);
+                if (cached) break;
+            }
+        }
+    }
+    return cached ? cached() : NULL;
+}
+DISPATCHEOF
+        echo "    Created decklink_compat.c"
+
+        if [ -f binding.gyp ]; then
+            sed -i '' 's/-framework DeckLinkAPI//g' binding.gyp
+            echo "    Removed -framework DeckLinkAPI from link flags"
+
+            if ! grep -q 'decklink_compat.c' binding.gyp; then
+                sed -i '' 's|"src/macadam.cc"|"src/macadam.cc", "src/decklink_compat.c"|' binding.gyp
+                echo "    Added decklink_compat.c to sources"
+            fi
+        fi
+
         PYTHON="$PYTHON_PATH" npx node-gyp rebuild 2>&1 || {
             echo -e "${YELLOW}  macadam build failed — DeckLink output will be unavailable${NC}"
             echo -e "${YELLOW}  This is OK if you don't have Blackmagic Desktop Video installed${NC}"
@@ -240,6 +281,32 @@ COMPATEOF
         fi
     else
         echo -e "${YELLOW}  macadam package not found — DeckLink features disabled${NC}"
+    fi
+fi
+
+# ===========================================================
+step "DeckLink API compatibility shim (fallback)"
+# ===========================================================
+SHIM_SRC="$PROJECT_DIR/src/decklink/decklink-shim.c"
+SHIM_OUT="$PROJECT_DIR/src/decklink/libdecklink-shim.dylib"
+
+if [ -f "$SHIM_OUT" ]; then
+    skip
+elif [ ! -d "/Library/Frameworks/DeckLinkAPI.framework" ]; then
+    echo -e "${YELLOW}  DeckLinkAPI.framework not installed — skipping shim${NC}"
+else
+    echo "  Building DeckLink API DYLD_INSERT shim (fallback for pre-built macadam)..."
+    clang -dynamiclib -flat_namespace \
+        -o "$SHIM_OUT" "$SHIM_SRC" \
+        -install_name "@rpath/libdecklink-shim.dylib" \
+        -arch arm64 -arch x86_64 2>/dev/null || \
+    clang -dynamiclib -flat_namespace \
+        -o "$SHIM_OUT" "$SHIM_SRC" \
+        -install_name "@rpath/libdecklink-shim.dylib" 2>/dev/null || \
+    echo -e "${YELLOW}  Shim build failed — OK if macadam was rebuilt with compat dispatch${NC}"
+
+    if [ -f "$SHIM_OUT" ]; then
+        echo -e "${GREEN}  DeckLink shim built OK${NC}"
     fi
 fi
 
