@@ -161,41 +161,58 @@ class NDIManager extends EventEmitter {
     if (source.mock || !source.sender) return;
 
     const ch = channels || 1;
-    const sr = sampleRate || 48000;
     const bytesPerSample = 2;
-    const noSamples = Math.floor(audioBuffer.length / (bytesPerSample * ch));
-    if (noSamples <= 0) return;
+    const incomingSamples = Math.floor(audioBuffer.length / (bytesPerSample * ch));
+    if (incomingSamples <= 0) return;
+
+    if (!source._pcmAccum) source._pcmAccum = Buffer.alloc(0);
+    if (!source._audioSending) source._audioSending = false;
+
+    const newPcm = Buffer.alloc(incomingSamples * 2);
+    for (let s = 0; s < incomingSamples; s++) {
+      const int16 = audioBuffer.readInt16LE(s * ch * bytesPerSample);
+      newPcm.writeInt16LE(int16, s * 2);
+    }
+    source._pcmAccum = Buffer.concat([source._pcmAccum, newPcm]);
+
+    const TARGET_SAMPLES = 1920;
+    if (source._pcmAccum.length >= TARGET_SAMPLES * 2 && !source._audioSending) {
+      this._sendAccumulatedAudio(userId);
+    }
+  }
+
+  async _sendAccumulatedAudio(userId) {
+    const source = this.sources.get(userId);
+    if (!source || !source.sender || source._audioSending) return;
+
+    source._audioSending = true;
+    const TARGET_SAMPLES = 1920;
+    const sr = 48000;
+    const fourCC = this.grandiose.FOURCC_FLTp || 0x70544C46;
 
     try {
-      const floatBuf = Buffer.alloc(noSamples * 4);
-      for (let s = 0; s < noSamples; s++) {
-        const int16 = audioBuffer.readInt16LE(s * ch * bytesPerSample);
-        floatBuf.writeFloatLE(int16 / 32768.0, s * 4);
-      }
+      while (source._pcmAccum && source._pcmAccum.length >= TARGET_SAMPLES * 2) {
+        const chunkPcm = source._pcmAccum.subarray(0, TARGET_SAMPLES * 2);
+        source._pcmAccum = source._pcmAccum.subarray(TARGET_SAMPLES * 2);
 
-      if (!source._audioSentCount) source._audioSentCount = 0;
-      source._audioSentCount++;
+        const floatBuf = Buffer.alloc(TARGET_SAMPLES * 4);
+        for (let s = 0; s < TARGET_SAMPLES; s++) {
+          floatBuf.writeFloatLE(chunkPcm.readInt16LE(s * 2) / 32768.0, s * 4);
+        }
 
-      const fourCC = this.grandiose.FOURCC_FLTp || 0x70544C46;
+        if (!source._audioSentCount) source._audioSentCount = 0;
+        source._audioSentCount++;
+        if (source._audioSentCount <= 3 || source._audioSentCount % 1000 === 0) {
+          console.log(`[NDI] Audio send #${source._audioSentCount}: userId=${userId} samples=${TARGET_SAMPLES} sr=${sr}`);
+        }
 
-      if (source._audioSentCount <= 3 || source._audioSentCount % 5000 === 0) {
-        console.log(`[NDI] Audio send #${source._audioSentCount}: userId=${userId} samples=${noSamples} sr=${sr} ch=1`);
-      }
-
-      const result = source.sender.audio({
-        fourCC: fourCC,
-        sampleRate: sr,
-        noChannels: 1,
-        noSamples: noSamples,
-        channelStrideBytes: noSamples * 4,
-        data: floatBuf,
-      });
-      if (result && typeof result.catch === 'function') {
-        result.catch(err => {
-          if (!source._audioPromiseErrorLogged) {
-            console.error(`[NDI] Audio send promise rejected for ${source.displayName}:`, err.message || err);
-            source._audioPromiseErrorLogged = true;
-          }
+        await source.sender.audio({
+          fourCC: fourCC,
+          sampleRate: sr,
+          noChannels: 1,
+          noSamples: TARGET_SAMPLES,
+          channelStrideBytes: TARGET_SAMPLES * 4,
+          data: floatBuf,
         });
       }
     } catch (err) {
@@ -203,6 +220,8 @@ class NDIManager extends EventEmitter {
         console.error(`[NDI] Error sending audio for ${source.displayName}:`, err.message);
         source._audioErrorLogged = true;
       }
+    } finally {
+      source._audioSending = false;
     }
   }
 
