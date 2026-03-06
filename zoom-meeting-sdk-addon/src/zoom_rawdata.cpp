@@ -289,10 +289,10 @@ void subscribeUserVideo(uint32_t userId) {
     IZoomSDKRenderer* renderer = nullptr;
     auto err = createRenderer(&renderer, listener);
     if (err == SDKERR_SUCCESS && renderer) {
-        auto resErr = renderer->setRawDataResolution(ZoomSDKResolution_1080P);
+        auto resErr = renderer->setRawDataResolution(ZoomSDKResolution_360P);
         auto subErr = renderer->subscribe(userId, RAW_DATA_TYPE_VIDEO);
         g_videoRenderers[userId] = { renderer, listener };
-        printf("[ZoomNative] subscribeUserVideo: userId=%u renderer=%p delegate=%p created (res=%d sub=%d) totalRenderers=%zu\n", userId, (void*)renderer, (void*)listener, (int)resErr, (int)subErr, g_videoRenderers.size());
+        printf("[ZoomNative] subscribeUserVideo: userId=%u renderer=%p delegate=%p created (res=360p/%d sub=%d) totalRenderers=%zu\n", userId, (void*)renderer, (void*)listener, (int)resErr, (int)subErr, g_videoRenderers.size());
         fflush(stdout);
         if (subErr == SDKERR_SUCCESS) {
             g_videoSubscribedOK.insert(userId);
@@ -352,10 +352,10 @@ public:
             IZoomSDKRenderer* renderer = nullptr;
             auto err = createRenderer(&renderer, listener);
             if (err == SDKERR_SUCCESS && renderer) {
-                renderer->setRawDataResolution(ZoomSDKResolution_1080P);
+                renderer->setRawDataResolution(ZoomSDKResolution_360P);
                 auto subErr = renderer->subscribe(userId, RAW_DATA_TYPE_VIDEO);
                 g_videoRenderers[userId] = { renderer, listener };
-                printf("[ZoomNative] onUserVideoStatusChange: userId=%u renderer=%p delegate=%p fresh created (sub=%d)\n", userId, (void*)renderer, (void*)listener, (int)subErr);
+                printf("[ZoomNative] onUserVideoStatusChange: userId=%u renderer=%p delegate=%p fresh created (res=360p sub=%d)\n", userId, (void*)renderer, (void*)listener, (int)subErr);
                 fflush(stdout);
                 if (subErr == SDKERR_SUCCESS) {
                     g_videoSubscribedOK.insert(userId);
@@ -1030,7 +1030,7 @@ static void macSubscribeUserVideo(uint32_t userId) {
         PerUserVideoDelegateImpl* delegate = [[PerUserVideoDelegateImpl alloc] initWithUserId:userId];
         renderer.delegate = delegate;
 
-        [renderer setResolution:ZoomSDKResolution_1080P];
+        [renderer setResolution:ZoomSDKResolution_360P];
         ZoomSDKError subErr = [renderer subscribe:userId rawDataType:ZoomSDKRawDataType_Video];
 
         if (!g_macVideoDelegates) g_macVideoDelegates = [[NSMutableDictionary alloc] init];

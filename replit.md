@@ -126,6 +126,7 @@ cd zoom-meeting-sdk-addon && npx node-gyp rebuild
 - Self audio frames are filtered at the native level (both platforms) to prevent bot's own audio from being sent to NDI
 - RetryVideoSubscriptions calls EnumerateParticipants each cycle to discover pre-existing participants that were missed
 - CRITICAL ORDERING: EnumerateParticipants MUST run inside OnRawRecordingStarted, NOT at MEETING_STATUS_INMEETING
+- Video resolution set to 360p (`ZoomSDKResolution_360P`) for all renderers. At 1080p, the Zoom SDK throttles bandwidth and only delivers 1-2 concurrent video streams. At 360p, 4-8+ concurrent streams work reliably. This affects all 3 renderer creation sites (Windows initial, Windows video-status-change, macOS).
 - RetryVideoSubscriptions detects stuck renderers and recreates them
 - If bot lacks recording permission, request privilege and wait for grant callback
 - `onRecordingStatus(Recording_Start)` / `onLocalRecordStatus:ZoomSDKRecordingStatus_Start` is the gate signal for raw data
