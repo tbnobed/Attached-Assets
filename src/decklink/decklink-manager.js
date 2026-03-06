@@ -286,6 +286,11 @@ class DeckLinkManager extends EventEmitter {
     output._audioRingCount++;
   }
 
+  _ringDrop(output, count) {
+    const toDrop = Math.min(count, output._audioRingCount);
+    output._audioRingCount -= toDrop;
+  }
+
   _ringPull(output, count) {
     const actual = Math.min(count, output._audioRingCount);
     const buf = Buffer.alloc(count * 4);
@@ -344,6 +349,12 @@ class DeckLinkManager extends EventEmitter {
 
     output.assignedUserId = userId;
     this.assignments.set(userId, deviceIndex);
+
+    output._audioRingHead = 0;
+    output._audioRingCount = 0;
+    output._audioTotalIn = 0;
+    output._audioTotalOut = 0;
+    console.log(`[DeckLink] Ring buffer flushed for device ${deviceIndex} on participant assign`);
 
     this.emit('assignment-changed', { userId, deviceIndex });
     console.log(`[DeckLink] Assigned participant ${userId} to device ${deviceIndex}`);
@@ -455,6 +466,13 @@ class DeckLinkManager extends EventEmitter {
       const bytesPerSample = 2;
       const noSamples = Math.floor(audioBuffer.length / (bytesPerSample * srcCh));
       if (noSamples <= 0) return;
+
+      const MAX_RING = Math.ceil(48000 / output._exactFps) * 3;
+      const wouldBe = output._audioRingCount + noSamples;
+      if (wouldBe > MAX_RING) {
+        const drop = wouldBe - MAX_RING;
+        this._ringDrop(output, drop);
+      }
 
       for (let s = 0; s < noSamples; s++) {
         const sample = audioBuffer.readInt16LE(s * srcCh * bytesPerSample);
