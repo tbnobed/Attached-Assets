@@ -7,16 +7,27 @@ let macadamAvailable = false;
 try {
   macadam = require('macadam');
   macadamAvailable = true;
+  console.log('[DeckLink] Loaded macadam via npm package');
 } catch (err) {
+  console.warn('[DeckLink] require("macadam") failed:', err.message);
   try {
+    const fs = require('fs');
     const nativePath = path.join(
       __dirname, '..', '..', 'node_modules', 'macadam', 'build', 'Release', 'macadam.node'
     );
-    macadam = require(nativePath);
-    macadamAvailable = true;
-    console.log('[DeckLink] Loaded macadam native binding directly (playback-only build)');
+    if (fs.existsSync(nativePath)) {
+      console.log('[DeckLink] Found native binary at:', nativePath);
+      macadam = require(nativePath);
+      macadamAvailable = true;
+      console.log('[DeckLink] Loaded macadam native binding directly (playback-only build)');
+    } else {
+      console.warn('[DeckLink] Native binary not found at:', nativePath);
+    }
   } catch (err2) {
-    // DeckLink SDK not installed — will run in stub mode
+    console.warn('[DeckLink] Direct native load failed:', err2.message);
+    if (err2.message.includes('DeckLinkAPI')) {
+      console.warn('[DeckLink] DeckLink drivers may not be installed. Install Blackmagic Desktop Video from https://www.blackmagicdesign.com/support');
+    }
   }
 }
 
