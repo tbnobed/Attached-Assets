@@ -253,6 +253,21 @@ fi
 echo ""
 
 echo "--------------------------------------------"
+echo -e "${GREEN}[4b/7]${NC} Checking FFmpeg..."
+echo "--------------------------------------------"
+if command -v ffmpeg &>/dev/null; then
+    echo -e "${GREEN}FFmpeg already installed${NC}"
+else
+    echo "FFmpeg not found. Installing via Homebrew..."
+    if command -v brew &>/dev/null; then
+        brew install ffmpeg
+    else
+        echo -e "${YELLOW}Homebrew not found. Install FFmpeg manually: brew install ffmpeg${NC}"
+    fi
+fi
+echo ""
+
+echo "--------------------------------------------"
 echo -e "${GREEN}[5/7]${NC} Building Zoom native addon..."
 echo "--------------------------------------------"
 cd "$PROJECT_DIR/zoom-meeting-sdk-addon"

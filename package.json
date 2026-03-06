@@ -4,8 +4,8 @@
   "description": "Zoom Video SDK ISO Capture for broadcast production - isolated video/audio feeds with NDI output and local recording",
   "main": "src/main/main.js",
   "scripts": {
-    "start": "electron . --no-sandbox --disable-gpu-sandbox",
-    "dev": "electron . --no-sandbox --disable-gpu-sandbox",
+    "start": "DYLD_LIBRARY_PATH=./node_modules/grandiose/build/Release:$DYLD_LIBRARY_PATH electron . --no-sandbox --disable-gpu-sandbox",
+    "dev": "DYLD_LIBRARY_PATH=./node_modules/grandiose/build/Release:$DYLD_LIBRARY_PATH electron . --no-sandbox --disable-gpu-sandbox",
     "install-sdk": "node scripts/install-zoom-sdk.js",
     "build-addon": "cd zoom-meeting-sdk-addon && npx node-gyp rebuild",
     "link-frameworks": "node scripts/link-electron-frameworks.js"

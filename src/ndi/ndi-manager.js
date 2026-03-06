@@ -15,10 +15,18 @@ class NDIManager extends EventEmitter {
 
   _init() {
     try {
+      const path = require('path');
+      const grandioseDir = path.join(__dirname, '..', '..', 'node_modules', 'grandiose');
+      const releaseDir = path.join(grandioseDir, 'build', 'Release');
+
+      const currentDyldPath = process.env.DYLD_LIBRARY_PATH || '';
+      if (!currentDyldPath.includes(releaseDir)) {
+        process.env.DYLD_LIBRARY_PATH = releaseDir + (currentDyldPath ? ':' + currentDyldPath : '');
+      }
+
       this.grandiose = require('grandiose');
       if (typeof this.grandiose.send !== 'function') {
         console.warn('[NDI] grandiose loaded but send() not available — install rse/grandiose fork');
-        console.warn('[NDI] Run: npm install github:rse/grandiose');
         this.available = false;
         return;
       }
@@ -26,7 +34,7 @@ class NDIManager extends EventEmitter {
       console.log('[NDI] grandiose loaded successfully - NDI output available');
     } catch (err) {
       console.warn('[NDI] grandiose not available - NDI output disabled');
-      console.warn('[NDI] Install NDI SDK and run: npm install github:rse/grandiose');
+      console.warn('[NDI] Error:', err.message);
       this.available = false;
     }
   }
