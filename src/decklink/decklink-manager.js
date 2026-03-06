@@ -362,14 +362,18 @@ class DeckLinkManager extends EventEmitter {
         audioSampleCount = Math.floor(audioBuf.length / 4);
       }
 
+      if (!audioBuf) {
+        const samplesPerFrame = Math.round(48000 / output.modeInfo.fps);
+        audioSampleCount = samplesPerFrame;
+        audioBuf = Buffer.alloc(samplesPerFrame * 4);
+      }
+
       const scheduleObj = {
         video: output._uyvyBuf,
+        audio: audioBuf,
+        sampleFrameCount: audioSampleCount,
         time: output.framesSent * ticksPerFrame,
       };
-      if (audioBuf) {
-        scheduleObj.audio = audioBuf;
-        scheduleObj.sampleFrameCount = audioSampleCount;
-      }
 
       output.playback.schedule(scheduleObj);
 

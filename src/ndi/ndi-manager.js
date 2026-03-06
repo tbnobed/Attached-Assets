@@ -160,48 +160,17 @@ class NDIManager extends EventEmitter {
     if (!source || !source.active) return;
     if (source.mock || !source.sender) return;
 
-    const ch = channels || this.settings.audio.channels;
-    const sr = sampleRate || this.settings.audio.sampleRate;
+    const ch = channels || 1;
+    const sr = sampleRate || 48000;
     const bytesPerSample = 2;
-    const srcSamples = Math.floor(audioBuffer.length / (bytesPerSample * ch));
-    if (srcSamples <= 0) return;
-
-    if (!source._audioPcmBufs) source._audioPcmBufs = [];
-    source._audioPcmBufs.push(Buffer.from(audioBuffer));
-
-    if (!source._audioFlushTimer) {
-      source._audioFlushTimer = setTimeout(() => {
-        this._flushAudio(userId);
-      }, 30);
-    }
-  }
-
-  _flushAudio(userId) {
-    const source = this.sources.get(userId);
-    if (!source || !source.active || source.mock || !source.sender) return;
-
-    source._audioFlushTimer = null;
-
-    const bufs = source._audioPcmBufs || [];
-    source._audioPcmBufs = [];
-    if (bufs.length === 0) return;
-
-    const ch = 1;
-    const sr = 48000;
-    const bytesPerSample = 2;
-
-    const combined = Buffer.concat(bufs);
-    const totalSamples = Math.floor(combined.length / (bytesPerSample * ch));
-    if (totalSamples <= 0) return;
+    const noSamples = Math.floor(audioBuffer.length / (bytesPerSample * ch));
+    if (noSamples <= 0) return;
 
     try {
-      const outCh = 2;
-      const floatBuf = Buffer.alloc(totalSamples * outCh * 4);
-      for (let s = 0; s < totalSamples; s++) {
-        const int16 = combined.readInt16LE(s * ch * 2);
-        const floatVal = int16 / 32768.0;
-        floatBuf.writeFloatLE(floatVal, s * 4);
-        floatBuf.writeFloatLE(floatVal, (totalSamples + s) * 4);
+      const floatBuf = Buffer.alloc(noSamples * 4);
+      for (let s = 0; s < noSamples; s++) {
+        const int16 = audioBuffer.readInt16LE(s * ch * bytesPerSample);
+        floatBuf.writeFloatLE(int16 / 32768.0, s * 4);
       }
 
       if (!source._audioSentCount) source._audioSentCount = 0;
@@ -209,16 +178,16 @@ class NDIManager extends EventEmitter {
 
       const fourCC = this.grandiose.FOURCC_FLTp || 0x70544C46;
 
-      if (source._audioSentCount <= 5 || source._audioSentCount % 100 === 0) {
-        console.log(`[NDI] Audio flush #${source._audioSentCount}: userId=${userId} samples=${totalSamples} sr=${sr} outCh=${outCh} chunks=${bufs.length}`);
+      if (source._audioSentCount <= 3 || source._audioSentCount % 5000 === 0) {
+        console.log(`[NDI] Audio send #${source._audioSentCount}: userId=${userId} samples=${noSamples} sr=${sr} ch=1`);
       }
 
       const result = source.sender.audio({
         fourCC: fourCC,
         sampleRate: sr,
-        noChannels: outCh,
-        noSamples: totalSamples,
-        channelStrideBytes: totalSamples * 4,
+        noChannels: 1,
+        noSamples: noSamples,
+        channelStrideBytes: noSamples * 4,
         data: floatBuf,
       });
       if (result && typeof result.catch === 'function') {
