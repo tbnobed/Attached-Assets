@@ -157,9 +157,21 @@ class NDIManager extends EventEmitter {
 
   sendAudioData(userId, audioBuffer, sampleRate, channels) {
     const source = this.sources.get(userId);
-    if (!source || !source.active) return;
+    if (!source || !source.active) {
+      if (!this._audioMissLogged) {
+        this._audioMissLogged = true;
+        console.log(`[NDI] sendAudioData: no source for userId=${userId} (type=${typeof userId}), sources keys:`, [...this.sources.keys()]);
+      }
+      return;
+    }
 
-    if (source.mock || !source.sender) return;
+    if (source.mock || !source.sender) {
+      if (!this._audioMockLogged) {
+        this._audioMockLogged = true;
+        console.log(`[NDI] sendAudioData: source mock=${source.mock} sender=${!!source.sender} for userId=${userId}`);
+      }
+      return;
+    }
 
     const ch = channels || this.settings.audio.channels;
     const sr = sampleRate || this.settings.audio.sampleRate;
