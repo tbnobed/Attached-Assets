@@ -224,9 +224,11 @@ else
         exit 1
     fi
 
-    # --- Build grandiose ---
-    echo "Building grandiose..."
+    # --- Install grandiose npm deps and build ---
+    echo "Installing grandiose dependencies..."
     cd "$GRANDIOSE_DIR"
+    npm install --ignore-scripts
+    echo "Building grandiose..."
     PYTHON="$PYTHON_PATH" npx node-gyp rebuild
     BUILD_RESULT=$?
     cd "$PROJECT_DIR"
