@@ -208,11 +208,41 @@ else
 
     if [ -d "$NDI_SRC/include" ]; then
         mkdir -p "$GRANDIOSE_DIR/ndi/include"
-        mkdir -p "$GRANDIOSE_DIR/ndi/lib/macOS"
+
+        ARCH=$(uname -m)
+        if [ "$ARCH" = "arm64" ]; then
+            NDI_LIB_DEST="$GRANDIOSE_DIR/ndi/lib/mac-a64"
+        else
+            NDI_LIB_DEST="$GRANDIOSE_DIR/ndi/lib/mac-x64"
+        fi
+        mkdir -p "$NDI_LIB_DEST"
+
         cp -R "$NDI_SRC/include/"* "$GRANDIOSE_DIR/ndi/include/"
-        cp -R "$NDI_SRC/lib/macOS/"* "$GRANDIOSE_DIR/ndi/lib/macOS/" 2>/dev/null || \
-        cp -R "$NDI_SRC/lib/macos/"* "$GRANDIOSE_DIR/ndi/lib/macOS/" 2>/dev/null || \
-        cp -R "$NDI_SRC/lib/"*.dylib "$GRANDIOSE_DIR/ndi/lib/macOS/" 2>/dev/null || true
+
+        NDI_DYLIB=""
+        for candidate in \
+            "$NDI_SRC/lib/macOS/libndi.dylib" \
+            "$NDI_SRC/lib/macos/libndi.dylib" \
+            "$NDI_SRC/lib/mac-a64/libndi.dylib" \
+            "$NDI_SRC/lib/mac-x64/libndi.dylib"; do
+            if [ -f "$candidate" ]; then
+                NDI_DYLIB="$candidate"
+                break
+            fi
+        done
+
+        if [ -z "$NDI_DYLIB" ]; then
+            NDI_DYLIB=$(find "$NDI_SRC" -name "libndi.dylib" -type f 2>/dev/null | head -1)
+        fi
+
+        if [ -n "$NDI_DYLIB" ]; then
+            echo "Found libndi.dylib at: $NDI_DYLIB"
+            cp "$NDI_DYLIB" "$NDI_LIB_DEST/libndi.dylib"
+            echo "Copied to: $NDI_LIB_DEST/libndi.dylib"
+        else
+            echo -e "${YELLOW}WARNING: libndi.dylib not found in NDI SDK${NC}"
+            find "$NDI_SRC/lib" -type f 2>/dev/null | head -20
+        fi
 
         echo "Building grandiose..."
         cd "$GRANDIOSE_DIR"
