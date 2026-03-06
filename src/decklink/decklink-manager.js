@@ -341,8 +341,16 @@ class DeckLinkManager extends EventEmitter {
 
       this._bgraToUyvy(frameBuffer, width, height, output._uyvyBuf, outW, outH);
 
-      output.playback.displayFrame({ video: output._uyvyBuf });
+      output.playback.displayFrame(output._uyvyBuf).catch(err => {
+        if (!output._videoErrorLogged) {
+          console.error(`[DeckLink] displayFrame error on device ${deviceIndex}:`, err.message);
+          output._videoErrorLogged = true;
+        }
+      });
       output.framesSent++;
+      if (output.framesSent <= 5 || output.framesSent % 300 === 0) {
+        console.log(`[DeckLink] Sent frame #${output.framesSent} to device ${deviceIndex} (${outW}x${outH} UYVY)`);
+      }
     } catch (err) {
       if (!output._videoErrorLogged) {
         console.error(`[DeckLink] Error sending frame to device ${deviceIndex}:`, err.message);
