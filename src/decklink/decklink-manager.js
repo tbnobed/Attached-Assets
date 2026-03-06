@@ -321,7 +321,14 @@ class DeckLinkManager extends EventEmitter {
 
   sendVideoFrame(userId, frameBuffer, width, height) {
     const deviceIndex = this.assignments.get(userId);
-    if (deviceIndex === undefined) return;
+    if (deviceIndex === undefined) {
+      if (!this._missLoggedUsers) this._missLoggedUsers = new Set();
+      if (!this._missLoggedUsers.has(userId)) {
+        this._missLoggedUsers.add(userId);
+        console.log(`[DeckLink] sendVideoFrame: no assignment for userId=${userId} (type=${typeof userId}), assignments:`, [...this.assignments.entries()]);
+      }
+      return;
+    }
 
     const output = this.outputs.get(deviceIndex);
     if (!output || !output.active || !output.playback) return;
