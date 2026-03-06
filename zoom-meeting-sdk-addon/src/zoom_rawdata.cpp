@@ -1006,10 +1006,26 @@ static void macSubscribeUserVideo(uint32_t userId) {
         NSNumber* key = @(userId);
 
         if (g_macVideoRenderers[key]) {
-            printf("[ZoomNative] subscribeUserVideo: userId=%u renderer already exists — keeping\n", userId);
+            ZoomSDKRenderer* existingRenderer = g_macVideoRenderers[key];
+            PerUserVideoDelegateImpl* existingDelegate = g_macVideoDelegates[key];
+
+            if (existingDelegate && existingDelegate.rawDataOnReceived) {
+                printf("[ZoomNative] subscribeUserVideo: userId=%u renderer exists and receiving data — keeping\n", userId);
+                fflush(stdout);
+                g_macVideoSubscribedOK.insert(userId);
+                return;
+            }
+
+            printf("[ZoomNative] subscribeUserVideo: userId=%u renderer exists but never received data — destroying to recreate\n", userId);
             fflush(stdout);
-            g_macVideoSubscribedOK.insert(userId);
-            return;
+            existingRenderer.delegate = nil;
+            [existingRenderer unSubscribe];
+            ZoomSDKRawDataController* rawCtrlCleanup = [[ZoomSDK sharedSDK] getRawDataController];
+            if (rawCtrlCleanup) {
+                [rawCtrlCleanup destroyRender:existingRenderer];
+            }
+            [g_macVideoRenderers removeObjectForKey:key];
+            [g_macVideoDelegates removeObjectForKey:key];
         }
 
         ZoomSDKRawDataController* rawCtrl = [[ZoomSDK sharedSDK] getRawDataController];
