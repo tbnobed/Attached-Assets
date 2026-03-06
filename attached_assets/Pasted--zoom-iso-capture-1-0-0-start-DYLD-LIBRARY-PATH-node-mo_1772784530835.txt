@@ -1,0 +1,31 @@
+> zoom-iso-capture@1.0.0 start
+> DYLD_LIBRARY_PATH=./node_modules/grandiose/build/Release:$DYLD_LIBRARY_PATH electron . --no-sandbox --disable-gpu-sandbox
+
+[DeckLink] require("macadam") failed: Could not locate the bindings file. Tried:
+ → /Users/debo/Documents/Attached-Assets/node_modules/segfault-handler/build/segfault-handler.node
+ → /Users/debo/Documents/Attached-Assets/node_modules/segfault-handler/build/Debug/segfault-handler.node
+ → /Users/debo/Documents/Attached-Assets/node_modules/segfault-handler/build/Release/segfault-handler.node
+ → /Users/debo/Documents/Attached-Assets/node_modules/segfault-handler/out/Debug/segfault-handler.node
+ → /Users/debo/Documents/Attached-Assets/node_modules/segfault-handler/Debug/segfault-handler.node
+ → /Users/debo/Documents/Attached-Assets/node_modules/segfault-handler/out/Release/segfault-handler.node
+ → /Users/debo/Documents/Attached-Assets/node_modules/segfault-handler/Release/segfault-handler.node
+ → /Users/debo/Documents/Attached-Assets/node_modules/segfault-handler/build/default/segfault-handler.node
+ → /Users/debo/Documents/Attached-Assets/node_modules/segfault-handler/compiled/24.13.1/darwin/arm64/segfault-handler.node
+ → /Users/debo/Documents/Attached-Assets/node_modules/segfault-handler/addon-build/release/install-root/segfault-handler.node
+ → /Users/debo/Documents/Attached-Assets/node_modules/segfault-handler/addon-build/debug/install-root/segfault-handler.node
+ → /Users/debo/Documents/Attached-Assets/node_modules/segfault-handler/addon-build/default/install-root/segfault-handler.node
+ → /Users/debo/Documents/Attached-Assets/node_modules/segfault-handler/lib/binding/node-v143-darwin-arm64/segfault-handler.node
+[DeckLink] Found native binary at: /Users/debo/Documents/Attached-Assets/node_modules/macadam/build/Release/macadam.node
+[DeckLink] Loaded macadam native binding directly (playback-only build)
+[ZoomNative] publicAppKey NOT available on ZoomSDKInitParams: [<ZoomSDKInitParams 0x124010a5ff0> setValue:forUndefinedKey:]: this class is not key value coding-compliant for the key publicAppKey.
+[ZoomNative] Initializing macOS SDK (customUI=NO/defaultUI, logging=YES)
+getServiceHub
+2026-03-06 00:08:20.747 Electron[20831:132203] NSWindow does not support nonactivating panel styleMask 0x80
+2026-03-06 00:08:20.762 Electron[20831:132203] _ptUILoader.retainCount 3
+[ZoomNative] InitSDK result=0
+[ZoomNative] Raw data modes set (heap, no intermediate)
+[ZoomNative] SDK version: 6.7.6 (75900)
+[SessionManager] SDK initialized, authenticating...
+[ZoomNative] JWT token length: 256
+[ZoomNative] Bundle ID: com.github.Electron
+[ZoomNative] JWT first 40 chars: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ
