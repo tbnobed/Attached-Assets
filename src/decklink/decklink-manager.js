@@ -181,7 +181,9 @@ class DeckLinkManager extends EventEmitter {
   }
 
   getDevices() {
-    this._refreshDevices();
+    if (this.devices.length === 0) {
+      this._refreshDevices();
+    }
     return this.devices;
   }
 
