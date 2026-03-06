@@ -169,10 +169,12 @@ class NDIManager extends EventEmitter {
     const incomingSamples = Math.floor(audioBuffer.length / (bytesPerSample * ch));
     if (incomingSamples <= 0) return;
 
-    const floatBuf = Buffer.alloc(incomingSamples * 4);
+    const floatBuf = Buffer.alloc(incomingSamples * 4 * 2);
     for (let s = 0; s < incomingSamples; s++) {
       const int16 = audioBuffer.readInt16LE(s * ch * bytesPerSample);
-      floatBuf.writeFloatLE(int16 / 32768.0, s * 4);
+      const fVal = int16 / 32768.0;
+      floatBuf.writeFloatLE(fVal, s * 4);
+      floatBuf.writeFloatLE(fVal, incomingSamples * 4 + s * 4);
     }
 
     source._audioQueue.push({
@@ -204,14 +206,14 @@ class NDIManager extends EventEmitter {
       source._audioSentCount++;
 
       if (source._audioSentCount <= 5 || source._audioSentCount % 2000 === 0) {
-        console.log(`[NDI] Audio #${source._audioSentCount}: userId=${userId} samples=${chunk.samples} sr=${chunk.sr} queueLen=${source._audioQueue.length}`);
+        console.log(`[NDI] Audio #${source._audioSentCount}: userId=${userId} samples=${chunk.samples} sr=${chunk.sr} ch=2 queueLen=${source._audioQueue.length}`);
       }
 
       try {
         const result = source.sender.audio({
           fourCC: fourCC,
           sampleRate: chunk.sr,
-          noChannels: 1,
+          noChannels: 2,
           noSamples: chunk.samples,
           channelStrideBytes: chunk.samples * 4,
           data: chunk.data,

@@ -226,6 +226,12 @@ class DeckLinkManager extends EventEmitter {
         sampleType: macadam.bmdAudioSampleType16bitInteger,
       });
 
+      const frameRate = playback.frameRate || [1001, 30000];
+      const exactFps = frameRate[1] / frameRate[0];
+
+      const RING_CAPACITY = 48000;
+      const audioRing = Buffer.alloc(RING_CAPACITY * 2);
+
       const output = {
         deviceIndex,
         modeKey,
@@ -239,6 +245,16 @@ class DeckLinkManager extends EventEmitter {
         _frameInterval: 1000 / modeInfo.fps,
         _scaledFrameBuf: null,
         _uyvyBuf: null,
+        _started: false,
+        _audioRing: audioRing,
+        _audioRingHead: 0,
+        _audioRingCount: 0,
+        _audioRingCapacity: RING_CAPACITY,
+        _audioTotalIn: 0,
+        _audioTotalOut: 0,
+        _frameRate: frameRate,
+        _exactFps: exactFps,
+        _audioLogCount: 0,
       };
 
       this.outputs.set(deviceIndex, output);
@@ -249,12 +265,39 @@ class DeckLinkManager extends EventEmitter {
         height: modeInfo.height,
       });
 
-      console.log(`[DeckLink] Output started on device ${deviceIndex}: ${modeInfo.label}`);
+      console.log(`[DeckLink] Output started on device ${deviceIndex}: ${modeInfo.label} (fps=${exactFps.toFixed(4)}, frameRate=${frameRate})`);
       return { success: true };
     } catch (err) {
       console.error(`[DeckLink] Failed to start output on device ${deviceIndex}:`, err.message);
       return { success: false, error: err.message };
     }
+  }
+
+  _ringAvailable(output) {
+    return output._audioRingCount;
+  }
+
+  _ringPush(output, sample) {
+    if (output._audioRingCount >= output._audioRingCapacity) {
+      return;
+    }
+    output._audioRing.writeInt16LE(sample, output._audioRingHead * 2);
+    output._audioRingHead = (output._audioRingHead + 1) % output._audioRingCapacity;
+    output._audioRingCount++;
+  }
+
+  _ringPull(output, count) {
+    const actual = Math.min(count, output._audioRingCount);
+    const buf = Buffer.alloc(count * 4);
+    const tail = (output._audioRingHead - output._audioRingCount + output._audioRingCapacity) % output._audioRingCapacity;
+    for (let i = 0; i < actual; i++) {
+      const idx = (tail + i) % output._audioRingCapacity;
+      const sample = output._audioRing.readInt16LE(idx * 2);
+      buf.writeInt16LE(sample, i * 4);
+      buf.writeInt16LE(sample, i * 4 + 2);
+    }
+    output._audioRingCount -= actual;
+    return buf;
   }
 
   stopOutput(deviceIndex) {
@@ -350,23 +393,24 @@ class DeckLinkManager extends EventEmitter {
 
       this._bgraToUyvy(frameBuffer, width, height, output._uyvyBuf, outW, outH);
 
-      const frameRate = output.playback.frameRate || [1000, 30000];
-      const ticksPerFrame = frameRate[0] || 1000;
+      const ticksPerFrame = output._frameRate[0] || 1001;
 
-      let audioBuf = null;
-      let audioSampleFrameCount = 0;
+      const nextFrameNum = output.framesSent + 1;
+      const totalAudioNeeded = Math.round((48000 * nextFrameNum * output._frameRate[0]) / output._frameRate[1]);
+      const samplesForThisFrame = Math.max(0, totalAudioNeeded - output._audioTotalOut);
 
-      if (output._audioPendingBufs && output._audioPendingBufs.length > 0) {
-        audioBuf = Buffer.concat(output._audioPendingBufs);
-        output._audioPendingBufs = [];
-        audioSampleFrameCount = Math.floor(audioBuf.length / 4);
+      const available = this._ringAvailable(output);
+
+      let audioBuf;
+      if (samplesForThisFrame <= 0) {
+        audioBuf = Buffer.alloc(4);
+        output._audioTotalOut = totalAudioNeeded;
+      } else {
+        audioBuf = this._ringPull(output, samplesForThisFrame);
+        output._audioTotalOut += samplesForThisFrame;
       }
 
-      if (!audioBuf) {
-        const samplesPerFrame = Math.round(48000 / output.modeInfo.fps);
-        audioSampleFrameCount = samplesPerFrame;
-        audioBuf = Buffer.alloc(samplesPerFrame * 4);
-      }
+      const audioSampleFrameCount = samplesForThisFrame > 0 ? samplesForThisFrame : 0;
 
       const scheduleObj = {
         video: output._uyvyBuf,
@@ -386,14 +430,10 @@ class DeckLinkManager extends EventEmitter {
         console.log(`[DeckLink] Scheduled playback started on device ${deviceIndex}`);
       }
 
-      if (output._started && output.framesSent > 3) {
-        const waitTime = (output.framesSent - 3) * ticksPerFrame;
-        output.playback.played(waitTime).then(() => {}).catch(() => {});
-      }
-
       output.framesSent++;
       if (output.framesSent <= 5 || output.framesSent % 300 === 0) {
-        console.log(`[DeckLink] Sent frame #${output.framesSent} to device ${deviceIndex} (${outW}x${outH} UYVY) audio=${audioBuf.length}B sampleFrames=${audioSampleFrameCount}`);
+        const ringNow = this._ringAvailable(output);
+        console.log(`[DeckLink] Frame #${output.framesSent} dev=${deviceIndex} audio=${audioBuf.length}B samples=${audioSampleFrameCount} ring=${ringNow} totalOut=${output._audioTotalOut}`);
       }
     } catch (err) {
       if (!output._videoErrorLogged) {
@@ -416,20 +456,16 @@ class DeckLinkManager extends EventEmitter {
       const noSamples = Math.floor(audioBuffer.length / (bytesPerSample * srcCh));
       if (noSamples <= 0) return;
 
-      const stereoBuf = Buffer.alloc(noSamples * 2 * bytesPerSample);
       for (let s = 0; s < noSamples; s++) {
         const sample = audioBuffer.readInt16LE(s * srcCh * bytesPerSample);
-        stereoBuf.writeInt16LE(sample, s * 4);
-        stereoBuf.writeInt16LE(sample, s * 4 + 2);
+        this._ringPush(output, sample);
       }
+      output._audioTotalIn += noSamples;
 
-      if (!output._audioPendingBufs) output._audioPendingBufs = [];
-      output._audioPendingBufs.push(stereoBuf);
-
-      if (!output._audioLogCount) output._audioLogCount = 0;
       output._audioLogCount++;
-      if (output._audioLogCount <= 3 || output._audioLogCount % 1000 === 0) {
-        console.log(`[DeckLink] Audio buffered #${output._audioLogCount} for device ${deviceIndex}: ${noSamples} samples -> ${stereoBuf.length}B stereo, pending=${output._audioPendingBufs.length} bufs`);
+      if (output._audioLogCount <= 3 || output._audioLogCount % 2000 === 0) {
+        const ring = this._ringAvailable(output);
+        console.log(`[DeckLink] Audio in #${output._audioLogCount} dev=${deviceIndex}: ${noSamples} samples, ring=${ring}, totalIn=${output._audioTotalIn} totalOut=${output._audioTotalOut}`);
       }
     } catch (err) {
       if (!output._audioErrorLogged) {
