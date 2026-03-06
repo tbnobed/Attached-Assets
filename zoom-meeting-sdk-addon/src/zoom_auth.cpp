@@ -171,7 +171,7 @@ bool ZoomAddon::Initialize(const ZoomConfig& config) {
 
     @autoreleasepool {
         ZoomSDKInitParams* params = [[ZoomSDKInitParams alloc] init];
-        params.needCustomizedUI = YES;
+        params.needCustomizedUI = NO;
         params.zoomDomain = @"zoom.us";
         params.enableLog = YES;
 
@@ -186,7 +186,7 @@ bool ZoomAddon::Initialize(const ZoomConfig& config) {
             fflush(stdout);
         }
 
-        printf("[ZoomNative] Initializing macOS SDK (customUI=YES, logging=YES)\n");
+        printf("[ZoomNative] Initializing macOS SDK (customUI=NO/defaultUI, logging=YES)\n");
         fflush(stdout);
 
         ZoomSDKError err = [[ZoomSDK sharedSDK] initSDKWithParams:params];

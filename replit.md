@@ -46,9 +46,9 @@ Electron desktop application for capturing isolated video/audio feeds from Zoom 
 - Runtime: `DYLD_FRAMEWORK_PATH` set by index.js
 - **CRITICAL**: ZoomSDK.framework uses `@executable_path/../Frameworks` rpath to find companion frameworks at runtime. All SDK files from `sdk/lib/` MUST be symlinked into `Electron.app/Contents/Frameworks/`. Without this, auth silently fails with `ZoomSDKError_Failed=1`. Run `npm run link-frameworks` after `npm install`.
 - SDK path: `/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900/ZoomSDK/`
-- Init: `[[ZoomSDK sharedSDK] initSDKWithParams:]` with `needCustomizedUI=YES`, heap raw data modes
+- Init: `[[ZoomSDK sharedSDK] initSDKWithParams:]` with `needCustomizedUI=NO` (default UI — shows standard Zoom meeting window with camera/audio device selection), heap raw data modes
 - Auth: `ZoomSDKAuthContext.jwtToken` + `[authService sdkAuth:]`
-- Join: `ZoomSDKJoinMeetingElements` with `isNoVideo=YES`, `isNoAudio=YES`, `isMyVoiceInMix=NO`, `audioRawdataSamplingRate=48K`
+- Join: `ZoomSDKJoinMeetingElements` with `isNoVideo=NO`, `isNoAudio=NO` (video/audio enabled so user can select devices in Zoom window), `isMyVoiceInMix=NO`, `audioRawdataSamplingRate=48K`
 - Self detection: `[[actionCtrl getMyself] getUserID]`
 - Participants: `[actionCtrl getParticipantsList]` returns NSArray of NSNumbers
 - Video: `[rawCtrl createRender:&renderer]` → `renderer.delegate` → `[renderer subscribe:userId rawDataType:ZoomSDKRawDataType_Video]`
