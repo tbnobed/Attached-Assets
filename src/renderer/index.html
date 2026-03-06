@@ -824,6 +824,7 @@
     }
 
     async function toggleRecording(userId) {
+      userId = isNaN(userId) ? userId : Number(userId);
       const p = state.participants.get(userId);
       if (!p) return;
       if (p.recording) {
@@ -836,12 +837,14 @@
     }
 
     async function toggleNdi(userId, active) {
+      userId = isNaN(userId) ? userId : Number(userId);
       await window.zoomISO.toggleNdi(userId, active);
       const p = state.participants.get(userId);
       log(`NDI ${active ? 'enabled' : 'disabled'} for ${p?.displayName || userId}`, active ? 'success' : 'warn');
     }
 
     async function removeParticipant(userId) {
+      userId = isNaN(userId) ? userId : Number(userId);
       const p = state.participants.get(userId);
       await window.zoomISO.removeSimulatedParticipant(userId);
       state.participants.delete(userId);
