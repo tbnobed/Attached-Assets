@@ -81,6 +81,10 @@ class NDIManager extends EventEmitter {
         mock: false,
         createdAt: Date.now(),
         framesSent: 0,
+        _audioQueue: [],
+        _audioSending: false,
+        _audioSentCount: 0,
+        _audioErrorCount: 0,
       };
 
       this.sources.set(userId, source);
@@ -165,64 +169,77 @@ class NDIManager extends EventEmitter {
     const incomingSamples = Math.floor(audioBuffer.length / (bytesPerSample * ch));
     if (incomingSamples <= 0) return;
 
-    if (!source._pcmAccum) source._pcmAccum = Buffer.alloc(0);
-    if (!source._audioSending) source._audioSending = false;
-
-    const newPcm = Buffer.alloc(incomingSamples * 2);
+    const floatBuf = Buffer.alloc(incomingSamples * 4);
     for (let s = 0; s < incomingSamples; s++) {
       const int16 = audioBuffer.readInt16LE(s * ch * bytesPerSample);
-      newPcm.writeInt16LE(int16, s * 2);
+      floatBuf.writeFloatLE(int16 / 32768.0, s * 4);
     }
-    source._pcmAccum = Buffer.concat([source._pcmAccum, newPcm]);
 
-    const TARGET_SAMPLES = 1920;
-    if (source._pcmAccum.length >= TARGET_SAMPLES * 2 && !source._audioSending) {
-      this._sendAccumulatedAudio(userId);
+    source._audioQueue.push({
+      samples: incomingSamples,
+      data: floatBuf,
+      sr: sampleRate || 48000,
+    });
+
+    if (!source._audioSending) {
+      this._drainAudioQueue(userId);
     }
   }
 
-  async _sendAccumulatedAudio(userId) {
+  _drainAudioQueue(userId) {
     const source = this.sources.get(userId);
     if (!source || !source.sender || source._audioSending) return;
+    if (source._audioQueue.length === 0) return;
 
     source._audioSending = true;
-    const TARGET_SAMPLES = 1920;
-    const sr = 48000;
     const fourCC = this.grandiose.FOURCC_FLTp || 0x70544C46;
 
-    try {
-      while (source._pcmAccum && source._pcmAccum.length >= TARGET_SAMPLES * 2) {
-        const chunkPcm = source._pcmAccum.subarray(0, TARGET_SAMPLES * 2);
-        source._pcmAccum = source._pcmAccum.subarray(TARGET_SAMPLES * 2);
+    const processNext = () => {
+      if (!source._audioQueue.length || !source.sender) {
+        source._audioSending = false;
+        return;
+      }
 
-        const floatBuf = Buffer.alloc(TARGET_SAMPLES * 4);
-        for (let s = 0; s < TARGET_SAMPLES; s++) {
-          floatBuf.writeFloatLE(chunkPcm.readInt16LE(s * 2) / 32768.0, s * 4);
-        }
+      const chunk = source._audioQueue.shift();
+      source._audioSentCount++;
 
-        if (!source._audioSentCount) source._audioSentCount = 0;
-        source._audioSentCount++;
-        if (source._audioSentCount <= 3 || source._audioSentCount % 1000 === 0) {
-          console.log(`[NDI] Audio send #${source._audioSentCount}: userId=${userId} samples=${TARGET_SAMPLES} sr=${sr}`);
-        }
+      if (source._audioSentCount <= 5 || source._audioSentCount % 2000 === 0) {
+        console.log(`[NDI] Audio #${source._audioSentCount}: userId=${userId} samples=${chunk.samples} sr=${chunk.sr} queueLen=${source._audioQueue.length}`);
+      }
 
-        await source.sender.audio({
+      try {
+        const result = source.sender.audio({
           fourCC: fourCC,
-          sampleRate: sr,
+          sampleRate: chunk.sr,
           noChannels: 1,
-          noSamples: TARGET_SAMPLES,
-          channelStrideBytes: TARGET_SAMPLES * 4,
-          data: floatBuf,
+          noSamples: chunk.samples,
+          channelStrideBytes: chunk.samples * 4,
+          data: chunk.data,
         });
+
+        if (result && typeof result.then === 'function') {
+          result.then(() => {
+            setImmediate(processNext);
+          }).catch(err => {
+            source._audioErrorCount++;
+            if (source._audioErrorCount <= 3) {
+              console.error(`[NDI] Audio promise error #${source._audioErrorCount} for ${source.displayName}:`, err.message || err);
+            }
+            setImmediate(processNext);
+          });
+        } else {
+          setImmediate(processNext);
+        }
+      } catch (err) {
+        source._audioErrorCount++;
+        if (source._audioErrorCount <= 3) {
+          console.error(`[NDI] Audio sync error #${source._audioErrorCount} for ${source.displayName}:`, err.message);
+        }
+        source._audioSending = false;
       }
-    } catch (err) {
-      if (!source._audioErrorLogged) {
-        console.error(`[NDI] Error sending audio for ${source.displayName}:`, err.message);
-        source._audioErrorLogged = true;
-      }
-    } finally {
-      source._audioSending = false;
-    }
+    };
+
+    processNext();
   }
 
   toggleSource(userId, active) {

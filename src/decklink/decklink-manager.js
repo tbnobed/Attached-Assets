@@ -350,30 +350,33 @@ class DeckLinkManager extends EventEmitter {
 
       this._bgraToUyvy(frameBuffer, width, height, output._uyvyBuf, outW, outH);
 
-      const frameRate = output.playback.frameRate || output.modeInfo.frameRate;
-      const ticksPerFrame = frameRate ? frameRate[0] : 1000;
+      const frameRate = output.playback.frameRate || [1000, 30000];
+      const ticksPerFrame = frameRate[0] || 1000;
 
       let audioBuf = null;
-      let audioSampleCount = 0;
+      let audioSampleFrameCount = 0;
+
       if (output._audioPendingBufs && output._audioPendingBufs.length > 0) {
-        const totalLen = output._audioPendingBufs.reduce((sum, b) => sum + b.length, 0);
-        audioBuf = Buffer.concat(output._audioPendingBufs, totalLen);
+        audioBuf = Buffer.concat(output._audioPendingBufs);
         output._audioPendingBufs = [];
-        audioSampleCount = Math.floor(audioBuf.length / 4);
+        audioSampleFrameCount = Math.floor(audioBuf.length / 4);
       }
 
       if (!audioBuf) {
         const samplesPerFrame = Math.round(48000 / output.modeInfo.fps);
-        audioSampleCount = samplesPerFrame;
+        audioSampleFrameCount = samplesPerFrame;
         audioBuf = Buffer.alloc(samplesPerFrame * 4);
       }
 
       const scheduleObj = {
         video: output._uyvyBuf,
         audio: audioBuf,
-        sampleFrameCount: audioSampleCount,
         time: output.framesSent * ticksPerFrame,
       };
+
+      if (audioSampleFrameCount > 0) {
+        scheduleObj.sampleFrameCount = audioSampleFrameCount;
+      }
 
       output.playback.schedule(scheduleObj);
 
@@ -383,9 +386,14 @@ class DeckLinkManager extends EventEmitter {
         console.log(`[DeckLink] Scheduled playback started on device ${deviceIndex}`);
       }
 
+      if (output._started && output.framesSent > 3) {
+        const waitTime = (output.framesSent - 3) * ticksPerFrame;
+        output.playback.played(waitTime).then(() => {}).catch(() => {});
+      }
+
       output.framesSent++;
       if (output.framesSent <= 5 || output.framesSent % 300 === 0) {
-        console.log(`[DeckLink] Sent frame #${output.framesSent} to device ${deviceIndex} (${outW}x${outH} UYVY) audio=${audioBuf ? audioBuf.length + 'B' : 'none'}`);
+        console.log(`[DeckLink] Sent frame #${output.framesSent} to device ${deviceIndex} (${outW}x${outH} UYVY) audio=${audioBuf.length}B sampleFrames=${audioSampleFrameCount}`);
       }
     } catch (err) {
       if (!output._videoErrorLogged) {
@@ -417,6 +425,12 @@ class DeckLinkManager extends EventEmitter {
 
       if (!output._audioPendingBufs) output._audioPendingBufs = [];
       output._audioPendingBufs.push(stereoBuf);
+
+      if (!output._audioLogCount) output._audioLogCount = 0;
+      output._audioLogCount++;
+      if (output._audioLogCount <= 3 || output._audioLogCount % 1000 === 0) {
+        console.log(`[DeckLink] Audio buffered #${output._audioLogCount} for device ${deviceIndex}: ${noSamples} samples -> ${stereoBuf.length}B stereo, pending=${output._audioPendingBufs.length} bufs`);
+      }
     } catch (err) {
       if (!output._audioErrorLogged) {
         console.error(`[DeckLink] Error buffering audio for device ${deviceIndex}:`, err.message);

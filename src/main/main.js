@@ -1,3 +1,4 @@
+process.env.UV_THREADPOOL_SIZE = '64';
 const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
 const { settings, ensureOutputDir, getOutputDir } = require('../config/settings');
