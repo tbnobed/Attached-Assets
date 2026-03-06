@@ -94,6 +94,20 @@ class NDIManager extends EventEmitter {
     }
   }
 
+  async renameSource(userId, newDisplayName, isoIndex) {
+    const source = this.sources.get(userId);
+    if (!source) return null;
+
+    const wasActive = source.active;
+    console.log(`[NDI] Renaming source for userId=${userId}: '${source.displayName}' -> '${newDisplayName}'`);
+    this.destroySource(userId);
+    const newSource = await this.createSource(userId, newDisplayName, isoIndex);
+    if (newSource && wasActive) {
+      this.toggleSource(userId, true);
+    }
+    return newSource;
+  }
+
   destroySource(userId) {
     const source = this.sources.get(userId);
     if (!source) return;

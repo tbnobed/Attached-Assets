@@ -226,6 +226,10 @@ class ZoomMeetingBridge extends EventEmitter {
         case 'participant-left':
           this._handleParticipantLeft(event);
           break;
+        case 'participant-name-updated':
+          console.log(`[ZoomBridge] Name updated: userId=${event.userId} name=${event.displayName}`);
+          this.emit('participant-name-updated', { userId: event.userId, displayName: event.displayName });
+          break;
         case 'meeting-status':
           this._handleMeetingStatus(event.status, event);
           break;

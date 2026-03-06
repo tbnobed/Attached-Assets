@@ -66,6 +66,12 @@ function initManagers() {
     sendStatusUpdate();
   });
 
+  sessionManager.on('participant-name-updated', async (participant) => {
+    await ndiManager.renameSource(participant.userId, participant.displayName, participant.isoIndex);
+    sendToRenderer('participant-updated', participant);
+    sendStatusUpdate();
+  });
+
   sessionManager.on('participant-updated', (participant) => {
     sendToRenderer('participant-updated', participant);
   });

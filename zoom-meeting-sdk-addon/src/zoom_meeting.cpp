@@ -531,8 +531,30 @@ void ZoomAddon::EnumerateParticipants() {
             {
                 std::lock_guard<std::mutex> lock(mutex_);
                 if (participants_.count(userId)) {
-                    printf("[ZoomNative] EnumerateParticipants: userId=%u already known\n", userId);
-                    fflush(stdout);
+                    auto& existing = participants_[userId];
+                    if (existing.displayName == "Participant") {
+                        ZoomSDKUserInfo* info = [actionCtrl getUserByUserID:userId];
+                        if (info) {
+                            NSString* nsName = [info getUserName];
+                            if (nsName) {
+                                std::string realName = std::string([nsName UTF8String]);
+                                if (realName != "Participant" && !realName.empty()) {
+                                    printf("[ZoomNative] EnumerateParticipants: userId=%u updating name from 'Participant' to '%s'\n", userId, realName.c_str());
+                                    fflush(stdout);
+                                    existing.displayName = realName;
+                                    if (eventCallback_) {
+                                        eventCallback_.NonBlockingCall([userId, realName](Napi::Env env, Napi::Function jsCallback) {
+                                            auto obj = Napi::Object::New(env);
+                                            obj.Set("type", Napi::String::New(env, "participant-name-updated"));
+                                            obj.Set("userId", Napi::Number::New(env, userId));
+                                            obj.Set("displayName", Napi::String::New(env, realName));
+                                            jsCallback.Call({ obj });
+                                        });
+                                    }
+                                }
+                            }
+                        }
+                    }
                     continue;
                 }
             }
