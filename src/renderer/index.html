@@ -412,6 +412,44 @@
     .log-entry.success { color: var(--accent-green); }
     .log-entry.warn { color: var(--accent-amber); }
     .log-entry .timestamp { color: var(--text-muted); margin-right: 8px; }
+
+    .meeting-status-bar {
+      padding: 10px 20px;
+      background: rgba(59, 130, 246, 0.15);
+      border-bottom: 1px solid rgba(59, 130, 246, 0.3);
+      color: var(--accent-blue);
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .meeting-status-bar.warning {
+      background: rgba(245, 158, 11, 0.15);
+      border-bottom-color: rgba(245, 158, 11, 0.3);
+      color: var(--accent-amber);
+    }
+
+    .meeting-status-bar.active {
+      background: rgba(34, 197, 94, 0.15);
+      border-bottom-color: rgba(34, 197, 94, 0.3);
+      color: var(--accent-green);
+    }
+
+    .meeting-status-bar .spinner {
+      width: 14px;
+      height: 14px;
+      border: 2px solid currentColor;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
@@ -464,6 +502,8 @@
         <button id="btnAddParticipant">+ Participant</button>
       </div>
     </div>
+
+    <div id="meetingStatusBar" class="meeting-status-bar" style="display:none;"></div>
 
     <div class="main-content">
       <div class="config-panel" id="configPanel">
@@ -557,6 +597,18 @@
       badge.innerHTML = `<div class="status-dot ${connected ? 'on' : 'off'}"></div><span>${connected ? 'Connected' : 'Disconnected'}</span>`;
       document.getElementById('btnJoinMeeting').disabled = connected;
       document.getElementById('btnLeaveMeeting').disabled = !connected;
+      if (!connected) {
+        const bar = document.getElementById('meetingStatusBar');
+        bar.style.display = 'none';
+      }
+    }
+
+    function updateMeetingStatusBar(message, type) {
+      const bar = document.getElementById('meetingStatusBar');
+      bar.style.display = 'flex';
+      bar.className = 'meeting-status-bar' + (type === 'warning' ? ' warning' : type === 'active' ? ' active' : '');
+      const spinner = type !== 'active' ? '<div class="spinner"></div>' : '';
+      bar.innerHTML = spinner + '<span>' + message + '</span>';
     }
 
     function renderParticipants() {
@@ -648,7 +700,7 @@
               recDuration: recStatus?.duration || 0,
               recFileSize: recStatus?.fileSize || 0,
               ndiActive: ndiSource?.active || false,
-              ndiSourceName: ndiSource?.videoSourceName || '',
+              ndiSourceName: ndiSource?.sourceName || ndiSource?.videoSourceName || '',
             });
           }
 
@@ -697,11 +749,13 @@
         return;
       }
       log(`Joining meeting ${meetingId}...`, 'info');
+      updateMeetingStatusBar('Connecting to meeting ' + meetingId + '...', 'info');
       const result = await window.zoomISO.joinMeeting(meetingId, password);
       if (result.success) {
         log(`Join initiated for meeting ${meetingId}`, 'success');
       } else {
         log(`Join failed: ${result.error || result.message || 'Unknown error'}`, 'error');
+        document.getElementById('meetingStatusBar').style.display = 'none';
       }
     });
 
@@ -782,6 +836,21 @@
 
       window.zoomISO.onConnectionStatus((connected) => {
         updateConnectionUI(connected);
+        if (connected) {
+          updateMeetingStatusBar('Connected — waiting for raw recording permission...', 'warning');
+          log('Connected to meeting', 'success');
+        }
+      });
+
+      window.zoomISO.onStatusMessage(({ message }) => {
+        log(message, 'info');
+        if (message.includes('Raw recording active')) {
+          updateMeetingStatusBar(message, 'active');
+        } else if (message.includes('Waiting for recording')) {
+          updateMeetingStatusBar(message, 'warning');
+        } else {
+          updateMeetingStatusBar(message, 'info');
+        }
       });
 
       window.zoomISO.onConnectionError((err) => {
@@ -819,6 +888,7 @@
 
       window.zoomISO.onRawRecordingStarted(() => {
         log('Raw recording started — capturing ISO video/audio feeds', 'success');
+        updateMeetingStatusBar('Raw recording active — capturing participant feeds. NDI auto-enabled.', 'active');
       });
 
       window.zoomISO.onVideoPreviewFrame(({ userId, buffer, width, height }) => {

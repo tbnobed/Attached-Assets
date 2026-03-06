@@ -302,7 +302,13 @@ class ZoomMeetingBridge extends EventEmitter {
         break;
       case 'RAW_RECORDING_ERROR':
         console.warn(`[ZoomBridge] Raw recording error (code=${data && data.errorCode}) — retries will continue`);
-        this.emit('raw-recording-error', { errorCode: data && data.errorCode });
+        this.emit('raw-recording-error', { errorCode: data && data.errorCode || 0 });
+        break;
+      case 'MEETING_STATUS_WAITINGFORHOST':
+        console.log('[ZoomBridge] Waiting for host...');
+        break;
+      case 'MEETING_STATUS_CONNECTING':
+        console.log('[ZoomBridge] Connecting to meeting...');
         break;
       case 'AUTH_SUCCESS':
         this.authenticated = true;

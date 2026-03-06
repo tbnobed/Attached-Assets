@@ -67,6 +67,7 @@ class SessionManager extends EventEmitter {
 
       this.zoomBridge.on('meeting-joined', () => {
         this.setConnected(true);
+        this.emit('status-message', 'In meeting — waiting for raw recording permission...');
       });
 
       this.zoomBridge.on('meeting-ended', ({ status }) => {
@@ -81,6 +82,12 @@ class SessionManager extends EventEmitter {
       this.zoomBridge.on('raw-recording-started', () => {
         console.log('[SessionManager] Raw recording started — capturing video/audio');
         this.emit('raw-recording-started');
+        this.emit('status-message', 'Raw recording active — capturing participant feeds');
+      });
+
+      this.zoomBridge.on('raw-recording-error', ({ errorCode }) => {
+        console.warn('[SessionManager] Raw recording error, code:', errorCode);
+        this.emit('status-message', 'Waiting for recording permission — host must grant local recording access');
       });
 
       this.zoomBridge.on('auth-success', () => {

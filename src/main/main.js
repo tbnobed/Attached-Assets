@@ -48,6 +48,7 @@ function initManagers() {
 
   sessionManager.on('participant-joined', async (participant) => {
     await ndiManager.createSource(participant.userId, participant.displayName, participant.isoIndex);
+    ndiManager.toggleSource(participant.userId, true);
     sendToRenderer('participant-joined', participant);
     sendStatusUpdate();
   });
@@ -80,6 +81,10 @@ function initManagers() {
 
   sessionManager.on('connection-error', (error) => {
     sendToRenderer('connection-error', { message: error.message || String(error) });
+  });
+
+  sessionManager.on('status-message', (message) => {
+    sendToRenderer('status-message', { message });
   });
 
   sessionManager.on('reconnecting', (info) => {

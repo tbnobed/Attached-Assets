@@ -106,4 +106,9 @@ contextBridge.exposeInMainWorld('zoomISO', {
     ipcRenderer.on('video-preview-frame', handler);
     return () => ipcRenderer.removeListener('video-preview-frame', handler);
   },
+  onStatusMessage: (callback) => {
+    const handler = (_event, data) => callback(data);
+    ipcRenderer.on('status-message', handler);
+    return () => ipcRenderer.removeListener('status-message', handler);
+  },
 });
