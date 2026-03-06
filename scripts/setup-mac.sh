@@ -320,7 +320,7 @@ if [ -f "$GRANDIOSE_DIR/build/Release/grandiose.node" ]; then
 else
     rm -rf "$GRANDIOSE_DIR"
     echo "  Cloning grandiose..."
-    git clone https://github.com/rse/grandiose.git "$GRANDIOSE_DIR" || fail "git clone grandiose failed"
+    git clone --depth 1 https://github.com/rse/grandiose.git "$GRANDIOSE_DIR" || fail "git clone grandiose failed"
 
     # --- Download NDI SDK ---
     NDI_EXPANDED="/tmp/ndi_sdk_plexiso_expanded"
