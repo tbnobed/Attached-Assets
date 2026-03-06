@@ -199,17 +199,19 @@ else
     if [ -d "$MACADAM_DIR" ]; then
         cd "$MACADAM_DIR"
 
-        echo "  Stubbing out capture function (playback-only build)..."
-        cat > src/capture_promise.cc << 'STUBEOF'
-#include "macadam_util.h"
-#include "node_api.h"
-napi_value capture(napi_env env, napi_callback_info info) {
-  napi_value result;
-  napi_get_undefined(env, &result);
-  return result;
-}
-STUBEOF
-        echo "    Replaced capture_promise.cc with stub"
+        echo "  Patching macadam for Node 20 N-API compatibility..."
+        if [ -f src/capture_promise.cc ]; then
+            sed -i '' 's/void finalizeCaptureCarrier(napi_env env/void finalizeCaptureCarrier(const napi_env env/g' src/capture_promise.cc
+            sed -i '' 's/void freeVideoBuffer(napi_env env/void freeVideoBuffer(const napi_env env/g' src/capture_promise.cc
+            sed -i '' 's/void freeAudioBuffer(napi_env env/void freeAudioBuffer(const napi_env env/g' src/capture_promise.cc
+            echo "    Fixed finalize callback signatures in capture_promise.cc"
+        fi
+        if [ -f src/playback_promise.cc ]; then
+            sed -i '' 's/void finalizePlaybackCarrier(napi_env env/void finalizePlaybackCarrier(const napi_env env/g' src/playback_promise.cc
+            sed -i '' 's/void freeVideoBuffer(napi_env env/void freeVideoBuffer(const napi_env env/g' src/playback_promise.cc
+            sed -i '' 's/void freeAudioBuffer(napi_env env/void freeAudioBuffer(const napi_env env/g' src/playback_promise.cc
+            echo "    Fixed finalize callback signatures in playback_promise.cc"
+        fi
 
         PYTHON="$PYTHON_PATH" npx node-gyp rebuild 2>&1 || {
             echo -e "${YELLOW}  macadam build failed — DeckLink output will be unavailable${NC}"

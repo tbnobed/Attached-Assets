@@ -1,0 +1,53 @@
+debo@LLM-Studio-1 macadam % cd /Users/debo/Documents/Attached-Assets && \
+rm -rf node_modules/macadam && \
+npm install macadam --no-save --ignore-scripts 2>/dev/null && \
+cd node_modules/macadam && \
+PYTHON=/opt/homebrew/bin/python3.12 npx node-gyp rebuild 2>&1 | tail -40
+
+added 1 package, removed 109 packages, and audited 92 packages in 443ms
+
+18 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+../src/macadam_util.h:84:3: note: expanded from macro 'NAPI_THROW_ERROR'
+  sprintf(errorMsg, msg); \
+  ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/stdio.h:188:1: note: 'sprintf' has been explicitly marked deprecated here
+__deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:215:48: note: expanded from macro '__deprecated_msg'
+        #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+                                                      ^
+../src/capture_promise.cc:460:15: error: no matching function for call to 'napi_create_external'
+  c->status = napi_create_external(env, crts, finalizeCaptureCarrier, nullptr, &param);
+              ^~~~~~~~~~~~~~~~~~~~
+/Users/debo/Library/Caches/node-gyp/20.20.0/include/node/js_native_api.h:339:1: note: candidate function not viable: no known conversion from 'void (napi_env, void *, void *)' (aka 'void (napi_env__ *, void *, void *)') to 'node_api_basic_finalize' (aka 'void (*)(const napi_env__ *, void *, void *)') for 3rd argument
+napi_create_external(napi_env env,
+^
+../src/capture_promise.cc:701:17: error: no matching function for call to 'napi_create_external_buffer'
+    c->status = napi_create_external_buffer(env, rowBytes*height, bytes,
+                ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/debo/Library/Caches/node-gyp/20.20.0/include/node/node_api.h:128:1: note: candidate function not viable: no known conversion from 'void (napi_env, void *, void *)' (aka 'void (napi_env__ *, void *, void *)') to 'node_api_basic_finalize' (aka 'void (*)(const napi_env__ *, void *, void *)') for 4th argument
+napi_create_external_buffer(napi_env env,
+^
+../src/capture_promise.cc:857:19: error: no matching function for call to 'napi_create_external_buffer'
+      c->status = napi_create_external_buffer(env,
+                  ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/debo/Library/Caches/node-gyp/20.20.0/include/node/node_api.h:128:1: note: candidate function not viable: no known conversion from 'void (napi_env, void *, void *)' (aka 'void (napi_env__ *, void *, void *)') to 'node_api_basic_finalize' (aka 'void (*)(const napi_env__ *, void *, void *)') for 4th argument
+napi_create_external_buffer(napi_env env,
+^
+6 warnings and 3 errors generated.
+make: *** [Release/obj.target/macadam/src/capture_promise.o] Error 1
+gyp ERR! build error 
+gyp ERR! stack Error: `make` failed with exit code: 2
+gyp ERR! stack at ChildProcess.<anonymous> (/Users/debo/.npm/_npx/c463d28440264a05/node_modules/node-gyp/lib/build.js:219:23)
+gyp ERR! System Darwin 22.6.0
+gyp ERR! command "/opt/homebrew/Cellar/node@20/20.20.0/bin/node" "/Users/debo/.npm/_npx/c463d28440264a05/node_modules/.bin/node-gyp" "rebuild"
+gyp ERR! cwd /Users/debo/Documents/Attached-Assets/node_modules/macadam
+gyp ERR! node -v v20.20.0
+gyp ERR! node-gyp -v v12.2.0
+gyp ERR! $npm_package_name macadam
+gyp ERR! $npm_package_version 2.0.18
+gyp ERR! not ok 
+debo@LLM-Studio-1 macadam % 
