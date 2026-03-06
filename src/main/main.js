@@ -136,31 +136,60 @@ function initManagers() {
 
   let _audioLogCount = 0;
   let _audioStartTime = 0;
-  let _lastAudioLogTime = 0;
+  let _audioTotalSamples = 0;
+  let _audioIsStereo = false;
+  let _audioRateDetected = false;
   streamHandler.on('audio-data', ({ userId, audioData }) => {
     _audioLogCount++;
     const now = Date.now();
     if (_audioLogCount === 1) _audioStartTime = now;
 
-    if (_audioLogCount <= 10 || _audioLogCount % 500 === 0 || (now - _lastAudioLogTime > 5000)) {
-      _lastAudioLogTime = now;
-      const buf = audioData.buffer;
-      const elapsed = ((now - _audioStartTime) / 1000).toFixed(1);
-      const hex = buf.length >= 8 ? buf.subarray(0, 8).toString('hex') : buf.toString('hex');
+    const rawBuf = audioData.buffer;
+    const reportedCh = audioData.channels || 1;
+    const sr = audioData.sampleRate || 48000;
+    const rawSamples = Math.floor(rawBuf.length / 2);
+    _audioTotalSamples += rawSamples;
 
-      let peak = 0;
-      const bytesPerSample = 2;
-      const sampleCount = Math.floor(buf.length / bytesPerSample);
-      for (let i = 0; i < Math.min(sampleCount, 48); i++) {
-        const val = Math.abs(buf.readInt16LE(i * bytesPerSample));
-        if (val > peak) peak = val;
+    if (!_audioRateDetected && _audioLogCount >= 200) {
+      const elapsed = (now - _audioStartTime) / 1000;
+      if (elapsed > 0.5) {
+        const effectiveRate = _audioTotalSamples / elapsed;
+        if (effectiveRate > sr * 1.5) {
+          _audioIsStereo = true;
+          console.log(`[AudioFix] Detected stereo data (rate=${Math.round(effectiveRate)} vs expected ${sr}). Downmixing to mono.`);
+        } else {
+          console.log(`[AudioFix] Audio rate OK (rate=${Math.round(effectiveRate)}, expected ${sr}). No correction needed.`);
+        }
+        _audioRateDetected = true;
       }
-
-      console.log(`[AudioDiag] #${_audioLogCount} t=${elapsed}s userId=${userId} bufLen=${buf.length} sr=${audioData.sampleRate} ch=${audioData.channels} hex=${hex} peak16=${peak}`);
     }
-    ndiManager.sendAudioData(userId, audioData.buffer, audioData.sampleRate, audioData.channels);
-    deckLinkManager.sendAudioData(userId, audioData.buffer, audioData.sampleRate, audioData.channels);
-    recorderManager.writeAudioData(userId, audioData.buffer);
+
+    let finalBuf = rawBuf;
+    let finalCh = reportedCh;
+
+    if (_audioIsStereo) {
+      const stereoFrames = Math.floor(rawBuf.length / 4);
+      if (stereoFrames > 0) {
+        finalBuf = Buffer.alloc(stereoFrames * 2);
+        for (let i = 0; i < stereoFrames; i++) {
+          const left = rawBuf.readInt16LE(i * 4);
+          const right = rawBuf.readInt16LE(i * 4 + 2);
+          const mono = Math.round((left + right) / 2);
+          finalBuf.writeInt16LE(Math.max(-32768, Math.min(32767, mono)), i * 2);
+        }
+        finalCh = 1;
+      }
+    }
+
+    if (_audioLogCount <= 5 || _audioLogCount % 2000 === 0) {
+      const elapsed = ((now - _audioStartTime) / 1000).toFixed(1);
+      const outSamples = Math.floor(finalBuf.length / 2);
+      console.log(`[AudioDiag] #${_audioLogCount} t=${elapsed}s userId=${userId} rawLen=${rawBuf.length} outLen=${finalBuf.length} outSamples=${outSamples} stereoFix=${_audioIsStereo} sr=${sr}`);
+    }
+
+    ndiManager.sendAudioData(userId, finalBuf, sr, finalCh);
+    deckLinkManager.sendAudioData(userId, finalBuf, sr, finalCh);
+    recorderManager.writeAudioData(userId, finalBuf);
   });
 
   recorderManager.on('recording-started', (info) => {
