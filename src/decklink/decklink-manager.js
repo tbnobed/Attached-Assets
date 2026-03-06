@@ -258,6 +258,7 @@ class DeckLinkManager extends EventEmitter {
   }
 
   stopOutput(deviceIndex) {
+    deviceIndex = typeof deviceIndex === 'string' ? parseInt(deviceIndex, 10) : deviceIndex;
     const output = this.outputs.get(deviceIndex);
     if (!output) return;
 
@@ -280,6 +281,7 @@ class DeckLinkManager extends EventEmitter {
   }
 
   assignParticipant(userId, deviceIndex) {
+    deviceIndex = typeof deviceIndex === 'string' ? parseInt(deviceIndex, 10) : deviceIndex;
     const output = this.outputs.get(deviceIndex);
     if (!output) {
       return { success: false, error: `No active output on device ${deviceIndex}` };
