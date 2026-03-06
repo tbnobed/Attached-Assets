@@ -102,15 +102,15 @@ else
         NDI_MOUNT="/tmp/ndi_sdk_mount"
 
         rm -rf "$NDI_EXPANDED"
-        mkdir -p "$NDI_EXPANDED"
 
-        curl -k -L -o "$NDI_DMG" "https://downloads.ndi.tv/SDK/NDI_SDK_v6/Install_NDI_SDK_v6_Apple.pkg" 2>/dev/null || true
+        curl -k -L -o "$NDI_DMG" "https://downloads.ndi.tv/SDK/NDI_SDK_Mac/Install_NDI_SDK_v6_Apple.pkg" 2>/dev/null || true
 
         FILETYPE=$(file "$NDI_DMG" 2>/dev/null || echo "unknown")
         echo "Downloaded file type: $FILETYPE"
 
         if echo "$FILETYPE" | grep -q "xar"; then
             echo "File is a .pkg (xar archive), expanding..."
+            rm -rf "$NDI_EXPANDED"
             pkgutil --expand "$NDI_DMG" "$NDI_EXPANDED"
             cd "$NDI_EXPANDED"
             if [ -d "NDI SDK for Apple.pkg" ]; then
@@ -155,6 +155,7 @@ else
                 FILETYPE=$(file "$NDI_DMG" 2>/dev/null || echo "unknown")
                 if echo "$FILETYPE" | grep -q "xar"; then
                     echo "  Got valid pkg from $URL"
+                    rm -rf "$NDI_EXPANDED"
                     pkgutil --expand "$NDI_DMG" "$NDI_EXPANDED"
                     cd "$NDI_EXPANDED"
                     for pkg_dir in *.pkg; do
