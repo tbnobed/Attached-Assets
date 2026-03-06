@@ -56,8 +56,18 @@ cd "$PROJECT_DIR/zoom-meeting-sdk-addon"
 npm install
 cd "$PROJECT_DIR"
 
-node -e "require('electron')" 2>/dev/null && echo "Electron installed OK" || echo "Running electron postinstall..." && cd "$PROJECT_DIR" && npx electron --version >/dev/null 2>&1 || true
+ELECTRON_APP="$PROJECT_DIR/node_modules/electron/dist/Electron.app"
+if [ ! -d "$ELECTRON_APP" ]; then
+    echo "Extracting Electron binary..."
+    node node_modules/electron/install.js
+fi
 
+if [ -d "$ELECTRON_APP" ]; then
+    echo -e "${GREEN}Electron.app extracted OK${NC}"
+else
+    echo -e "${RED}ERROR: Electron.app still not found after install. Check node_modules/electron/.${NC}"
+    exit 1
+fi
 echo ""
 
 echo "--------------------------------------------"
@@ -83,31 +93,131 @@ else
     echo "Cloning grandiose..."
     git clone https://github.com/rse/grandiose.git "$GRANDIOSE_DIR"
 
-    NDI_PKG="/tmp/ndi_sdk_plexiso.pkg"
     NDI_EXPANDED="/tmp/ndi_sdk_plexiso_expanded"
     NDI_SRC="$NDI_EXPANDED/NDI SDK for Apple"
 
-    if [ ! -d "$NDI_SRC" ]; then
+    if [ ! -d "$NDI_SRC/include" ]; then
         echo "Downloading NDI SDK v6..."
-        curl -k -L -o "$NDI_PKG" "https://downloads.ndi.tv/SDK/NDI_SDK_v6/Install_NDI_SDK_v6_Apple.pkg"
+        NDI_DMG="/tmp/ndi_sdk_plexiso.dmg"
+        NDI_MOUNT="/tmp/ndi_sdk_mount"
+
         rm -rf "$NDI_EXPANDED"
-        pkgutil --expand "$NDI_PKG" "$NDI_EXPANDED"
-        cd "$NDI_EXPANDED"
-        cat "NDI SDK for Apple.pkg/Payload" | gunzip -dc | cpio -i 2>/dev/null || true
-        cd "$PROJECT_DIR"
+        mkdir -p "$NDI_EXPANDED"
+
+        curl -k -L -o "$NDI_DMG" "https://downloads.ndi.tv/SDK/NDI_SDK_v6/Install_NDI_SDK_v6_Apple.pkg" 2>/dev/null || true
+
+        FILETYPE=$(file "$NDI_DMG" 2>/dev/null || echo "unknown")
+        echo "Downloaded file type: $FILETYPE"
+
+        if echo "$FILETYPE" | grep -q "xar"; then
+            echo "File is a .pkg (xar archive), expanding..."
+            pkgutil --expand "$NDI_DMG" "$NDI_EXPANDED"
+            cd "$NDI_EXPANDED"
+            if [ -d "NDI SDK for Apple.pkg" ]; then
+                cat "NDI SDK for Apple.pkg/Payload" | gunzip -dc | cpio -i 2>/dev/null || true
+            elif ls *.pkg 1>/dev/null 2>&1; then
+                for pkg in *.pkg; do
+                    if [ -f "$pkg/Payload" ]; then
+                        cat "$pkg/Payload" | gunzip -dc | cpio -i 2>/dev/null || true
+                    fi
+                done
+            fi
+            cd "$PROJECT_DIR"
+        elif echo "$FILETYPE" | grep -q "Disk Image\|ISO"; then
+            echo "File is a DMG, mounting..."
+            mkdir -p "$NDI_MOUNT"
+            hdiutil attach "$NDI_DMG" -mountpoint "$NDI_MOUNT" -nobrowse -quiet 2>/dev/null || true
+            INNER_PKG=$(find "$NDI_MOUNT" -name "*.pkg" -maxdepth 2 2>/dev/null | head -1)
+            if [ -n "$INNER_PKG" ]; then
+                echo "Found inner pkg: $INNER_PKG"
+                pkgutil --expand "$INNER_PKG" "$NDI_EXPANDED"
+                cd "$NDI_EXPANDED"
+                for pkg_dir in *.pkg; do
+                    if [ -f "$pkg_dir/Payload" ]; then
+                        cat "$pkg_dir/Payload" | gunzip -dc | cpio -i 2>/dev/null || true
+                    fi
+                done
+                cd "$PROJECT_DIR"
+            else
+                cp -R "$NDI_MOUNT/"* "$NDI_EXPANDED/" 2>/dev/null || true
+            fi
+            hdiutil detach "$NDI_MOUNT" -quiet 2>/dev/null || true
+        else
+            echo -e "${YELLOW}Downloaded file is not a recognized package format.${NC}"
+            echo "Trying alternative NDI SDK URLs..."
+
+            for URL in \
+                "https://downloads.ndi.tv/SDK/NDI_SDK_Mac/Install_NDI_SDK_v6_Apple.pkg" \
+                "https://downloads.ndi.tv/SDK/NDI_SDK_v6_Apple/Install_NDI_SDK_v6_Apple.pkg" \
+                "https://downloads.ndi.tv/SDK/NdiSdkApple/Install_NDI_SDK_v6_Apple.pkg"; do
+                echo "  Trying: $URL"
+                curl -k -L -o "$NDI_DMG" "$URL" 2>/dev/null || continue
+                FILETYPE=$(file "$NDI_DMG" 2>/dev/null || echo "unknown")
+                if echo "$FILETYPE" | grep -q "xar"; then
+                    echo "  Got valid pkg from $URL"
+                    pkgutil --expand "$NDI_DMG" "$NDI_EXPANDED"
+                    cd "$NDI_EXPANDED"
+                    for pkg_dir in *.pkg; do
+                        if [ -f "$pkg_dir/Payload" ]; then
+                            cat "$pkg_dir/Payload" | gunzip -dc | cpio -i 2>/dev/null || true
+                        fi
+                    done
+                    cd "$PROJECT_DIR"
+                    break
+                fi
+            done
+        fi
+
+        if [ ! -d "$NDI_SRC/include" ]; then
+            FOUND_INCLUDE=$(find "$NDI_EXPANDED" -name "Processing.NDI.Lib.h" -type f 2>/dev/null | head -1)
+            if [ -n "$FOUND_INCLUDE" ]; then
+                FOUND_DIR=$(dirname "$FOUND_INCLUDE")
+                FOUND_ROOT=$(dirname "$FOUND_DIR")
+                echo "Found NDI headers at: $FOUND_DIR"
+                mkdir -p "$NDI_SRC"
+                cp -R "$FOUND_ROOT/"* "$NDI_SRC/" 2>/dev/null || true
+            fi
+        fi
     else
         echo "NDI SDK already extracted, reusing."
     fi
 
-    mkdir -p "$GRANDIOSE_DIR/ndi/include"
-    mkdir -p "$GRANDIOSE_DIR/ndi/lib/macOS"
-    cp -R "$NDI_SRC/include/"* "$GRANDIOSE_DIR/ndi/include/"
-    cp -R "$NDI_SRC/lib/macOS/"* "$GRANDIOSE_DIR/ndi/lib/macOS/"
+    if [ ! -d "$NDI_SRC/include" ]; then
+        echo ""
+        echo -e "${YELLOW}Could not automatically download NDI SDK.${NC}"
+        echo "Please manually download the NDI SDK for Apple from:"
+        echo "  https://ndi.video/for-developers/ndi-sdk/"
+        echo ""
+        echo "Then extract it and re-run with NDI_SDK_PATH set:"
+        echo "  export NDI_SDK_PATH=/path/to/NDI\\ SDK\\ for\\ Apple"
+        echo "  ./scripts/setup-mac.sh"
+        echo ""
+        echo "Or place the extracted SDK at: $NDI_SRC"
+        echo "  (with include/ and lib/ subdirectories)"
+        echo ""
 
-    echo "Building grandiose..."
-    cd "$GRANDIOSE_DIR"
-    PYTHON="$PYTHON_PATH" npx node-gyp rebuild
-    cd "$PROJECT_DIR"
+        if [ -n "$NDI_SDK_PATH" ] && [ -d "$NDI_SDK_PATH/include" ]; then
+            echo "Using NDI_SDK_PATH=$NDI_SDK_PATH"
+            NDI_SRC="$NDI_SDK_PATH"
+        else
+            echo -e "${YELLOW}Continuing without NDI support. NDI features will be disabled.${NC}"
+            echo ""
+        fi
+    fi
+
+    if [ -d "$NDI_SRC/include" ]; then
+        mkdir -p "$GRANDIOSE_DIR/ndi/include"
+        mkdir -p "$GRANDIOSE_DIR/ndi/lib/macOS"
+        cp -R "$NDI_SRC/include/"* "$GRANDIOSE_DIR/ndi/include/"
+        cp -R "$NDI_SRC/lib/macOS/"* "$GRANDIOSE_DIR/ndi/lib/macOS/" 2>/dev/null || \
+        cp -R "$NDI_SRC/lib/macos/"* "$GRANDIOSE_DIR/ndi/lib/macOS/" 2>/dev/null || \
+        cp -R "$NDI_SRC/lib/"*.dylib "$GRANDIOSE_DIR/ndi/lib/macOS/" 2>/dev/null || true
+
+        echo "Building grandiose..."
+        cd "$GRANDIOSE_DIR"
+        PYTHON="$PYTHON_PATH" npx node-gyp rebuild
+        cd "$PROJECT_DIR"
+    fi
 fi
 echo ""
 
@@ -155,19 +265,17 @@ fi
 if [ -f "$GRANDIOSE_PATH" ]; then
     echo -e "${GREEN}  ✓ Grandiose (NDI) built${NC}"
 else
-    echo -e "${RED}  ✗ Grandiose NOT found${NC}"
-    PASS=false
+    echo -e "${YELLOW}  ⚠ Grandiose NOT built (NDI features unavailable)${NC}"
 fi
 
-ELECTRON_PATH="$PROJECT_DIR/node_modules/electron/dist/Electron.app"
-if [ -d "$ELECTRON_PATH" ]; then
+if [ -d "$ELECTRON_APP" ]; then
     echo -e "${GREEN}  ✓ Electron.app present${NC}"
 else
     echo -e "${RED}  ✗ Electron.app NOT found${NC}"
     PASS=false
 fi
 
-FRAMEWORK_LINK="$ELECTRON_PATH/Contents/Frameworks/ZoomSDK.framework"
+FRAMEWORK_LINK="$ELECTRON_APP/Contents/Frameworks/ZoomSDK.framework"
 if [ -L "$FRAMEWORK_LINK" ] || [ -d "$FRAMEWORK_LINK" ]; then
     echo -e "${GREEN}  ✓ ZoomSDK framework linked${NC}"
 else
@@ -185,7 +293,7 @@ if [ "$PASS" = true ]; then
     echo "  cd $PROJECT_DIR && npm start"
 else
     echo "============================================"
-    echo -e "${YELLOW}  Setup finished with warnings above.${NC}"
+    echo -e "${YELLOW}  Setup finished with issues above.${NC}"
     echo "============================================"
 fi
 echo ""
