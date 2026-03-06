@@ -184,6 +184,43 @@ else
 fi
 
 # ===========================================================
+step "Macadam (DeckLink SDI)"
+# ===========================================================
+MACADAM_DIR="$PROJECT_DIR/node_modules/macadam"
+
+if [ -f "$MACADAM_DIR/build/Release/macadam.node" ]; then
+    skip
+else
+    echo "  Installing macadam for DeckLink SDI output..."
+    cd "$PROJECT_DIR"
+    rm -rf "$MACADAM_DIR"
+    npm install macadam --no-save --ignore-scripts 2>/dev/null
+
+    if [ -d "$MACADAM_DIR" ]; then
+        cd "$MACADAM_DIR"
+
+        echo "  Patching binding.gyp to remove capture sources (playback-only)..."
+        if [ -f binding.gyp ]; then
+            sed -i '' '/"src\/capture/d' binding.gyp
+        fi
+
+        PYTHON="$PYTHON_PATH" npx node-gyp rebuild 2>&1 || {
+            echo -e "${YELLOW}  macadam build failed — DeckLink output will be unavailable${NC}"
+            echo -e "${YELLOW}  This is OK if you don't have Blackmagic Desktop Video installed${NC}"
+        }
+        cd "$PROJECT_DIR"
+
+        if [ -f "$MACADAM_DIR/build/Release/macadam.node" ]; then
+            echo -e "${GREEN}  macadam built OK (playback-only)${NC}"
+        else
+            echo -e "${YELLOW}  macadam.node not produced — DeckLink features disabled${NC}"
+        fi
+    else
+        echo -e "${YELLOW}  macadam package not found — DeckLink features disabled${NC}"
+    fi
+fi
+
+# ===========================================================
 step "Grandiose (NDI)"
 # ===========================================================
 GRANDIOSE_DIR="$PROJECT_DIR/node_modules/grandiose"
@@ -271,49 +308,6 @@ else
 
     [ -f "$GRANDIOSE_DIR/build/Release/grandiose.node" ] || fail "grandiose.node not produced"
     echo -e "${GREEN}  grandiose built OK${NC}"
-fi
-
-# ===========================================================
-step "Macadam (DeckLink SDI)"
-# ===========================================================
-MACADAM_DIR="$PROJECT_DIR/node_modules/macadam"
-
-if [ -f "$MACADAM_DIR/build/Release/macadam.node" ]; then
-    skip
-else
-    echo "  Installing macadam for DeckLink SDI output..."
-    cd "$PROJECT_DIR"
-    rm -rf "$MACADAM_DIR"
-    npm install macadam --ignore-scripts 2>/dev/null
-
-    if [ -d "$MACADAM_DIR" ]; then
-        cd "$MACADAM_DIR"
-
-        echo "  Patching macadam to build playback-only (removing capture sources)..."
-        if [ -f binding.gyp ]; then
-            sed -i '' '/"src\/capture/d' binding.gyp
-            echo "  Removed capture source entries from binding.gyp"
-        fi
-        for jsf in index.js macadam.js; do
-            if [ -f "$jsf" ]; then
-                sed -i '' '/[Cc]apture/d' "$jsf" 2>/dev/null || true
-            fi
-        done
-
-        PYTHON="$PYTHON_PATH" npx node-gyp rebuild 2>&1 || {
-            echo -e "${YELLOW}  macadam build failed — DeckLink output will be unavailable${NC}"
-            echo -e "${YELLOW}  This is OK if you don't have Blackmagic Desktop Video installed${NC}"
-        }
-        cd "$PROJECT_DIR"
-
-        if [ -f "$MACADAM_DIR/build/Release/macadam.node" ]; then
-            echo -e "${GREEN}  macadam built OK (playback-only)${NC}"
-        else
-            echo -e "${YELLOW}  macadam.node not produced — DeckLink features disabled${NC}"
-        fi
-    else
-        echo -e "${YELLOW}  macadam package not found — DeckLink features disabled${NC}"
-    fi
 fi
 
 # ===========================================================
