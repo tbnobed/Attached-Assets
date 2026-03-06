@@ -135,10 +135,28 @@ function initManagers() {
   });
 
   let _audioLogCount = 0;
+  let _audioStartTime = 0;
+  let _lastAudioLogTime = 0;
   streamHandler.on('audio-data', ({ userId, audioData }) => {
     _audioLogCount++;
-    if (_audioLogCount <= 5 || _audioLogCount % 1000 === 0) {
-      console.log(`[Main] audio-data #${_audioLogCount}: userId=${userId} bufLen=${audioData.buffer.length} sr=${audioData.sampleRate} ch=${audioData.channels}`);
+    const now = Date.now();
+    if (_audioLogCount === 1) _audioStartTime = now;
+
+    if (_audioLogCount <= 10 || _audioLogCount % 500 === 0 || (now - _lastAudioLogTime > 5000)) {
+      _lastAudioLogTime = now;
+      const buf = audioData.buffer;
+      const elapsed = ((now - _audioStartTime) / 1000).toFixed(1);
+      const hex = buf.length >= 8 ? buf.subarray(0, 8).toString('hex') : buf.toString('hex');
+
+      let peak = 0;
+      const bytesPerSample = 2;
+      const sampleCount = Math.floor(buf.length / bytesPerSample);
+      for (let i = 0; i < Math.min(sampleCount, 48); i++) {
+        const val = Math.abs(buf.readInt16LE(i * bytesPerSample));
+        if (val > peak) peak = val;
+      }
+
+      console.log(`[AudioDiag] #${_audioLogCount} t=${elapsed}s userId=${userId} bufLen=${buf.length} sr=${audioData.sampleRate} ch=${audioData.channels} hex=${hex} peak16=${peak}`);
     }
     ndiManager.sendAudioData(userId, audioData.buffer, audioData.sampleRate, audioData.channels);
     deckLinkManager.sendAudioData(userId, audioData.buffer, audioData.sampleRate, audioData.channels);
