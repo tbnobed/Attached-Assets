@@ -895,7 +895,7 @@
       list.innerHTML = entries.map(([idx, output]) => {
         const participants = Array.from(state.participants.entries());
         const optionsHtml = '<option value="">— unassigned —</option>' +
-          participants.map(([uid, p]) => `<option value="${uid}" ${output.assignedUser === uid ? 'selected' : ''}>${p.displayName}</option>`).join('');
+          participants.map(([uid, p]) => `<option value="${uid}" ${String(output.assignedUser) === String(uid) ? 'selected' : ''}>${p.displayName}</option>`).join('');
         return `
           <div class="decklink-output-item">
             <span class="dl-label">${output.deviceName || 'Output ' + idx}</span>
@@ -916,10 +916,11 @@
         log(`DeckLink output ${deviceIndex}: unassigned`, 'warn');
         return;
       }
-      const result = await window.zoomISO.decklinkAssignParticipant(userId, deviceIndex);
+      const numericUserId = parseInt(userId) || userId;
+      const result = await window.zoomISO.decklinkAssignParticipant(numericUserId, deviceIndex);
       if (result.success) {
-        state.decklinkOutputs[deviceIndex].assignedUser = userId;
-        const p = state.participants.get(userId);
+        state.decklinkOutputs[deviceIndex].assignedUser = numericUserId;
+        const p = state.participants.get(numericUserId) || state.participants.get(userId);
         log(`DeckLink output ${deviceIndex}: assigned to ${p?.displayName || userId}`, 'success');
         renderDecklinkOutputs();
       } else {
