@@ -226,6 +226,8 @@ class DeckLinkManager extends EventEmitter {
         sampleType: macadam.bmdAudioSampleType16bitInteger,
       });
 
+      console.log(`[DeckLink] Playback init result: channels=${playback.channels} sampleRate=${playback.sampleRate} sampleType=${playback.sampleType} frameRate=${JSON.stringify(playback.frameRate)}`);
+
       const frameRate = playback.frameRate || [1001, 30000];
       const exactFps = frameRate[1] / frameRate[0];
 
@@ -435,11 +437,12 @@ class DeckLinkManager extends EventEmitter {
       }
 
       output.framesSent++;
-      if (output.framesSent <= 5 || output.framesSent % 300 === 0) {
+      const shouldLog = output.framesSent <= 5 || output.framesSent % 300 === 0 || output.framesSent === 100 || output.framesSent === 200;
+      if (shouldLog) {
         const remLen = output._audioRemainder ? output._audioRemainder.length / 4 : 0;
         let hexSnip = '';
-        if (output.framesSent <= 10 && audioBuf.length >= 8) {
-          hexSnip = ' hex=' + audioBuf.slice(0, 16).toString('hex');
+        if ((output.framesSent <= 10 || output.framesSent === 100 || output.framesSent === 200) && audioBuf.length >= 8) {
+          hexSnip = ' hex=' + audioBuf.slice(0, 32).toString('hex');
         }
         console.log(`[DeckLink] Frame #${output.framesSent} dev=${deviceIndex} audio=${audioBuf.length}B samples=${audioSampleFrameCount} rem=${remLen} totalOut=${output._audioTotalOut}${hexSnip}`);
       }
@@ -482,7 +485,7 @@ class DeckLinkManager extends EventEmitter {
       output._audioLogCount++;
       if (output._audioLogCount <= 3 || output._audioLogCount % 2000 === 0) {
         const pending = output._audioPendingBufs.reduce((s, b) => s + b.length, 0) / 4;
-        console.log(`[DeckLink] Audio in #${output._audioLogCount} dev=${deviceIndex}: ${noSamples} samples, pending=${pending} bufs=${output._audioPendingBufs.length}, totalIn=${output._audioTotalIn} totalOut=${output._audioTotalOut}`);
+        console.log(`[DeckLink] Audio in #${output._audioLogCount} dev=${deviceIndex}: ${noSamples} samples sr=${sampleRate} ch=${channels}, pending=${pending} bufs=${output._audioPendingBufs.length}, totalIn=${output._audioTotalIn} totalOut=${output._audioTotalOut}`);
       }
     } catch (err) {
       if (!output._audioErrorLogged) {

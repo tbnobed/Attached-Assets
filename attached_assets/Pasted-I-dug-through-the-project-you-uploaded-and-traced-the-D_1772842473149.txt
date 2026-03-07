@@ -1,0 +1,122 @@
+I dug through the project you uploaded and traced the DeckLink output path. The video pipeline is mostly correct, but audio never actually gets enabled in the DeckLink playback configuration, which is why you get video but no audio on the SDI output.
+
+Below is the exact issue and the fix.
+
+Root Cause
+
+In src/decklink/decklink-manager.js, the DeckLink playback is initialized like this:
+
+const playback = await macadam.playback({
+  deviceIndex: deviceIndex,
+  displayMode: modeConst,
+  pixelFormat: macadam.bmdFormat8BitYUV,
+  channels: 2,
+  sampleRate: macadam.bmdAudioSampleRate48kHz,
+  sampleType: macadam.bmdAudioSampleType16bitInteger,
+});
+Problem
+
+The macadam library does NOT use channels.
+
+The correct parameter name is:
+
+audioChannels
+
+Because of this, macadam initializes video-only playback, and the DeckLink device never opens its audio output stream.
+
+Your later code does generate audio buffers and passes them into:
+
+output.playback.schedule({
+  video: output._uyvyBuf,
+  audio: audioBuf,
+  time: output.framesSent * ticksPerFrame
+});
+
+…but since audio wasn't initialized in the device configuration, the buffers are ignored.
+
+Fix
+
+Change the playback initialization to this:
+
+const playback = await macadam.playback({
+  deviceIndex: deviceIndex,
+  displayMode: modeConst,
+  pixelFormat: macadam.bmdFormat8BitYUV,
+
+  // FIX
+  audioChannels: 2,
+
+  sampleRate: macadam.bmdAudioSampleRate48kHz,
+  sampleType: macadam.bmdAudioSampleType16bitInteger,
+});
+Additional Issues I Found (Important)
+
+These aren't the main failure, but they will cause instability or silence.
+
+1. Sample rate mismatch (Zoom → DeckLink)
+
+Your audio ingest function:
+
+sendAudioData(userId, audioBuffer, sampleRate, channels)
+
+You ignore the incoming sample rate.
+
+DeckLink requires 48kHz.
+
+Zoom SDK often delivers:
+
+32kHz
+16kHz
+
+Right now the code assumes everything is already 48k.
+
+If it isn't, audio will sound distorted or disappear.
+
+Recommended fix
+
+Add a resampler before pushing audio into _audioPending.
+
+Example (simple):
+
+soxr
+libsamplerate
+ffmpeg resampler
+2. Incorrect stereo extraction
+
+Current code:
+
+const sample = audioBuffer.readInt16LE(s * srcCh * bytesPerSample);
+
+If the source has 2 channels, you're always reading the left channel only.
+
+Better:
+
+left  = readInt16LE(...)
+right = readInt16LE(... + 2)
+
+Or if mono, duplicate.
+
+3. Incorrect zero-audio fallback
+
+When no samples are available you do:
+
+audioBuf = Buffer.alloc(4);
+
+That inserts 1 audio sample instead of 0 samples.
+
+This can drift audio timing over time.
+
+Better:
+
+audioBuf = Buffer.alloc(0)
+Correct DeckLink Initialization (Recommended)
+const playback = await macadam.playback({
+  deviceIndex,
+  displayMode: modeConst,
+  pixelFormat: macadam.bmdFormat8BitYUV,
+
+  // audio
+  audioChannels: 2,
+  sampleRate: 48000,
+  sampleType: macadam.bmdAudioSampleType16bitInteger
+});
