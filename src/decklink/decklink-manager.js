@@ -243,7 +243,8 @@ class DeckLinkManager extends EventEmitter {
         _scaledFrameBuf: null,
         _uyvyBuf: null,
         _started: false,
-        _audioPending: Buffer.alloc(0),
+        _audioPendingBufs: [],
+        _audioRemainder: null,
         _audioTotalIn: 0,
         _audioTotalOut: 0,
         _frameRate: frameRate,
@@ -312,7 +313,8 @@ class DeckLinkManager extends EventEmitter {
     output.assignedUserId = userId;
     this.assignments.set(userId, deviceIndex);
 
-    output._audioPending = Buffer.alloc(0);
+    output._audioPendingBufs = [];
+    output._audioRemainder = null;
     output._audioTotalIn = 0;
     output._audioTotalOut = 0;
     output._audioLogCount = 0;
@@ -371,22 +373,44 @@ class DeckLinkManager extends EventEmitter {
       const nextFrameNum = output.framesSent + 1;
       const totalAudioNeeded = Math.round((48000 * nextFrameNum * output._frameRate[0]) / output._frameRate[1]);
       const samplesForThisFrame = Math.max(0, totalAudioNeeded - output._audioTotalOut);
-
       const bytesNeeded = samplesForThisFrame * 4;
-      const pendingLen = output._audioPending.length;
+
+      const parts = [];
+      if (output._audioRemainder) {
+        parts.push(output._audioRemainder);
+        output._audioRemainder = null;
+      }
+      for (const buf of output._audioPendingBufs) {
+        parts.push(buf);
+      }
+      output._audioPendingBufs = [];
+
+      const allAudio = parts.length > 0 ? Buffer.concat(parts) : Buffer.alloc(0);
+
       let audioBuf;
+      let audioSampleFrameCount;
 
       if (samplesForThisFrame <= 0) {
         audioBuf = Buffer.alloc(4);
-      } else if (pendingLen >= bytesNeeded) {
-        audioBuf = output._audioPending.subarray(0, bytesNeeded);
-        output._audioPending = Buffer.from(output._audioPending.subarray(bytesNeeded));
+        audioSampleFrameCount = 1;
+        if (allAudio.length > 0) {
+          output._audioRemainder = allAudio;
+        }
+      } else if (allAudio.length >= bytesNeeded) {
+        audioBuf = Buffer.alloc(bytesNeeded);
+        allAudio.copy(audioBuf, 0, 0, bytesNeeded);
+        audioSampleFrameCount = samplesForThisFrame;
+        if (allAudio.length > bytesNeeded) {
+          const rem = Buffer.alloc(allAudio.length - bytesNeeded);
+          allAudio.copy(rem, 0, bytesNeeded);
+          output._audioRemainder = rem;
+        }
       } else {
         audioBuf = Buffer.alloc(bytesNeeded);
-        if (pendingLen > 0) {
-          output._audioPending.copy(audioBuf, 0, 0, pendingLen);
+        if (allAudio.length > 0) {
+          allAudio.copy(audioBuf, 0, 0, allAudio.length);
         }
-        output._audioPending = Buffer.alloc(0);
+        audioSampleFrameCount = samplesForThisFrame;
       }
       output._audioTotalOut += samplesForThisFrame;
 
@@ -394,6 +418,7 @@ class DeckLinkManager extends EventEmitter {
         video: output._uyvyBuf,
         audio: audioBuf,
         time: output.framesSent * ticksPerFrame,
+        sampleFrameCount: audioSampleFrameCount,
       };
 
       output.playback.schedule(scheduleObj);
@@ -404,14 +429,19 @@ class DeckLinkManager extends EventEmitter {
         console.log(`[DeckLink] Scheduled playback started on device ${deviceIndex}`);
       }
 
+      if (output._started) {
+        const waitTime = Math.max(0, (output.framesSent - 2) * ticksPerFrame);
+        output.playback.played(waitTime).then(() => {}).catch(() => {});
+      }
+
       output.framesSent++;
       if (output.framesSent <= 5 || output.framesSent % 300 === 0) {
-        const pendingNow = output._audioPending.length / 4;
+        const remLen = output._audioRemainder ? output._audioRemainder.length / 4 : 0;
         let hexSnip = '';
-        if (output.framesSent <= 5 && audioBuf.length >= 8) {
-          hexSnip = ' hex=' + audioBuf.subarray(0, 16).toString('hex');
+        if (output.framesSent <= 10 && audioBuf.length >= 8) {
+          hexSnip = ' hex=' + audioBuf.slice(0, 16).toString('hex');
         }
-        console.log(`[DeckLink] Frame #${output.framesSent} dev=${deviceIndex} audio=${audioBuf.length}B samples=${samplesForThisFrame} pending=${pendingNow} totalOut=${output._audioTotalOut}${hexSnip}`);
+        console.log(`[DeckLink] Frame #${output.framesSent} dev=${deviceIndex} audio=${audioBuf.length}B samples=${audioSampleFrameCount} rem=${remLen} totalOut=${output._audioTotalOut}${hexSnip}`);
       }
     } catch (err) {
       if (!output._videoErrorLogged) {
@@ -441,18 +471,18 @@ class DeckLinkManager extends EventEmitter {
         stereoBuf.writeInt16LE(sample, s * 4 + 2);
       }
 
-      output._audioPending = Buffer.concat([output._audioPending, stereoBuf]);
+      output._audioPendingBufs.push(stereoBuf);
       output._audioTotalIn += noSamples;
 
-      const maxPendingBytes = Math.ceil(48000 / output._exactFps) * 3 * 4;
-      if (output._audioPending.length > maxPendingBytes) {
-        output._audioPending = Buffer.from(output._audioPending.subarray(output._audioPending.length - maxPendingBytes));
+      const maxBufs = Math.ceil(output._exactFps / 10) * 3;
+      if (output._audioPendingBufs.length > maxBufs) {
+        output._audioPendingBufs = output._audioPendingBufs.slice(-maxBufs);
       }
 
       output._audioLogCount++;
       if (output._audioLogCount <= 3 || output._audioLogCount % 2000 === 0) {
-        const pending = output._audioPending.length / 4;
-        console.log(`[DeckLink] Audio in #${output._audioLogCount} dev=${deviceIndex}: ${noSamples} samples, pending=${pending}, totalIn=${output._audioTotalIn} totalOut=${output._audioTotalOut}`);
+        const pending = output._audioPendingBufs.reduce((s, b) => s + b.length, 0) / 4;
+        console.log(`[DeckLink] Audio in #${output._audioLogCount} dev=${deviceIndex}: ${noSamples} samples, pending=${pending} bufs=${output._audioPendingBufs.length}, totalIn=${output._audioTotalIn} totalOut=${output._audioTotalOut}`);
       }
     } catch (err) {
       if (!output._audioErrorLogged) {
