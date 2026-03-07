@@ -428,7 +428,13 @@ class DeckLinkManager extends EventEmitter {
       if (!output._started && output.framesSent >= 3) {
         output.playback.start({ startTime: 0 });
         output._started = true;
-        console.log(`[DeckLink] Scheduled playback started on device ${deviceIndex}`);
+        try {
+          const hwBufAudio = output.playback.bufferedAudioFrames();
+          const hwBufVideo = output.playback.bufferedFrames();
+          console.log(`[DeckLink] Playback STARTED dev=${deviceIndex} hwAudioBuf=${hwBufAudio} hwVideoBuf=${hwBufVideo}`);
+        } catch (e) {
+          console.log(`[DeckLink] Playback STARTED dev=${deviceIndex} (buffered query failed: ${e.message})`);
+        }
       }
 
       if (output._started) {
@@ -444,7 +450,13 @@ class DeckLinkManager extends EventEmitter {
         if ((output.framesSent <= 10 || output.framesSent === 100 || output.framesSent === 200) && audioBuf.length >= 8) {
           hexSnip = ' hex=' + audioBuf.slice(0, 32).toString('hex');
         }
-        console.log(`[DeckLink] Frame #${output.framesSent} dev=${deviceIndex} audio=${audioBuf.length}B samples=${audioSampleFrameCount} rem=${remLen} totalOut=${output._audioTotalOut}${hexSnip}`);
+        let hwInfo = '';
+        if (output.framesSent === 100 || output.framesSent === 200) {
+          try {
+            hwInfo = ` hwAudioBuf=${output.playback.bufferedAudioFrames()} hwVideoBuf=${output.playback.bufferedFrames()}`;
+          } catch (e) {}
+        }
+        console.log(`[DeckLink] Frame #${output.framesSent} dev=${deviceIndex} audio=${audioBuf.length}B samples=${audioSampleFrameCount} rem=${remLen} totalOut=${output._audioTotalOut}${hexSnip}${hwInfo}`);
       }
     } catch (err) {
       if (!output._videoErrorLogged) {
