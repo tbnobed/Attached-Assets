@@ -213,13 +213,41 @@ else
     DECKLINK_FW="/Library/Frameworks/DeckLinkAPI.framework"
     DECKLINK_HEADERS="$DECKLINK_FW/Headers"
 
+    SDK_SEARCH_DIRS=(
+        "/Users/debo/Documents/Blackmagic DeckLink SDK 15.2"
+        "$HOME/Documents/Blackmagic DeckLink SDK"*
+        "/Users/Shared/Blackmagic DeckLink SDK"*
+    )
+
+    if [ ! -f "$DECKLINK_HEADERS/DeckLinkAPI.h" ]; then
+        echo "  DeckLink SDK headers not in framework — searching for SDK..."
+        SDK_INCLUDE=""
+        for search_dir in "${SDK_SEARCH_DIRS[@]}"; do
+            if [ -d "$search_dir" ]; then
+                FOUND=$(find "$search_dir" -name "DeckLinkAPI.h" -path "*/Mac/include/*" -type f 2>/dev/null | head -1)
+                if [ -n "$FOUND" ]; then
+                    SDK_INCLUDE="$(dirname "$FOUND")"
+                    echo "  Found SDK headers at: $SDK_INCLUDE"
+                    break
+                fi
+            fi
+        done
+
+        if [ -n "$SDK_INCLUDE" ]; then
+            echo "  Copying DeckLink SDK headers into framework..."
+            sudo mkdir -p "$DECKLINK_HEADERS"
+            sudo cp "$SDK_INCLUDE"/*.h "$DECKLINK_HEADERS/" 2>/dev/null || true
+            echo -e "${GREEN}  Copied SDK headers to $DECKLINK_HEADERS${NC}"
+        fi
+    fi
+
     if [ ! -d "$DECKLINK_FW" ]; then
         echo -e "${YELLOW}  DeckLinkAPI.framework not installed — DeckLink output will be unavailable${NC}"
         echo -e "${YELLOW}  Install Blackmagic Desktop Video from https://www.blackmagicdesign.com/support${NC}"
     elif [ ! -f "$DECKLINK_HEADERS/DeckLinkAPI.h" ]; then
         echo -e "${YELLOW}  DeckLink SDK headers not found at $DECKLINK_HEADERS${NC}"
         echo -e "${YELLOW}  Download the DeckLink SDK from https://www.blackmagicdesign.com/developer/product/decklink${NC}"
-        echo -e "${YELLOW}  Then copy Headers/ into $DECKLINK_FW/${NC}"
+        echo -e "${YELLOW}  Then copy Mac/include/*.h into $DECKLINK_HEADERS/${NC}"
     else
         echo "  Building decklink-output-addon (direct DeckLink SDK)..."
         cd "$DECKLINK_ADDON_DIR"
