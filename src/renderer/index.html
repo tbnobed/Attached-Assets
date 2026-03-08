@@ -556,6 +556,133 @@
       opacity: 0.85;
     }
 
+    .settings-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      padding: 6px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+    }
+
+    .settings-btn:hover {
+      background: var(--bg-card-hover);
+      color: var(--text-primary);
+    }
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.active { display: flex; }
+
+    .modal {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      width: 480px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .modal-header h2 {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .modal-close {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 20px;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+
+    .modal-close:hover { color: var(--text-primary); background: var(--bg-card-hover); }
+
+    .modal-body { padding: 20px; }
+
+    .settings-group {
+      margin-bottom: 16px;
+    }
+
+    .settings-group-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .settings-field {
+      margin-bottom: 10px;
+    }
+
+    .settings-field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+    }
+
+    .settings-field label .optional {
+      font-weight: 400;
+      color: var(--text-muted);
+      font-size: 11px;
+    }
+
+    .settings-field input {
+      width: 100%;
+      padding: 7px 10px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-primary);
+      font-size: 13px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+    }
+
+    .settings-field input:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+    }
+
+    .modal-footer {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      padding: 12px 20px;
+      border-top: 1px solid var(--border);
+    }
+
+    .modal-footer .save-note {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-right: auto;
+    }
+
     .decklink-output-list {
       display: flex;
       flex-direction: column;
@@ -630,6 +757,12 @@
         <div class="header-stat">Participants: <strong id="participantCount">0</strong></div>
         <div class="header-stat">Recording: <strong id="recordingCount">0</strong></div>
         <div class="header-stat">NDI: <strong id="ndiCount">0</strong></div>
+        <button id="btnSettings" class="settings-btn" title="Settings">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12.22 2h-.44a2 2 0 00-2 2v.18a2 2 0 01-1 1.73l-.43.25a2 2 0 01-2 0l-.15-.08a2 2 0 00-2.73.73l-.22.38a2 2 0 00.73 2.73l.15.1a2 2 0 011 1.72v.51a2 2 0 01-1 1.74l-.15.09a2 2 0 00-.73 2.73l.22.38a2 2 0 002.73.73l.15-.08a2 2 0 012 0l.43.25a2 2 0 011 1.73V20a2 2 0 002 2h.44a2 2 0 002-2v-.18a2 2 0 011-1.73l.43-.25a2 2 0 012 0l.15.08a2 2 0 002.73-.73l.22-.39a2 2 0 00-.73-2.73l-.15-.08a2 2 0 01-1-1.74v-.5a2 2 0 011-1.74l.15-.09a2 2 0 00.73-2.73l-.22-.38a2 2 0 00-2.73-.73l-.15.08a2 2 0 01-2 0l-.43-.25a2 2 0 01-1-1.73V4a2 2 0 00-2-2z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+        </button>
       </div>
     </header>
 
@@ -717,6 +850,55 @@
 
       <div class="section-title">Activity Log</div>
       <div class="log-area" id="logArea"></div>
+    </div>
+
+    <div class="modal-overlay" id="settingsModal">
+      <div class="modal">
+        <div class="modal-header">
+          <h2>Settings</h2>
+          <button class="modal-close" id="btnCloseSettings">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="settings-group">
+            <div class="settings-group-title">Zoom Meeting SDK (Required)</div>
+            <div class="settings-field">
+              <label>SDK Key</label>
+              <input type="text" id="cfgSdkKey" placeholder="Your Zoom Meeting SDK Key" />
+            </div>
+            <div class="settings-field">
+              <label>SDK Secret</label>
+              <input type="password" id="cfgSdkSecret" placeholder="Your Zoom Meeting SDK Secret" />
+            </div>
+          </div>
+          <div class="settings-group">
+            <div class="settings-group-title">Server-to-Server OAuth <span style="font-weight:400;text-transform:none;">(Optional - for auto recording permission)</span></div>
+            <div class="settings-field">
+              <label>Account ID <span class="optional">optional</span></label>
+              <input type="text" id="cfgAccountId" placeholder="Zoom Account ID" />
+            </div>
+            <div class="settings-field">
+              <label>Client ID <span class="optional">optional</span></label>
+              <input type="text" id="cfgClientId" placeholder="Zoom OAuth Client ID" />
+            </div>
+            <div class="settings-field">
+              <label>Client Secret <span class="optional">optional</span></label>
+              <input type="password" id="cfgClientSecret" placeholder="Zoom OAuth Client Secret" />
+            </div>
+          </div>
+          <div class="settings-group">
+            <div class="settings-group-title">General</div>
+            <div class="settings-field">
+              <label>Bot Display Name</label>
+              <input type="text" id="cfgBotName" placeholder="ZoomLink" />
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <span class="save-note">Changes apply after restart</span>
+          <button id="btnCancelSettings">Cancel</button>
+          <button class="primary" id="btnSaveSettings">Save</button>
+        </div>
+      </div>
     </div>
 
     <footer class="footer">
@@ -1090,6 +1272,57 @@
       }
     });
 
+    const settingsModal = document.getElementById('settingsModal');
+
+    document.getElementById('btnSettings').addEventListener('click', async () => {
+      if (window.zoomISO) {
+        const cfg = await window.zoomISO.getAppConfig();
+        document.getElementById('cfgSdkKey').value = cfg.zoomSdkKey || '';
+        document.getElementById('cfgSdkSecret').value = cfg.zoomSdkSecret || '';
+        document.getElementById('cfgAccountId').value = cfg.zoomAccountId || '';
+        document.getElementById('cfgClientId').value = cfg.zoomClientId || '';
+        document.getElementById('cfgClientSecret').value = cfg.zoomClientSecret || '';
+        document.getElementById('cfgBotName').value = cfg.botName || 'ZoomLink';
+      }
+      settingsModal.classList.add('active');
+    });
+
+    document.getElementById('btnCloseSettings').addEventListener('click', () => {
+      settingsModal.classList.remove('active');
+    });
+
+    document.getElementById('btnCancelSettings').addEventListener('click', () => {
+      settingsModal.classList.remove('active');
+    });
+
+    settingsModal.addEventListener('click', (e) => {
+      if (e.target === settingsModal) settingsModal.classList.remove('active');
+    });
+
+    document.getElementById('btnSaveSettings').addEventListener('click', async () => {
+      if (!window.zoomISO) return;
+      const config = {
+        zoomSdkKey: document.getElementById('cfgSdkKey').value.trim(),
+        zoomSdkSecret: document.getElementById('cfgSdkSecret').value.trim(),
+        zoomAccountId: document.getElementById('cfgAccountId').value.trim(),
+        zoomClientId: document.getElementById('cfgClientId').value.trim(),
+        zoomClientSecret: document.getElementById('cfgClientSecret').value.trim(),
+        botName: document.getElementById('cfgBotName').value.trim() || 'ZoomLink',
+      };
+      const result = await window.zoomISO.saveAppConfig(config);
+      if (result.success) {
+        log('Settings saved', 'success');
+        settingsModal.classList.remove('active');
+        const setIndicator = (dotId, indId, ok, tipOk, tipFail) => {
+          document.getElementById(dotId).className = 'dot ' + (ok ? 'ok' : 'fail');
+          document.getElementById(indId).title = ok ? tipOk : tipFail;
+        };
+        setIndicator('dotSdk', 'indSdk', !!(config.zoomSdkKey && config.zoomSdkSecret), 'Credentials: Configured', 'Credentials: Not configured');
+      } else {
+        log('Failed to save settings: ' + (result.error || 'unknown error'), 'error');
+      }
+    });
+
     if (window.zoomISO) {
       window.zoomISO.onStatusUpdate((status) => {
         updateStatusCounts(status);
@@ -1209,6 +1442,11 @@
           refreshDecklinkDevices();
         }
         log('Application initialized', 'success');
+
+        if (!s.hasCredentials) {
+          document.getElementById('btnSettings').click();
+          log('Welcome! Please configure your Zoom SDK credentials to get started.', 'warn');
+        }
       });
 
       window.zoomISO.getStatus().then(status => {

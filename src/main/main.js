@@ -2,6 +2,7 @@ process.env.UV_THREADPOOL_SIZE = '64';
 const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
 const { settings, ensureOutputDir, getOutputDir } = require('../config/settings');
+const { applyUserConfigToSettings, needsConfiguration } = require('../config/user-config');
 const { SessionManager } = require('../zoom/session-manager');
 const { StreamHandler } = require('../zoom/stream-handler');
 const { NDIManager } = require('../ndi/ndi-manager');
@@ -196,6 +197,7 @@ function sendStatusUpdate() {
 }
 
 app.whenReady().then(() => {
+  applyUserConfigToSettings(settings);
   initManagers();
   setupIpcHandlers(ipcMain, {
     sessionManager,

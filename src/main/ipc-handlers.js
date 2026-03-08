@@ -1,5 +1,6 @@
 const { dialog } = require('electron');
 const { settings, ensureOutputDir, getOutputDir } = require('../config/settings');
+const { getCurrentConfig, saveUserConfig } = require('../config/user-config');
 
 let simulatedUserCounter = 0;
 
@@ -234,6 +235,26 @@ function setupIpcHandlers(ipcMain, context) {
   ipcMain.handle('remove-simulated-participant', (_event, userId) => {
     const participant = sessionManager.removeParticipant(userId);
     return { success: !!participant };
+  });
+
+  ipcMain.handle('get-app-config', () => {
+    return getCurrentConfig(settings);
+  });
+
+  ipcMain.handle('save-app-config', (_event, config) => {
+    try {
+      const saved = saveUserConfig(config);
+      if (config.zoomSdkKey) settings.zoomSdkKey = config.zoomSdkKey;
+      if (config.zoomSdkSecret) settings.zoomSdkSecret = config.zoomSdkSecret;
+      if (config.zoomAccountId !== undefined) settings.zoomAccountId = config.zoomAccountId;
+      if (config.zoomClientId !== undefined) settings.zoomClientId = config.zoomClientId;
+      if (config.zoomClientSecret !== undefined) settings.zoomClientSecret = config.zoomClientSecret;
+      if (config.botName) settings.botName = config.botName;
+      if (config.defaultOutputDir) settings.defaultOutputDir = config.defaultOutputDir;
+      return { success: true, needsRestart: true };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
   });
 }
 

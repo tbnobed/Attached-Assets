@@ -12,7 +12,7 @@ Electron desktop application that bridges Zoom meetings to professional broadcas
 - **NDI** (`src/ndi/`): NDI source management via grandiose (graceful fallback if unavailable)
 - **DeckLink** (`src/decklink/` + `decklink-output-addon/`): SDI output via custom C++ native addon that directly calls the Blackmagic DeckLink SDK v15.2 (replaced macadam). Enumerates DeckLink devices, maps participants to physical outputs, converts BGRA→UYVY with scaling, upmixes mono audio to stereo. Uses `DisplayVideoFrameSync` + `WriteAudioSamplesSync` for synchronous frame output. SDK v15.2 specifics: `IDeckLinkMutableVideoFrame` does NOT inherit from `IDeckLinkVideoFrame` and has no `GetBytes`; must use `CreateVideoFrameWithBuffer` with a custom `SimpleVideoBuffer` (implements `IDeckLinkVideoBuffer`) to provide the pixel buffer, then QI the mutable frame for `IDeckLinkVideoFrame` (via `IID_IDeckLinkVideoFrame`) to pass to `DisplayVideoFrameSync`. Uses `DeckLinkAPIDispatch.cpp` (copied locally) for `CreateDeckLinkIteratorInstance`. Audio is written per-pump-iteration with only real accumulated samples (no fixed-size padding) to prevent buffer overrun; `maxSamplesPerWrite` caps at 2× frame's worth. UI allows per-output participant assignment.
 - **Recorder** (`src/recorder/`): FFmpeg-based per-participant MP4 recording
-- **Config** (`src/config/`): Settings loader from environment variables
+- **Config** (`src/config/`): Settings loader from environment variables + persistent user config. `user-config.js` stores credentials in `~/Library/Application Support/ZoomLink/config.json`. Settings modal in UI (gear icon) allows configuring SDK Key/Secret, OAuth credentials, and bot name. Auto-opens on first launch if no credentials are configured. Env vars take precedence over saved config.
 
 ## Key Files
 - `src/main/main.js` - Electron main entry point
@@ -29,6 +29,7 @@ Electron desktop application that bridges Zoom meetings to professional broadcas
 - `decklink-output-addon/index.js` - JS wrapper with soft-loading and BMD constant exports
 - `src/recorder/recorder-manager.js` - FFmpeg spawn and pipe management
 - `src/config/settings.js` - Environment variable loader
+- `src/config/user-config.js` - Persistent user config (~/Library/Application Support/ZoomLink/config.json)
 - `zoom-meeting-sdk-addon/index.js` - JS bridge for the native addon (handles DLL/dylib/framework paths per platform)
 - `zoom-meeting-sdk-addon/src/zoom_addon.cpp` - N-API entry point (platform-independent callbacks, participant tracking)
 - `zoom-meeting-sdk-addon/src/zoom_addon.h` - Shared header (ZoomAddon singleton, structs, enums)

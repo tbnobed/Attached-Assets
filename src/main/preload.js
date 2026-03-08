@@ -117,4 +117,7 @@ contextBridge.exposeInMainWorld('zoomISO', {
     ipcRenderer.on('status-message', handler);
     return () => ipcRenderer.removeListener('status-message', handler);
   },
+
+  getAppConfig: () => ipcRenderer.invoke('get-app-config'),
+  saveAppConfig: (config) => ipcRenderer.invoke('save-app-config', config),
 });
