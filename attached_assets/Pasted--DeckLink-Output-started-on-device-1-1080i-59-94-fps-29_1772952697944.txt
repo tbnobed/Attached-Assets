@@ -1,0 +1,47 @@
+[DeckLink] Output started on device 1: 1080i 59.94 (fps=29.9700, frameRate=1001,30000)
+[DeckLink] Audio buffer flushed for device 1 on participant assign
+[DeckLink] Assigned participant 16783360 to device 1
+[DeckLink] Starting frame pump dev=1 interval=33.37ms
+[DeckLink] Frame #1 dev=1 audio=6408B samples=1602 rem=0 totalOut=1602
+[DeckLink] Frame #2 dev=1 audio=6404B samples=1601 rem=0 totalOut=3203
+[DeckLink] Frame #3 dev=1 audio=6408B samples=1602 rem=0 totalOut=4805
+[DeckLink] Playback STARTED dev=1 hwAudioBuf=6406 hwVideoBuf=4
+[DeckLink] Frame #4 dev=1 audio=6404B samples=1601 rem=0 totalOut=6406
+[DeckLink] Frame #5 dev=1 audio=6408B samples=1602 rem=0 totalOut=8008 hwAudioBuf=7629 hwVideoBuf=5
+[DeckLink] Frame #100 dev=1 audio=6408B samples=1602 rem=0 totalOut=160160 hwAudioBuf=0 hwVideoBuf=2
+[ZoomNative] Audio frame: userId=16783360 len=960 sr=48000 ch=1 (frame #0)
+[AudioDiag] #1 t=0.0s userId=16783360 bufLen=960 samples=480 rate=1/sec sr=48000 ch=1
+[NDI] Audio #1: userId=16783360 samples=480 sr=48000 ch=2 queueLen=0
+[DeckLink] Audio in #1 dev=1: 480 samples sr=48000 ch=1, pending=480 bufs=1, totalIn=480 totalOut=304304
+[ZoomNative] Audio frame: userId=16783360 len=960 sr=48000 ch=1 (frame #1)
+[AudioDiag] #2 t=0.0s userId=16783360 bufLen=960 samples=480 rate=200/sec sr=48000 ch=1
+[NDI] Audio #2: userId=16783360 samples=480 sr=48000 ch=2 queueLen=0
+[DeckLink] Audio in #2 dev=1: 480 samples sr=48000 ch=1, pending=480 bufs=1, totalIn=960 totalOut=305906
+[ZoomNative] Audio frame: userId=16783360 len=960 sr=48000 ch=1 (frame #2)
+[AudioDiag] #3 t=0.0s userId=16783360 bufLen=960 samples=480 rate=150/sec sr=48000 ch=1
+[NDI] Audio #3: userId=16783360 samples=480 sr=48000 ch=2 queueLen=0
+[DeckLink] Audio in #3 dev=1: 480 samples sr=48000 ch=1, pending=960 bufs=2, totalIn=1440 totalOut=305906
+[ZoomNative] Audio frame: userId=16783360 len=960 sr=48000 ch=1 (frame #3)
+[AudioDiag] #4 t=0.0s userId=16783360 bufLen=960 samples=480 rate=133/sec sr=48000 ch=1
+[NDI] Audio #4: userId=16783360 samples=480 sr=48000 ch=2 queueLen=0
+[ZoomNative] Audio frame: userId=16783360 len=960 sr=48000 ch=1 (frame #4)
+[AudioDiag] #5 t=0.0s userId=16783360 bufLen=960 samples=480 rate=125/sec sr=48000 ch=1
+[NDI] Audio #5: userId=16783360 samples=480 sr=48000 ch=2 queueLen=0
+[ZoomNative] Video frame: userId=16783360 640x360 (frame #300) src=Y/U/V
+[DeckLink] Frame #200 dev=1 audio=6408B samples=1602 rem=1754 totalOut=320320 hwAudioBuf=0 hwVideoBuf=2
+[DeckLink] Frame #300 dev=1 audio=6408B samples=1602 rem=10074 totalOut=480480
+[ZoomNative] Audio frame: userId=16783360 len=960 sr=48000 ch=1 (frame #1000)
+[DeckLink] Frame #600 dev=1 audio=6408B samples=1602 rem=39834 totalOut=960960
+[AudioDiag] #2000 t=20.0s userId=16783360 bufLen=960 samples=480 rate=100/sec sr=48000 ch=1
+[NDI] Audio #2000: userId=16783360 samples=480 sr=48000 ch=2 queueLen=0
+[DeckLink] Audio in #2000 dev=1: 480 samples sr=48000 ch=1, pending=1440 bufs=3, totalIn=960000 totalOut=1210810
+[ZoomNative] Audio frame: userId=16783360 len=960 sr=48000 ch=1 (frame #2000)
+[ZoomNative] Video frame: userId=16783360 640x360 (frame #600) src=Y/U/V
+[DeckLink] Frame #900 dev=1 audio=6408B samples=1602 rem=68634 totalOut=1441440
+[ZoomNative] Audio frame: userId=16783360 len=960 sr=48000 ch=1 (frame #3000)
+[DeckLink] Frame #1200 dev=1 audio=6408B samples=1602 rem=93594 totalOut=1921920
+[AudioDiag] #4000 t=40.0s userId=16783360 bufLen=960 samples=480 rate=100/sec sr=48000 ch=1
+[NDI] Audio #4000: userId=16783360 samples=480 sr=48000 ch=2 queueLen=0
+[DeckLink] Audio in #4000 dev=1: 480 samples sr=48000 ch=1, pending=960 bufs=2, totalIn=1920000 totalOut=2122120
+[ZoomNative] Audio frame: userId=16783360 len=960 sr=48000 ch=1 (frame #4000)
+[

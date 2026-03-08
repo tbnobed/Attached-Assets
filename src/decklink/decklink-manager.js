@@ -244,7 +244,6 @@ class DeckLinkManager extends EventEmitter {
         _frameInterval: 1000 / modeInfo.fps,
         _scaledFrameBuf: null,
         _uyvyBuf: null,
-        _started: false,
         _audioPendingBufs: [],
         _audioRemainder: null,
         _audioTotalIn: 0,
@@ -252,7 +251,7 @@ class DeckLinkManager extends EventEmitter {
         _frameRate: frameRate,
         _exactFps: exactFps,
         _audioLogCount: 0,
-        _pumpTimer: null,
+        _pumpRunning: false,
         _hasFrame: false,
       };
 
@@ -371,128 +370,80 @@ class DeckLinkManager extends EventEmitter {
     this._bgraToUyvy(frameBuffer, width, height, output._uyvyBuf, outW, outH);
     output._hasFrame = true;
 
-    if (!output._pumpTimer) {
+    if (!output._pumpRunning) {
       this._startFramePump(deviceIndex, output);
     }
   }
 
   _startFramePump(deviceIndex, output) {
-    if (output._pumpTimer) return;
+    if (output._pumpRunning) return;
+    output._pumpRunning = true;
 
-    const intervalMs = output._frameInterval;
-    console.log(`[DeckLink] Starting frame pump dev=${deviceIndex} interval=${intervalMs.toFixed(2)}ms`);
-
-    output._pumpTimer = setInterval(() => {
-      this._pumpFrame(deviceIndex, output);
-    }, intervalMs);
+    console.log(`[DeckLink] Starting sync frame pump dev=${deviceIndex}`);
+    this._pumpFrameLoop(deviceIndex, output);
   }
 
   _stopFramePump(output) {
-    if (output._pumpTimer) {
-      clearInterval(output._pumpTimer);
-      output._pumpTimer = null;
-    }
+    output._pumpRunning = false;
   }
 
-  _pumpFrame(deviceIndex, output) {
-    if (!output || !output.active || !output.playback) {
-      this._stopFramePump(output);
-      return;
-    }
-
-    if (!output._uyvyBuf || !output._hasFrame) return;
-
-    try {
-      const ticksPerFrame = output._frameRate[0] || 1001;
-
-      const nextFrameNum = output.framesSent + 1;
-      const totalAudioNeeded = Math.round((48000 * nextFrameNum * output._frameRate[0]) / output._frameRate[1]);
-      const samplesForThisFrame = Math.max(0, totalAudioNeeded - output._audioTotalOut);
-      const bytesNeeded = samplesForThisFrame * 4;
-
-      const parts = [];
-      if (output._audioRemainder) {
-        parts.push(output._audioRemainder);
-        output._audioRemainder = null;
+  async _pumpFrameLoop(deviceIndex, output) {
+    while (output._pumpRunning && output.active && output.playback) {
+      if (!output._uyvyBuf || !output._hasFrame) {
+        await new Promise(r => setTimeout(r, 5));
+        continue;
       }
-      for (const buf of output._audioPendingBufs) {
-        parts.push(buf);
-      }
-      output._audioPendingBufs = [];
 
-      const allAudio = parts.length > 0 ? Buffer.concat(parts) : Buffer.alloc(0);
+      try {
+        const samplesPerFrame = Math.round(48000 / output._exactFps);
 
-      let audioBuf;
-      let audioSampleFrameCount;
-
-      if (samplesForThisFrame <= 0) {
-        audioBuf = Buffer.alloc(4);
-        audioSampleFrameCount = 1;
-        if (allAudio.length > 0) {
-          output._audioRemainder = allAudio;
+        const parts = [];
+        if (output._audioRemainder) {
+          parts.push(output._audioRemainder);
+          output._audioRemainder = null;
         }
-      } else if (allAudio.length >= bytesNeeded) {
-        audioBuf = Buffer.alloc(bytesNeeded);
-        allAudio.copy(audioBuf, 0, 0, bytesNeeded);
-        audioSampleFrameCount = samplesForThisFrame;
-        if (allAudio.length > bytesNeeded) {
-          const rem = Buffer.alloc(allAudio.length - bytesNeeded);
-          allAudio.copy(rem, 0, bytesNeeded);
-          output._audioRemainder = rem;
+        for (const buf of output._audioPendingBufs) {
+          parts.push(buf);
         }
-      } else {
-        audioBuf = Buffer.alloc(bytesNeeded);
-        if (allAudio.length > 0) {
+        output._audioPendingBufs = [];
+
+        const allAudio = parts.length > 0 ? Buffer.concat(parts) : Buffer.alloc(0);
+        const bytesNeeded = samplesPerFrame * 4;
+
+        let audioBuf;
+        if (allAudio.length >= bytesNeeded) {
+          audioBuf = Buffer.alloc(bytesNeeded);
+          allAudio.copy(audioBuf, 0, 0, bytesNeeded);
+          if (allAudio.length > bytesNeeded) {
+            const rem = Buffer.alloc(allAudio.length - bytesNeeded);
+            allAudio.copy(rem, 0, bytesNeeded);
+            output._audioRemainder = rem;
+          }
+        } else if (allAudio.length > 0) {
+          audioBuf = Buffer.alloc(bytesNeeded);
           allAudio.copy(audioBuf, 0, 0, allAudio.length);
+        } else {
+          audioBuf = Buffer.alloc(bytesNeeded);
         }
-        audioSampleFrameCount = samplesForThisFrame;
-      }
-      output._audioTotalOut += samplesForThisFrame;
+        output._audioTotalOut += samplesPerFrame;
 
-      const scheduleObj = {
-        video: output._uyvyBuf,
-        audio: audioBuf,
-        time: output.framesSent * ticksPerFrame,
-        sampleFrameCount: audioSampleFrameCount,
-      };
+        await output.playback.displayFrame(output._uyvyBuf, audioBuf);
 
-      output.playback.schedule(scheduleObj);
-
-      if (!output._started && output.framesSent >= 3) {
-        output.playback.start({ startTime: 0 });
-        output._started = true;
-        try {
-          const hwBufAudio = output.playback.bufferedAudioFrames();
-          const hwBufVideo = output.playback.bufferedFrames();
-          console.log(`[DeckLink] Playback STARTED dev=${deviceIndex} hwAudioBuf=${hwBufAudio} hwVideoBuf=${hwBufVideo}`);
-        } catch (e) {
-          console.log(`[DeckLink] Playback STARTED dev=${deviceIndex} (buffered query failed: ${e.message})`);
+        output.framesSent++;
+        const shouldLog = output.framesSent <= 5 || output.framesSent % 300 === 0 || output.framesSent === 100 || output.framesSent === 200;
+        if (shouldLog) {
+          const remLen = output._audioRemainder ? output._audioRemainder.length / 4 : 0;
+          console.log(`[DeckLink] Frame #${output.framesSent} dev=${deviceIndex} audio=${audioBuf.length}B samples=${samplesPerFrame} rem=${remLen} totalOut=${output._audioTotalOut}`);
         }
-      }
-
-      if (output._started) {
-        const waitTime = Math.max(0, (output.framesSent - 2) * ticksPerFrame);
-        output.playback.played(waitTime).then(() => {}).catch(() => {});
-      }
-
-      output.framesSent++;
-      const shouldLog = output.framesSent <= 5 || output.framesSent % 300 === 0 || output.framesSent === 100 || output.framesSent === 200;
-      if (shouldLog) {
-        const remLen = output._audioRemainder ? output._audioRemainder.length / 4 : 0;
-        let hwInfo = '';
-        if (output.framesSent === 5 || output.framesSent === 100 || output.framesSent === 200) {
-          try {
-            hwInfo = ` hwAudioBuf=${output.playback.bufferedAudioFrames()} hwVideoBuf=${output.playback.bufferedFrames()}`;
-          } catch (e) {}
+      } catch (err) {
+        if (!output._videoErrorLogged) {
+          console.error(`[DeckLink] Error displaying frame on device ${deviceIndex}:`, err.message);
+          output._videoErrorLogged = true;
         }
-        console.log(`[DeckLink] Frame #${output.framesSent} dev=${deviceIndex} audio=${audioBuf.length}B samples=${audioSampleFrameCount} rem=${remLen} totalOut=${output._audioTotalOut}${hwInfo}`);
-      }
-    } catch (err) {
-      if (!output._videoErrorLogged) {
-        console.error(`[DeckLink] Error sending frame to device ${deviceIndex}:`, err.message);
-        output._videoErrorLogged = true;
+        await new Promise(r => setTimeout(r, 100));
       }
     }
+    console.log(`[DeckLink] Frame pump stopped dev=${deviceIndex}`);
   }
 
   sendAudioData(userId, audioBuffer, sampleRate, channels) {
