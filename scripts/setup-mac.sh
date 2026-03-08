@@ -215,6 +215,7 @@ else
 
     SDK_SEARCH_DIRS=(
         "/Users/debo/Documents/Blackmagic DeckLink SDK 15.2"
+        "/Users/debo/Documents/Blackmagic DeckLink SDK"*
         "$HOME/Documents/Blackmagic DeckLink SDK"*
         "/Users/Shared/Blackmagic DeckLink SDK"*
     )
@@ -224,7 +225,8 @@ else
         SDK_INCLUDE=""
         for search_dir in "${SDK_SEARCH_DIRS[@]}"; do
             if [ -d "$search_dir" ]; then
-                FOUND=$(find "$search_dir" -name "DeckLinkAPI.h" -path "*/Mac/include/*" -type f 2>/dev/null | head -1)
+                echo "    Checking: $search_dir"
+                FOUND=$(find "$search_dir" -name "DeckLinkAPI.h" -type f 2>/dev/null | head -1)
                 if [ -n "$FOUND" ]; then
                     SDK_INCLUDE="$(dirname "$FOUND")"
                     echo "  Found SDK headers at: $SDK_INCLUDE"
