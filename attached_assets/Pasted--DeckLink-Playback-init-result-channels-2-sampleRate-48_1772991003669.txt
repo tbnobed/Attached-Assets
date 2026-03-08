@@ -1,0 +1,43 @@
+[DeckLink] Playback init result: channels=2 sampleRate=48000 sampleType=16 frameRate=[1001,30000]
+[DeckLink] Output started on device 1: 1080i 59.94 (fps=29.9700, frameRate=1001,30000)
+[ZoomNative] EnumerateParticipants called
+[ZoomNative] EnumerateParticipants: 2 participants in SDK list
+[ZoomNative] EnumerateParticipants: userId=16783360 is SELF — skipping
+[ZoomBridge] Enumerating existing participants: 1
+[DeckLink] Audio buffer flushed for device 1 on participant assign
+[DeckLink] Assigned participant 16778240 to device 1
+[DeckLink] Starting sync frame pump dev=1
+[DeckLink] Frame #1 dev=1 audio=6408B samples=1602 rem=0 totalOut=1602
+[DeckLink] Frame #2 dev=1 audio=6408B samples=1602 rem=0 totalOut=3204
+[DeckLink] Frame #3 dev=1 audio=6408B samples=1602 rem=0 totalOut=4806
+[DeckLink] Frame #4 dev=1 audio=6408B samples=1602 rem=0 totalOut=6408
+[DeckLink] Frame #5 dev=1 audio=6408B samples=1602 rem=0 totalOut=8010
+[DeckLink] Frame #100 dev=1 audio=6408B samples=1602 rem=0 totalOut=160200
+[DeckLink] Frame #200 dev=1 audio=6408B samples=1602 rem=0 totalOut=320400
+[DeckLink] Frame #300 dev=1 audio=6408B samples=1602 rem=0 totalOut=480600
+[DeckLink] Frame #600 dev=1 audio=6408B samples=1602 rem=0 totalOut=961200
+[ZoomNative] Video frame: userId=16778240 640x360 (frame #300) src=Y/U/V
+[ZoomNative] EnumerateParticipants called
+[ZoomNative] EnumerateParticipants: 2 participants in SDK list
+[ZoomNative] EnumerateParticipants: userId=16783360 is SELF — skipping
+[ZoomNative] RetryVideoSubscriptions: 1 participants, 0 needed retry, 1 already OK
+[DeckLink] Frame #900 dev=1 audio=6408B samples=1602 rem=0 totalOut=1441800
+[DeckLink] Frame #1200 dev=1 audio=6408B samples=1602 rem=0 totalOut=1922400
+[DeckLink] Frame #1500 dev=1 audio=6408B samples=1602 rem=0 totalOut=2403000
+[DeckLink] Frame #1800 dev=1 audio=6408B samples=1602 rem=0 totalOut=2883600
+[DeckLink] Frame #2100 dev=1 audio=6408B samples=1602 rem=0 totalOut=3364200
+[ZoomNative] EnumerateParticipants called
+[ZoomNative] EnumerateParticipants: 2 participants in SDK list
+[ZoomNative] EnumerateParticipants: userId=16783360 is SELF — skipping
+[ZoomNative] RetryVideoSubscriptions: 1 participants, 0 needed retry, 1 already OK
+[DeckLink] Frame #2400 dev=1 audio=6408B samples=1602 rem=0 totalOut=3844800
+[ZoomNative] Video frame: userId=16778240 640x360 (frame #600) src=Y/U/V
+[DeckLink] Frame #2700 dev=1 audio=6408B samples=1602 rem=0 totalOut=4325400
+[DeckLink] Frame #3000 dev=1 audio=6408B samples=1602 rem=0 totalOut=4806000
+[DeckLink] Frame #3300 dev=1 audio=6408B samples=1602 rem=0 totalOut=5286600
+[DeckLink] Frame #3600 dev=1 audio=6408B samples=1602 rem=0 totalOut=5767200
+[DeckLink] Frame #3900 dev=1 audio=6408B samples=1602 rem=0 totalOut=6247800
+[DeckLink] Frame #4200 dev=1 audio=6408B samples=1602 rem=0 totalOut=6728400
+[ZoomNative] Video frame: userId=16778240 640x360 (frame #900) src=Y/U/V
+[DeckLink] Frame #4500 dev=1 audio=6408B samples=1602 rem=0 totalOut=7209000
+[DeckLink] Frame #4800 dev=1 audio=6408B samples=1602 rem=0 totalOut=7689600
