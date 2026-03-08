@@ -207,7 +207,8 @@ step "DeckLink Output Addon (SDI)"
 DECKLINK_ADDON_DIR="$PROJECT_DIR/decklink-output-addon"
 DECKLINK_NODE="$DECKLINK_ADDON_DIR/build/Release/decklink_output.node"
 
-if [ -f "$DECKLINK_NODE" ]; then
+DECKLINK_SRC="$DECKLINK_ADDON_DIR/src/decklink_output.mm"
+if [ -f "$DECKLINK_NODE" ] && [ -f "$DECKLINK_SRC" ] && [ "$DECKLINK_NODE" -nt "$DECKLINK_SRC" ]; then
     skip
 else
     DECKLINK_FW="/Library/Frameworks/DeckLinkAPI.framework"
