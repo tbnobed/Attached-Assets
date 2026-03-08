@@ -31,7 +31,7 @@ fail() {
 
 echo ""
 echo "============================================"
-echo "  PlexISO - Full macOS Setup"
+echo "  ZoomLink - Full macOS Setup"
 echo "  (brand-new Mac compatible)"
 echo "============================================"
 echo ""
@@ -427,19 +427,12 @@ fi
 # ===========================================================
 step ".env configuration"
 # ===========================================================
-if [ -f "$PROJECT_DIR/.env" ]; then
-    echo "  .env exists."
-    if grep -q "your_sdk_key_here" "$PROJECT_DIR/.env" 2>/dev/null; then
-        echo -e "${YELLOW}  WARNING: .env has placeholder values — edit with real SDK credentials${NC}"
-    fi
-else
-    cat > "$PROJECT_DIR/.env" << 'ENVEOF'
-ZOOM_SDK_KEY=your_sdk_key_here
-ZOOM_SDK_SECRET=your_sdk_secret_here
-ZOOM_MEETING_BOT_NAME=PlexISO
-ENVEOF
-    echo -e "${YELLOW}  Created .env — edit with real Zoom SDK credentials before running${NC}"
-fi
+echo "  Credentials can be configured in the app's Settings dialog (gear icon)."
+echo "  They are saved to ~/Library/Application Support/ZoomLink/config.json."
+echo ""
+echo "  Alternatively, create a .env file with:"
+echo "    ZOOM_SDK_KEY=your_key"
+echo "    ZOOM_SDK_SECRET=your_secret"
 
 # ===========================================================
 step "Final verification"
@@ -480,7 +473,7 @@ if [ "$ALL_OK" = true ]; then
     echo ""
     # Write PATH setup to shell profile so npm works in new terminals
     SHELL_RC="$HOME/.zshrc"
-    MARKER="# PlexISO PATH setup"
+    MARKER="# ZoomLink PATH setup"
     if ! grep -q "$MARKER" "$SHELL_RC" 2>/dev/null; then
         echo "" >> "$SHELL_RC"
         echo "$MARKER" >> "$SHELL_RC"
