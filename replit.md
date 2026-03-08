@@ -1,7 +1,7 @@
-# Zoom ISO Capture
+# ZoomLink
 
 ## Project Overview
-Electron desktop application for capturing isolated video/audio feeds from Zoom meetings. Designed for professional broadcast TV production. Joins standard Zoom meetings via Meeting ID/passcode and captures per-participant raw video (I420->RGBA) and audio (PCM) streams, outputting them as named NDI sources and/or recording separate MP4 files per participant.
+Electron desktop application that bridges Zoom meetings to professional broadcast production. Joins standard Zoom meetings via Meeting ID/passcode and captures per-participant raw video (I420->RGBA) and audio (PCM) streams, outputting them as named NDI sources, SDI via DeckLink, and/or recording separate MP4 files per participant.
 
 ## Architecture
 - **Runtime**: Node.js with Electron (macOS/Windows desktop)

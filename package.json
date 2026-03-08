@@ -1,7 +1,7 @@
 {
-  "name": "zoom-iso-capture",
+  "name": "zoomlink",
   "version": "1.0.0",
-  "description": "Zoom Video SDK ISO Capture for broadcast production - isolated video/audio feeds with NDI output and local recording",
+  "description": "ZoomLink - Zoom to broadcast bridge with NDI, SDI, and per-participant recording",
   "main": "src/main/main.js",
   "scripts": {
     "start": "DYLD_LIBRARY_PATH=./node_modules/grandiose/build/Release:$DYLD_LIBRARY_PATH electron . --no-sandbox --disable-gpu-sandbox",

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;">
-  <title>Zoom ISO Capture</title>
+  <title>ZoomLink</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -53,7 +53,7 @@
       color: var(--text-primary);
     }
 
-    .logo span { color: var(--accent-blue); }
+    .logo span { font-weight: 400; color: var(--accent-blue); }
 
     .status-badge {
       display: inline-flex;
@@ -321,9 +321,80 @@
       background: var(--bg-card);
       border: 1px solid var(--border);
       border-radius: 8px;
-      padding: 16px;
-      margin-bottom: 20px;
+      padding: 8px 14px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
     }
+
+    .config-dir {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .config-dir-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+
+    .config-dir-value {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+    }
+
+    .config-dir button {
+      font-size: 11px;
+      padding: 2px 8px;
+      background: var(--bg-primary);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .config-dir button:hover {
+      background: var(--bg-card-hover);
+      color: var(--text-primary);
+    }
+
+    .status-indicators {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-left: auto;
+    }
+
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      color: var(--text-secondary);
+      cursor: default;
+    }
+
+    .status-indicator .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    .status-indicator .dot.ok { background: var(--accent-green); }
+    .status-indicator .dot.fail { background: var(--accent-red); }
 
     .config-row {
       display: flex;
@@ -549,7 +620,7 @@
   <div class="app" id="app">
     <header class="header">
       <div class="header-left">
-        <div class="logo">Zoom <span>ISO</span> Capture</div>
+        <div class="logo">Zoom<span>Link</span></div>
         <div id="connectionBadge" class="status-badge disconnected">
           <div class="status-dot off"></div>
           <span>Disconnected</span>
@@ -600,26 +671,24 @@
 
     <div class="main-content">
       <div class="config-panel" id="configPanel">
-        <div class="config-row">
-          <span class="config-label">Output Directory</span>
-          <span class="config-value" id="outputDirDisplay">./recordings</span>
+        <div class="config-dir">
+          <span class="config-dir-label">Output</span>
+          <span class="config-dir-value" id="outputDirDisplay">./recordings</span>
           <button id="btnSelectDir">Browse</button>
         </div>
-        <div class="config-row">
-          <span class="config-label">NDI Status</span>
-          <span class="config-value" id="ndiStatusDisplay">Checking...</span>
-        </div>
-        <div class="config-row">
-          <span class="config-label">SDK Credentials</span>
-          <span class="config-value" id="sdkStatusDisplay">Checking...</span>
-        </div>
-        <div class="config-row">
-          <span class="config-label">Meeting SDK</span>
-          <span class="config-value" id="zoomSdkStatusDisplay">Checking...</span>
-        </div>
-        <div class="config-row">
-          <span class="config-label">DeckLink</span>
-          <span class="config-value" id="decklinkStatusDisplay">Checking...</span>
+        <div class="status-indicators">
+          <div class="status-indicator" id="indNdi" title="NDI: Checking...">
+            <span class="dot" id="dotNdi"></span><span>NDI</span>
+          </div>
+          <div class="status-indicator" id="indSdk" title="SDK Credentials: Checking...">
+            <span class="dot" id="dotSdk"></span><span>Credentials</span>
+          </div>
+          <div class="status-indicator" id="indZoom" title="Meeting SDK: Checking...">
+            <span class="dot" id="dotZoom"></span><span>SDK</span>
+          </div>
+          <div class="status-indicator" id="indDecklink" title="DeckLink: Checking...">
+            <span class="dot" id="dotDecklink"></span><span>DeckLink</span>
+          </div>
         </div>
       </div>
 
@@ -651,7 +720,7 @@
     </div>
 
     <footer class="footer">
-      <span>Zoom ISO Capture v1.0.0</span>
+      <span>ZoomLink v1.0.0</span>
       <span>Target: 1080p @ 30fps | Audio: 48kHz 16-bit</span>
       <span id="footerTime"></span>
     </footer>
@@ -1124,16 +1193,20 @@
       window.zoomISO.getSettings().then(s => {
         state.settings = s;
         document.getElementById('outputDirDisplay').textContent = s.outputDir || './recordings';
-        document.getElementById('ndiStatusDisplay').textContent = s.ndiAvailable ? 'Available (grandiose loaded)' : 'Unavailable (grandiose not installed)';
-        document.getElementById('zoomSdkStatusDisplay').textContent = s.zoomAvailable ? 'Available (native addon loaded)' : 'Unavailable (native addon not built)';
-        document.getElementById('sdkStatusDisplay').textContent = s.hasCredentials ? 'Configured' : 'Not configured - set ZOOM_SDK_KEY and ZOOM_SDK_SECRET in .env';
+
+        const setIndicator = (dotId, indId, ok, tipOk, tipFail) => {
+          document.getElementById(dotId).className = 'dot ' + (ok ? 'ok' : 'fail');
+          document.getElementById(indId).title = ok ? tipOk : tipFail;
+        };
+        setIndicator('dotNdi', 'indNdi', s.ndiAvailable, 'NDI: Available', 'NDI: Unavailable');
+        setIndicator('dotSdk', 'indSdk', s.hasCredentials, 'Credentials: Configured', 'Credentials: Not configured');
+        setIndicator('dotZoom', 'indZoom', s.zoomAvailable, 'Meeting SDK: Loaded', 'Meeting SDK: Not available');
+        setIndicator('dotDecklink', 'indDecklink', s.decklinkAvailable, 'DeckLink: Available', 'DeckLink: Not available');
+
         if (s.decklinkAvailable) {
-          document.getElementById('decklinkStatusDisplay').textContent = 'Available';
           document.getElementById('decklinkSectionTitle').style.display = '';
           document.getElementById('decklinkPanel').style.display = '';
           refreshDecklinkDevices();
-        } else {
-          document.getElementById('decklinkStatusDisplay').textContent = 'Unavailable (macadam not installed)';
         }
         log('Application initialized', 'success');
       });
