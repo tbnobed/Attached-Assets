@@ -100,17 +100,28 @@ fi
 export PYTHON="$PYTHON_PATH"
 
 # ===========================================================
-step "Node.js 20"
+step "Node.js"
 # ===========================================================
+# Always add Homebrew node paths so versioned installs are found
+for nd in /opt/homebrew/opt/node@*/bin /opt/homebrew/opt/node/bin /usr/local/opt/node@*/bin /usr/local/opt/node/bin; do
+    [ -d "$nd" ] && export PATH="$nd:$PATH"
+done
+
 if command -v node &>/dev/null; then
     NODE_VER=$(node -v 2>/dev/null)
-    echo -e "${CYAN}  Found Node $NODE_VER — skipping${NC}"
+    echo -e "${CYAN}  Found Node $NODE_VER${NC}"
 else
-    echo "Installing Node.js 20..."
-    brew install node@20
-    export PATH="/opt/homebrew/opt/node@20/bin:$PATH"
+    echo "Installing Node.js..."
+    brew install node
+    for nd in /opt/homebrew/opt/node@*/bin /opt/homebrew/opt/node/bin /usr/local/opt/node@*/bin /usr/local/opt/node/bin; do
+        [ -d "$nd" ] && export PATH="$nd:$PATH"
+    done
     command -v node &>/dev/null || fail "Node.js installation failed"
 fi
+
+NODE_BIN_DIR="$(dirname "$(which node)")"
+echo "  node: $(which node)"
+echo "  npm:  $(which npm 2>/dev/null || echo 'NOT FOUND')"
 
 # ===========================================================
 step "Git"
@@ -475,11 +486,22 @@ if [ "$ALL_OK" = true ]; then
     echo -e "${GREEN}  Setup complete! All checks passed.${NC}"
     echo "============================================"
     echo ""
-    echo "  If 'npm' is not found, run this first:"
-    echo "    eval \"\$(/opt/homebrew/bin/brew shellenv)\""
+    # Write PATH setup to shell profile so npm works in new terminals
+    SHELL_RC="$HOME/.zshrc"
+    MARKER="# PlexISO PATH setup"
+    if ! grep -q "$MARKER" "$SHELL_RC" 2>/dev/null; then
+        echo "" >> "$SHELL_RC"
+        echo "$MARKER" >> "$SHELL_RC"
+        echo 'eval "$(/opt/homebrew/bin/brew shellenv)" 2>/dev/null' >> "$SHELL_RC"
+        echo 'for nd in /opt/homebrew/opt/node@*/bin /opt/homebrew/opt/node/bin; do [ -d "$nd" ] && export PATH="$nd:$PATH"; done' >> "$SHELL_RC"
+        echo -e "${GREEN}  Updated ~/.zshrc with PATH for node/npm${NC}"
+    fi
+
     echo ""
-    echo "  Then run:"
+    echo "  To run now:"
     echo "    cd $PROJECT_DIR && npm start"
+    echo ""
+    echo "  If 'npm' is not found, open a NEW terminal window first."
     echo ""
 else
     echo "============================================"
