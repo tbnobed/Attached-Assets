@@ -36,6 +36,13 @@ echo "  (brand-new Mac compatible)"
 echo "============================================"
 echo ""
 
+# Ensure Homebrew is on PATH (critical for brand-new systems)
+if [ -f /opt/homebrew/bin/brew ]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+elif [ -f /usr/local/bin/brew ]; then
+    eval "$(/usr/local/bin/brew shellenv)"
+fi
+
 # ===========================================================
 step "Xcode Command Line Tools"
 # ===========================================================
@@ -468,7 +475,11 @@ if [ "$ALL_OK" = true ]; then
     echo -e "${GREEN}  Setup complete! All checks passed.${NC}"
     echo "============================================"
     echo ""
-    echo "  To run:  cd $PROJECT_DIR && npm start"
+    echo "  If 'npm' is not found, run this first:"
+    echo "    eval \"\$(/opt/homebrew/bin/brew shellenv)\""
+    echo ""
+    echo "  Then run:"
+    echo "    cd $PROJECT_DIR && npm start"
     echo ""
 else
     echo "============================================"
