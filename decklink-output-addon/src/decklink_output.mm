@@ -3,43 +3,13 @@
 #include <map>
 #include <string>
 #include <mutex>
-#include <atomic>
 
 #include "DeckLinkAPI.h"
-
-class SimpleVideoBuffer : public IDeckLinkVideoBuffer {
-public:
-    SimpleVideoBuffer(uint32_t size) : refCount_(1) {
-        bufferSize_ = size;
-        buffer_ = (uint8_t*)calloc(1, size);
-    }
-
-    ~SimpleVideoBuffer() {
-        if (buffer_) free(buffer_);
-    }
-
-    uint8_t* RawPtr() { return buffer_; }
-    uint32_t Size() { return bufferSize_; }
-
-    HRESULT QueryInterface(REFIID, LPVOID* ppv) { *ppv = this; AddRef(); return S_OK; }
-    ULONG AddRef() { return ++refCount_; }
-    ULONG Release() { ULONG c = --refCount_; if (c == 0) delete this; return c; }
-
-    HRESULT GetBytes(void** buffer) { *buffer = buffer_; return S_OK; }
-    HRESULT StartAccess(BMDBufferAccessFlags) { return S_OK; }
-    HRESULT EndAccess(BMDBufferAccessFlags) { return S_OK; }
-
-private:
-    uint8_t* buffer_;
-    uint32_t bufferSize_;
-    std::atomic<ULONG> refCount_;
-};
 
 struct OutputState {
     IDeckLink* device = nullptr;
     IDeckLinkOutput* output = nullptr;
     IDeckLinkMutableVideoFrame* mutableFrame = nullptr;
-    SimpleVideoBuffer* videoBuffer = nullptr;
     void* frameBuffer = nullptr;
     size_t frameBufferSize = 0;
     int width = 0;
@@ -199,38 +169,38 @@ public:
             }
         }
 
-        size_t frameBufferSize = (size_t)frameHeight * (size_t)rowBytes;
-        SimpleVideoBuffer* videoBuffer = new SimpleVideoBuffer((uint32_t)frameBufferSize);
-        if (!videoBuffer->RawPtr()) {
-            videoBuffer->Release();
+        IDeckLinkMutableVideoFrame* mutableFrame = nullptr;
+        hr = output->CreateVideoFrame(frameWidth, frameHeight, rowBytes,
+                                       pixelFormat_, bmdFrameFlagDefault,
+                                       &mutableFrame);
+        if (hr != S_OK || !mutableFrame) {
             output->DisableAudioOutput();
             output->DisableVideoOutput();
             output->Release();
             deckLink->Release();
-            SetError("Failed to allocate video buffer");
+            SetError("CreateVideoFrame failed (HRESULT=" + std::to_string(hr) + ")");
             return;
         }
 
-        IDeckLinkMutableVideoFrame* mutableFrame = nullptr;
-        hr = output->CreateVideoFrameWithBuffer(frameWidth, frameHeight, rowBytes,
-                                                 pixelFormat_, bmdFrameFlagDefault,
-                                                 videoBuffer, &mutableFrame);
-        if (hr != S_OK || !mutableFrame) {
-            videoBuffer->Release();
+        void* frameBuffer = nullptr;
+        hr = mutableFrame->GetBytes(&frameBuffer);
+        if (hr != S_OK || !frameBuffer) {
+            mutableFrame->Release();
             output->DisableAudioOutput();
             output->DisableVideoOutput();
             output->Release();
             deckLink->Release();
-            SetError("CreateVideoFrameWithBuffer failed (HRESULT=" + std::to_string(hr) + ")");
+            SetError("GetBytes on mutable frame failed (HRESULT=" + std::to_string(hr) + ")");
             return;
         }
+
+        size_t frameBufferSize = (size_t)frameHeight * (size_t)rowBytes;
 
         OutputState* state = new OutputState();
         state->device = deckLink;
         state->output = output;
         state->mutableFrame = mutableFrame;
-        state->videoBuffer = videoBuffer;
-        state->frameBuffer = videoBuffer->RawPtr();
+        state->frameBuffer = frameBuffer;
         state->frameBufferSize = frameBufferSize;
         state->width = frameWidth;
         state->height = frameHeight;
@@ -342,18 +312,10 @@ public:
             return;
         }
 
-        if (state->videoBuffer) {
-            state->videoBuffer->StartAccess(0);
-        }
-
         size_t copySize = videoSize_ < state->frameBufferSize ? videoSize_ : state->frameBufferSize;
         memcpy(state->frameBuffer, videoData_, copySize);
         if (copySize < state->frameBufferSize) {
             memset((uint8_t*)state->frameBuffer + copySize, 0, state->frameBufferSize - copySize);
-        }
-
-        if (state->videoBuffer) {
-            state->videoBuffer->EndAccess(0);
         }
 
         HRESULT hr = state->output->DisplayVideoFrameSync(state->mutableFrame);
@@ -437,9 +399,6 @@ Napi::Value CloseOutput(const Napi::CallbackInfo& info) {
     }
 
     if (state) {
-        if (state->videoBuffer) {
-            state->videoBuffer->Release();
-        }
         if (state->mutableFrame) {
             state->mutableFrame->Release();
         }
@@ -476,7 +435,6 @@ static void CleanupOutputs(void* /*arg*/) {
     for (auto& pair : g_outputs) {
         OutputState* state = pair.second;
         if (state) {
-            if (state->videoBuffer) state->videoBuffer->Release();
             if (state->mutableFrame) state->mutableFrame->Release();
             if (state->output) {
                 if (state->audioEnabled) state->output->DisableAudioOutput();
