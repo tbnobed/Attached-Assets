@@ -202,129 +202,40 @@ else
 fi
 
 # ===========================================================
-step "Macadam (DeckLink SDI)"
+step "DeckLink Output Addon (SDI)"
 # ===========================================================
-MACADAM_DIR="$PROJECT_DIR/node_modules/macadam"
+DECKLINK_ADDON_DIR="$PROJECT_DIR/decklink-output-addon"
+DECKLINK_NODE="$DECKLINK_ADDON_DIR/build/Release/decklink_output.node"
 
-if [ -f "$MACADAM_DIR/build/Release/macadam.node" ]; then
+if [ -f "$DECKLINK_NODE" ]; then
     skip
 else
-    echo "  Installing macadam for DeckLink SDI output..."
-    cd "$PROJECT_DIR"
-    rm -rf "$MACADAM_DIR"
-    npm install macadam --no-save --ignore-scripts 2>/dev/null
+    DECKLINK_FW="/Library/Frameworks/DeckLinkAPI.framework"
+    DECKLINK_HEADERS="$DECKLINK_FW/Headers"
 
-    if [ -d "$MACADAM_DIR" ]; then
-        cd "$MACADAM_DIR"
+    if [ ! -d "$DECKLINK_FW" ]; then
+        echo -e "${YELLOW}  DeckLinkAPI.framework not installed — DeckLink output will be unavailable${NC}"
+        echo -e "${YELLOW}  Install Blackmagic Desktop Video from https://www.blackmagicdesign.com/support${NC}"
+    elif [ ! -f "$DECKLINK_HEADERS/DeckLinkAPI.h" ]; then
+        echo -e "${YELLOW}  DeckLink SDK headers not found at $DECKLINK_HEADERS${NC}"
+        echo -e "${YELLOW}  Download the DeckLink SDK from https://www.blackmagicdesign.com/developer/product/decklink${NC}"
+        echo -e "${YELLOW}  Then copy Headers/ into $DECKLINK_FW/${NC}"
+    else
+        echo "  Building decklink-output-addon (direct DeckLink SDK)..."
+        cd "$DECKLINK_ADDON_DIR"
 
-        echo "  Patching macadam for Node 20 N-API compatibility..."
-        cat > src/napi_compat.h << 'COMPATEOF'
-#ifndef NAPI_COMPAT_H
-#define NAPI_COMPAT_H
-#include <node_api.h>
-typedef void (*_macadam_old_BF)(napi_env env, void* data, void* hint);
-static inline napi_status _mc_create_ext(napi_env env, void* data,
-    _macadam_old_BF fin, void* hint, napi_value* result) {
-  return napi_create_external(env, data, (node_api_basic_finalize)fin, hint, result);
-}
-static inline napi_status _mc_create_ext_buf(napi_env env, size_t len,
-    void* data, _macadam_old_BF fin, void* hint, napi_value* result) {
-  return napi_create_external_buffer(env, len, data, (node_api_basic_finalize)fin, hint, result);
-}
-#define napi_create_external _mc_create_ext
-#define napi_create_external_buffer _mc_create_ext_buf
-#endif
-COMPATEOF
-        echo "    Created napi_compat.h"
-        for srcf in src/capture_promise.cc src/playback_promise.cc src/macadam.cc; do
-            if [ -f "$srcf" ]; then
-                if ! grep -q 'napi_compat.h' "$srcf"; then
-                    sed -i '' '1s/^/#include "napi_compat.h"\n/' "$srcf"
-                    echo "    Patched $srcf"
-                fi
-            fi
-        done
-
-        echo "  Adding DeckLink API v15 compatibility dispatch..."
-        cat > src/decklink_compat.c << 'DISPATCHEOF'
-#include <dlfcn.h>
-#include <stdio.h>
-#define DECKLINK_FW "/Library/Frameworks/DeckLinkAPI.framework/DeckLinkAPI"
-typedef void* (*CreateIterFn)(void);
-void* CreateDeckLinkIteratorInstance(void) {
-    static CreateIterFn cached = NULL;
-    static int tried = 0;
-    if (!tried) {
-        tried = 1;
-        void* h = dlopen(DECKLINK_FW, RTLD_LAZY | RTLD_GLOBAL);
-        if (h) {
-            const char* names[] = {
-                "CreateDeckLinkIteratorInstance_0004",
-                "CreateDeckLinkIteratorInstance_0003",
-                "CreateDeckLinkIteratorInstance_0002",
-                "CreateDeckLinkIterator",
-                NULL
-            };
-            for (int i = 0; names[i]; i++) {
-                cached = (CreateIterFn)dlsym(h, names[i]);
-                if (cached) break;
-            }
-        }
-    }
-    return cached ? cached() : NULL;
-}
-DISPATCHEOF
-        echo "    Created decklink_compat.c"
-
-        if [ -f binding.gyp ]; then
-            sed -i '' 's/-framework DeckLinkAPI//g' binding.gyp
-            echo "    Removed -framework DeckLinkAPI from link flags"
-
-            if ! grep -q 'decklink_compat.c' binding.gyp; then
-                sed -i '' 's|"src/macadam.cc"|"src/macadam.cc", "src/decklink_compat.c"|' binding.gyp
-                echo "    Added decklink_compat.c to sources"
-            fi
-        fi
+        npm install --ignore-scripts 2>/dev/null || true
 
         PYTHON="$PYTHON_PATH" npx node-gyp rebuild 2>&1 || {
-            echo -e "${YELLOW}  macadam build failed — DeckLink output will be unavailable${NC}"
-            echo -e "${YELLOW}  This is OK if you don't have Blackmagic Desktop Video installed${NC}"
+            echo -e "${YELLOW}  DeckLink addon build failed — SDI output will be unavailable${NC}"
         }
         cd "$PROJECT_DIR"
 
-        if [ -f "$MACADAM_DIR/build/Release/macadam.node" ]; then
-            echo -e "${GREEN}  macadam built OK (playback-only)${NC}"
+        if [ -f "$DECKLINK_NODE" ]; then
+            echo -e "${GREEN}  decklink-output-addon built OK${NC}"
         else
-            echo -e "${YELLOW}  macadam.node not produced — DeckLink features disabled${NC}"
+            echo -e "${YELLOW}  decklink_output.node not produced — DeckLink features disabled${NC}"
         fi
-    else
-        echo -e "${YELLOW}  macadam package not found — DeckLink features disabled${NC}"
-    fi
-fi
-
-# ===========================================================
-step "DeckLink API compatibility shim (fallback)"
-# ===========================================================
-SHIM_SRC="$PROJECT_DIR/src/decklink/decklink-shim.c"
-SHIM_OUT="$PROJECT_DIR/src/decklink/libdecklink-shim.dylib"
-
-if [ -f "$SHIM_OUT" ]; then
-    skip
-elif [ ! -d "/Library/Frameworks/DeckLinkAPI.framework" ]; then
-    echo -e "${YELLOW}  DeckLinkAPI.framework not installed — skipping shim${NC}"
-else
-    echo "  Building DeckLink API DYLD_INSERT shim (fallback for pre-built macadam)..."
-    clang -dynamiclib -flat_namespace \
-        -o "$SHIM_OUT" "$SHIM_SRC" \
-        -install_name "@rpath/libdecklink-shim.dylib" \
-        -arch arm64 -arch x86_64 2>/dev/null || \
-    clang -dynamiclib -flat_namespace \
-        -o "$SHIM_OUT" "$SHIM_SRC" \
-        -install_name "@rpath/libdecklink-shim.dylib" 2>/dev/null || \
-    echo -e "${YELLOW}  Shim build failed — OK if macadam was rebuilt with compat dispatch${NC}"
-
-    if [ -f "$SHIM_OUT" ]; then
-        echo -e "${GREEN}  DeckLink shim built OK${NC}"
     fi
 fi
 
@@ -474,10 +385,10 @@ check "Node.js"        command -v node
 check "Python"         test -f "$PYTHON_PATH"
 check "Git"            command -v git
 
-if [ -f "$MACADAM_DIR/build/Release/macadam.node" ]; then
-    echo -e "${GREEN}  ✓ Macadam (DeckLink)${NC}"
+if [ -f "$DECKLINK_NODE" ]; then
+    echo -e "${GREEN}  ✓ DeckLink Output Addon${NC}"
 else
-    echo -e "${YELLOW}  ~ Macadam (DeckLink) — not built (optional, needs Blackmagic drivers)${NC}"
+    echo -e "${YELLOW}  ~ DeckLink Output Addon — not built (optional, needs Blackmagic drivers + SDK)${NC}"
 fi
 
 echo ""

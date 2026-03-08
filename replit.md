@@ -10,7 +10,7 @@ Electron desktop application for capturing isolated video/audio feeds from Zoom 
 - **Zoom Integration** (`src/zoom/`): Session manager wrapping the native Meeting SDK addon, stream handler, JWT generator
 - **Native Addon** (`zoom-meeting-sdk-addon/`): C++/ObjC++ N-API wrapper around the Zoom Meeting SDK. macOS uses Objective-C ZoomSDK.framework API; Windows uses C++ zoom_sdk API. Both provide raw data callbacks (video I420, audio PCM) per participant via ThreadSafeFunction
 - **NDI** (`src/ndi/`): NDI source management via grandiose (graceful fallback if unavailable)
-- **DeckLink** (`src/decklink/`): SDI output via macadam (graceful fallback if unavailable). Enumerates DeckLink devices, maps participants to physical outputs, converts BGRA→UYVY with scaling, upmixes mono audio to stereo. UI allows per-output participant assignment. Desktop Video v15+ renames `CreateDeckLinkIteratorInstance` to versioned symbols (`_0002`/`_0003`/`_0004`); macadam is patched at build time with `decklink_compat.c` dispatch + a `libdecklink-shim.dylib` fallback for runtime DYLD_INSERT. Probe runs in a child process to avoid uncatchable SIGABRT.
+- **DeckLink** (`src/decklink/` + `decklink-output-addon/`): SDI output via custom C++ native addon that directly calls the Blackmagic DeckLink SDK (replaced macadam). Enumerates DeckLink devices, maps participants to physical outputs, converts BGRA→UYVY with scaling, upmixes mono audio to stereo. Uses `DisplayVideoFrameSync` + `WriteAudioSamplesSync` for synchronous frame output — the card paces the frame pump at native refresh rate. Desktop Video v15+ renames `CreateDeckLinkIteratorInstance` to versioned symbols; addon uses dlopen/dlsym to scan for the correct symbol at runtime. UI allows per-output participant assignment.
 - **Recorder** (`src/recorder/`): FFmpeg-based per-participant MP4 recording
 - **Config** (`src/config/`): Settings loader from environment variables
 
@@ -25,6 +25,8 @@ Electron desktop application for capturing isolated video/audio feeds from Zoom 
 - `src/zoom/recording-token.js` - Fetches local recording join token via Zoom REST API (Server-to-Server OAuth)
 - `src/ndi/ndi-manager.js` - NDI source creation/destruction
 - `src/decklink/decklink-manager.js` - DeckLink SDI output, BGRA→UYVY conversion, participant→device mapping
+- `decklink-output-addon/src/decklink_output.mm` - C++ native addon wrapping DeckLink SDK directly (getDevices, openOutput, displayFrame, closeOutput)
+- `decklink-output-addon/index.js` - JS wrapper with soft-loading and BMD constant exports
 - `src/recorder/recorder-manager.js` - FFmpeg spawn and pipe management
 - `src/config/settings.js` - Environment variable loader
 - `zoom-meeting-sdk-addon/index.js` - JS bridge for the native addon (handles DLL/dylib/framework paths per platform)
@@ -84,7 +86,7 @@ Electron desktop application for capturing isolated video/audio feeds from Zoom 
 ## Dependencies
 - electron - Desktop app framework
 - grandiose - NDI output (native module, requires NDI SDK)
-- macadam - DeckLink/SDI output (native module, requires Blackmagic Desktop Video drivers)
+- decklink-output-addon - Custom DeckLink SDI output (native module, requires Blackmagic Desktop Video drivers + SDK headers)
 - node-addon-api - For the Zoom Meeting SDK native addon
 - ffmpeg - System dependency for recording
 
@@ -99,11 +101,17 @@ Electron desktop application for capturing isolated video/audio feeds from Zoom 
 
 ## Quick Setup (macOS)
 ```bash
+bash scripts/setup-mac.sh
+```
+
+Or manually:
+```bash
 npm install
 cd zoom-meeting-sdk-addon && npm install && cd ..
 node scripts/install-zoom-sdk.js /Users/debo/Documents/zoom-sdk-macos-6.7.6.75900
 npm run link-frameworks
 cd zoom-meeting-sdk-addon && CXX="$(pwd)/build-tools/cxx-objcpp.sh" npx node-gyp rebuild && cd ..
+cd decklink-output-addon && npm install && npx node-gyp rebuild && cd ..
 ```
 
 Create `.env` with your ZOOM_SDK_KEY and ZOOM_SDK_SECRET, then:

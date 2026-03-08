@@ -1,72 +1,19 @@
 const EventEmitter = require('events');
 const path = require('path');
 
-let macadam = null;
-let macadamAvailable = false;
-
-function bmCodeToInt(s) {
-  return ((s.charCodeAt(0) << 24) | (s.charCodeAt(1) << 16) | (s.charCodeAt(2) << 8) | s.charCodeAt(3)) >>> 0;
-}
-
-const MACADAM_CONSTANTS = {
-  bmdModeNTSC:           bmCodeToInt('ntsc'),
-  bmdModeNTSC2398:       bmCodeToInt('nt23'),
-  bmdModePAL:            bmCodeToInt('pal '),
-  bmdModeNTSCp:          bmCodeToInt('ntsp'),
-  bmdModePALp:           bmCodeToInt('palp'),
-  bmdModeHD1080p2398:    bmCodeToInt('23ps'),
-  bmdModeHD1080p24:      bmCodeToInt('24ps'),
-  bmdModeHD1080p25:      bmCodeToInt('Hp25'),
-  bmdModeHD1080p2997:    bmCodeToInt('Hp29'),
-  bmdModeHD1080p30:      bmCodeToInt('Hp30'),
-  bmdModeHD1080i50:      bmCodeToInt('Hi50'),
-  bmdModeHD1080i5994:    bmCodeToInt('Hi59'),
-  bmdModeHD1080i6000:    bmCodeToInt('Hi60'),
-  bmdModeHD1080p50:      bmCodeToInt('Hp50'),
-  bmdModeHD1080p5994:    bmCodeToInt('Hp59'),
-  bmdModeHD1080p6000:    bmCodeToInt('Hp60'),
-  bmdModeHD720p50:       bmCodeToInt('hp50'),
-  bmdModeHD720p5994:     bmCodeToInt('hp59'),
-  bmdModeHD720p60:       bmCodeToInt('hp60'),
-  bmdFormat8BitYUV:      bmCodeToInt('2vuy'),
-  bmdFormat8BitBGRA:     bmCodeToInt('BGRA'),
-  bmdFormat10BitYUV:     bmCodeToInt('v210'),
-  bmdAudioSampleRate48kHz: 48000,
-  bmdAudioSampleType16bitInteger: 16,
-  bmdAudioSampleType32bitInteger: 32,
-};
+let decklink = null;
+let decklinkAvailable = false;
 
 try {
-  macadam = require('macadam');
-  macadamAvailable = true;
-  console.log('[DeckLink] Loaded macadam via npm package');
-} catch (err) {
-  console.warn('[DeckLink] require("macadam") failed:', err.message);
-  try {
-    const fs = require('fs');
-    const nativePath = path.join(
-      __dirname, '..', '..', 'node_modules', 'macadam', 'build', 'Release', 'macadam.node'
-    );
-    if (fs.existsSync(nativePath)) {
-      console.log('[DeckLink] Found native binary at:', nativePath);
-      const nativeBinding = require(nativePath);
-      macadam = nativeBinding;
-      for (const [k, v] of Object.entries(MACADAM_CONSTANTS)) {
-        if (macadam[k] === undefined) {
-          macadam[k] = v;
-        }
-      }
-      macadamAvailable = true;
-      console.log('[DeckLink] Loaded macadam native binding with constants applied');
-    } else {
-      console.warn('[DeckLink] Native binary not found at:', nativePath);
-    }
-  } catch (err2) {
-    console.warn('[DeckLink] Direct native load failed:', err2.message);
-    if (err2.message.includes('DeckLinkAPI')) {
-      console.warn('[DeckLink] DeckLink drivers may not be installed. Install Blackmagic Desktop Video from https://www.blackmagicdesign.com/support');
-    }
+  decklink = require(path.join(__dirname, '..', '..', 'decklink-output-addon'));
+  if (decklink && decklink.available) {
+    decklinkAvailable = true;
+    console.log('[DeckLink] Loaded decklink-output-addon');
+  } else {
+    console.warn('[DeckLink] Addon loaded but not available:', decklink ? decklink.loadError : 'null');
   }
+} catch (err) {
+  console.warn('[DeckLink] Failed to load decklink-output-addon:', err.message);
 }
 
 const DISPLAY_MODES = {
@@ -95,70 +42,30 @@ class DeckLinkManager extends EventEmitter {
   }
 
   _init() {
-    if (!macadamAvailable) {
-      console.warn('[DeckLink] macadam not available — DeckLink output disabled');
-      console.warn('[DeckLink] Install with: npm install macadam');
-      return;
-    }
-
-    const nativePath = path.join(
-      __dirname, '..', '..', 'node_modules', 'macadam', 'build', 'Release', 'macadam.node'
-    );
-
-    const fs = require('fs');
-    const { spawnSync } = require('child_process');
-
-    const shimPath = path.join(__dirname, 'libdecklink-shim.dylib');
-    const shimExists = fs.existsSync(shimPath);
-
-    const testScript = `
-      try {
-        const m = require(${JSON.stringify(nativePath)});
-        const devices = m.getDeviceInfo ? m.getDeviceInfo() : [];
-        process.stdout.write(JSON.stringify({ ok: true, count: devices ? devices.length : 0, devices: devices || [] }));
-      } catch (e) {
-        process.stdout.write(JSON.stringify({ ok: false, error: e.message }));
-      }
-    `;
-
-    const probeEnv = { ...process.env, ELECTRON_RUN_AS_NODE: '1' };
-    if (shimExists) {
-      probeEnv.DYLD_INSERT_LIBRARIES = shimPath;
-      console.log('[DeckLink] Using API compatibility shim:', shimPath);
-    }
-
-    const result = spawnSync(process.execPath, ['-e', testScript], {
-      timeout: 5000,
-      encoding: 'utf8',
-      env: probeEnv,
-    });
-
-    if (result.status !== 0 || result.signal) {
-      console.warn(`[DeckLink] DeckLink API probe crashed (signal=${result.signal || 'none'})`);
-      console.warn('[DeckLink] Blackmagic Desktop Video may not be installed or is incompatible');
-      console.warn('[DeckLink] Install from https://www.blackmagicdesign.com/support');
-      this.available = false;
+    if (!decklinkAvailable) {
+      console.warn('[DeckLink] decklink-output-addon not available — DeckLink output disabled');
       return;
     }
 
     try {
-      const probe = JSON.parse(result.stdout);
-      if (!probe.ok) {
-        console.warn('[DeckLink] DeckLink API probe failed:', probe.error);
-        this.available = false;
+      if (!decklink.isAvailable()) {
+        console.warn('[DeckLink] DeckLink drivers not installed or no devices found');
+        console.warn('[DeckLink] Install Blackmagic Desktop Video from https://www.blackmagicdesign.com/support');
         return;
       }
-      this.devices = (probe.devices || []).map((d, i) => ({
-        index: i,
-        name: d.displayName || d.modelName || `Output ${i + 1}`,
-        modelName: d.modelName || `DeckLink ${i}`,
-        displayName: d.displayName || d.modelName || `Output ${i + 1}`,
-        hasOutput: true,
+
+      const devices = decklink.getDevices();
+      this.devices = (devices || []).map((d, i) => ({
+        index: d.index !== undefined ? d.index : i,
+        name: d.name || `Output ${i + 1}`,
+        modelName: d.modelName || d.name || `DeckLink ${i}`,
+        displayName: d.name || `Output ${i + 1}`,
+        hasOutput: d.hasOutput !== false,
       }));
       this.available = true;
       console.log(`[DeckLink] Initialized — ${this.devices.length} device(s) found`);
     } catch (err) {
-      console.warn('[DeckLink] Failed to parse DeckLink probe result:', err.message);
+      console.warn('[DeckLink] Error initializing:', err.message);
       this.available = false;
     }
   }
@@ -168,16 +75,16 @@ class DeckLinkManager extends EventEmitter {
   }
 
   _refreshDevices() {
-    if (!macadamAvailable) return;
+    if (!decklinkAvailable) return;
 
     try {
-      const info = macadam.getDeviceInfo();
-      this.devices = (info || []).map((d, i) => ({
-        index: i,
-        name: d.displayName || d.modelName || `Output ${i + 1}`,
-        modelName: d.modelName || `DeckLink ${i}`,
-        displayName: d.displayName || d.modelName || `Output ${i + 1}`,
-        hasOutput: true,
+      const devices = decklink.getDevices();
+      this.devices = (devices || []).map((d, i) => ({
+        index: d.index !== undefined ? d.index : i,
+        name: d.name || `Output ${i + 1}`,
+        modelName: d.modelName || d.name || `DeckLink ${i}`,
+        displayName: d.name || `Output ${i + 1}`,
+        hasOutput: d.hasOutput !== false,
       }));
     } catch (err) {
       console.warn('[DeckLink] Error enumerating devices:', err.message);
@@ -210,45 +117,38 @@ class DeckLinkManager extends EventEmitter {
     }
 
     const modeInfo = DISPLAY_MODES[modeKey] || DISPLAY_MODES[DEFAULT_MODE];
-    const modeConst = macadam[modeInfo.mode];
+    const modeConst = decklink[modeInfo.mode];
 
-    if (modeConst === undefined) {
-      return { success: false, error: `Display mode ${modeInfo.mode} not supported by this macadam version` };
+    if (modeConst === undefined || modeConst === 0) {
+      return { success: false, error: `Display mode ${modeInfo.mode} not available` };
     }
 
     try {
-      const playback = await macadam.playback({
+      const result = await decklink.openOutput({
         deviceIndex: deviceIndex,
         displayMode: modeConst,
-        pixelFormat: macadam.bmdFormat8BitYUV,
-        channels: 2,
-        sampleRate: macadam.bmdAudioSampleRate48kHz,
-        sampleType: macadam.bmdAudioSampleType16bitInteger,
+        pixelFormat: decklink.bmdFormat8BitYUV,
+        audioSampleRate: 48000,
+        audioSampleType: 16,
+        audioChannels: 2,
       });
 
-      console.log(`[DeckLink] Playback init result: channels=${playback.channels} sampleRate=${playback.sampleRate} sampleType=${playback.sampleType} frameRate=${JSON.stringify(playback.frameRate)}`);
-
-      const frameRate = playback.frameRate || [1001, 30000];
-      const exactFps = frameRate[1] / frameRate[0];
+      const exactFps = modeInfo.fps;
 
       const output = {
         deviceIndex,
         modeKey,
         modeInfo,
-        playback,
+        handle: result.handle,
         assignedUserId: null,
         framesSent: 0,
         active: true,
         startedAt: Date.now(),
-        _lastFrameTime: 0,
-        _frameInterval: 1000 / modeInfo.fps,
-        _scaledFrameBuf: null,
         _uyvyBuf: null,
         _audioPendingBufs: [],
         _audioRemainder: null,
         _audioTotalIn: 0,
         _audioTotalOut: 0,
-        _frameRate: frameRate,
         _exactFps: exactFps,
         _audioLogCount: 0,
         _pumpRunning: false,
@@ -263,7 +163,7 @@ class DeckLinkManager extends EventEmitter {
         height: modeInfo.height,
       });
 
-      console.log(`[DeckLink] Output started on device ${deviceIndex}: ${modeInfo.label} (fps=${exactFps.toFixed(4)}, frameRate=${frameRate})`);
+      console.log(`[DeckLink] Output started on device ${deviceIndex}: ${modeInfo.label} (fps=${exactFps}, handle=${result.handle})`);
       return { success: true };
     } catch (err) {
       console.error(`[DeckLink] Failed to start output on device ${deviceIndex}:`, err.message);
@@ -279,8 +179,8 @@ class DeckLinkManager extends EventEmitter {
     this._stopFramePump(output);
 
     try {
-      if (output.playback && typeof output.playback.stop === 'function') {
-        output.playback.stop();
+      if (output.handle !== undefined && output.handle !== null) {
+        decklink.closeOutput(output.handle);
       }
     } catch (err) {
       console.warn(`[DeckLink] Error stopping output on device ${deviceIndex}:`, err.message);
@@ -357,7 +257,7 @@ class DeckLinkManager extends EventEmitter {
     }
 
     const output = this.outputs.get(deviceIndex);
-    if (!output || !output.active || !output.playback) return;
+    if (!output || !output.active || output.handle === undefined) return;
 
     const outW = output.modeInfo.width;
     const outH = output.modeInfo.height;
@@ -388,7 +288,7 @@ class DeckLinkManager extends EventEmitter {
   }
 
   async _pumpFrameLoop(deviceIndex, output) {
-    while (output._pumpRunning && output.active && output.playback) {
+    while (output._pumpRunning && output.active && output.handle !== undefined) {
       if (!output._uyvyBuf || !output._hasFrame) {
         await new Promise(r => setTimeout(r, 5));
         continue;
@@ -427,13 +327,14 @@ class DeckLinkManager extends EventEmitter {
         }
         output._audioTotalOut += samplesPerFrame;
 
-        await output.playback.displayFrame(output._uyvyBuf, audioBuf);
+        const result = await decklink.displayFrame(output.handle, output._uyvyBuf, audioBuf);
 
         output.framesSent++;
         const shouldLog = output.framesSent <= 5 || output.framesSent % 300 === 0 || output.framesSent === 100 || output.framesSent === 200;
         if (shouldLog) {
           const remLen = output._audioRemainder ? output._audioRemainder.length / 4 : 0;
-          console.log(`[DeckLink] Frame #${output.framesSent} dev=${deviceIndex} audio=${audioBuf.length}B samples=${samplesPerFrame} rem=${remLen} totalOut=${output._audioTotalOut}`);
+          const written = result ? result.samplesWritten : '?';
+          console.log(`[DeckLink] Frame #${output.framesSent} dev=${deviceIndex} audio=${audioBuf.length}B samples=${samplesPerFrame} written=${written} rem=${remLen} totalOut=${output._audioTotalOut}`);
         }
       } catch (err) {
         if (!output._videoErrorLogged) {
@@ -451,7 +352,7 @@ class DeckLinkManager extends EventEmitter {
     if (deviceIndex === undefined) return;
 
     const output = this.outputs.get(deviceIndex);
-    if (!output || !output.active || !output.playback) return;
+    if (!output || !output.active || output.handle === undefined) return;
 
     try {
       const srcCh = channels || 1;

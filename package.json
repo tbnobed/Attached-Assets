@@ -8,6 +8,7 @@
     "dev": "DYLD_LIBRARY_PATH=./node_modules/grandiose/build/Release:$DYLD_LIBRARY_PATH electron . --no-sandbox --disable-gpu-sandbox",
     "install-sdk": "node scripts/install-zoom-sdk.js",
     "build-addon": "cd zoom-meeting-sdk-addon && npx node-gyp rebuild",
+    "build-decklink": "cd decklink-output-addon && npx node-gyp rebuild",
     "link-frameworks": "node scripts/link-electron-frameworks.js"
   },
   "keywords": [
@@ -20,7 +21,6 @@
   "license": "MIT",
   "dependencies": {
     "electron": "^40.6.1",
-    "jsonwebtoken": "^9.0.3",
-    "macadam": "^2.0.0"
+    "jsonwebtoken": "^9.0.3"
   }
 }
