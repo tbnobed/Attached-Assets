@@ -187,12 +187,16 @@ public:
             modeIter->Release();
         }
 
-        int bytesPerPixel = 2;
-        if (pixelFormat_ == bmdFormat8BitBGRA) bytesPerPixel = 4;
-        else if (pixelFormat_ == bmdFormat10BitYUV) bytesPerPixel = 0;
-        int rowBytes = frameWidth * bytesPerPixel;
-        if (pixelFormat_ == bmdFormat10BitYUV) {
-            rowBytes = ((frameWidth + 47) / 48) * 128;
+        int32_t rowBytes = 0;
+        hr = output->RowBytesForPixelFormat(pixelFormat_, frameWidth, &rowBytes);
+        if (hr != S_OK || rowBytes <= 0) {
+            int bytesPerPixel = 2;
+            if (pixelFormat_ == bmdFormat8BitBGRA) bytesPerPixel = 4;
+            else if (pixelFormat_ == bmdFormat10BitYUV) bytesPerPixel = 0;
+            rowBytes = frameWidth * bytesPerPixel;
+            if (pixelFormat_ == bmdFormat10BitYUV) {
+                rowBytes = ((frameWidth + 47) / 48) * 128;
+            }
         }
 
         size_t frameBufferSize = (size_t)frameHeight * (size_t)rowBytes;
@@ -338,10 +342,18 @@ public:
             return;
         }
 
+        if (state->videoBuffer) {
+            state->videoBuffer->StartAccess(0);
+        }
+
         size_t copySize = videoSize_ < state->frameBufferSize ? videoSize_ : state->frameBufferSize;
         memcpy(state->frameBuffer, videoData_, copySize);
         if (copySize < state->frameBufferSize) {
             memset((uint8_t*)state->frameBuffer + copySize, 0, state->frameBufferSize - copySize);
+        }
+
+        if (state->videoBuffer) {
+            state->videoBuffer->EndAccess(0);
         }
 
         HRESULT hr = state->output->DisplayVideoFrameSync(state->mutableFrame);
