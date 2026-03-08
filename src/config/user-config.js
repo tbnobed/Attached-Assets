@@ -95,6 +95,78 @@ function needsConfiguration(settings) {
   return !settings.zoomSdkKey || !settings.zoomSdkSecret;
 }
 
+const MAX_RECENT_MEETINGS = 5;
+
+function getMeetingsPath() {
+  return path.join(getConfigDir(), 'meetings.json');
+}
+
+function loadMeetings() {
+  const p = getMeetingsPath();
+  try {
+    if (fs.existsSync(p)) {
+      const parsed = JSON.parse(fs.readFileSync(p, 'utf8'));
+      return {
+        recent: Array.isArray(parsed.recent) ? parsed.recent : [],
+        favorites: Array.isArray(parsed.favorites) ? parsed.favorites : [],
+      };
+    }
+  } catch (err) {
+    console.error('[Config] Error loading meetings:', err.message);
+  }
+  return { recent: [], favorites: [] };
+}
+
+function saveMeetings(data) {
+  const dir = getConfigDir();
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(getMeetingsPath(), JSON.stringify(data, null, 2), 'utf8');
+}
+
+function addRecentMeeting(meetingId, passcode, label) {
+  const data = loadMeetings();
+  const entry = {
+    meetingId: String(meetingId).replace(/\s+/g, ''),
+    passcode: passcode || '',
+    label: label || '',
+    lastUsed: Date.now(),
+  };
+  data.recent = data.recent.filter(m => m.meetingId !== entry.meetingId);
+  data.recent.unshift(entry);
+  data.recent = data.recent.slice(0, MAX_RECENT_MEETINGS);
+  saveMeetings(data);
+  return data;
+}
+
+function toggleFavoriteMeeting(meetingId, passcode, label) {
+  const data = loadMeetings();
+  const id = String(meetingId).replace(/\s+/g, '');
+  const idx = data.favorites.findIndex(m => m.meetingId === id);
+  if (idx >= 0) {
+    data.favorites.splice(idx, 1);
+  } else {
+    data.favorites.push({
+      meetingId: id,
+      passcode: passcode || '',
+      label: label || '',
+      addedAt: Date.now(),
+    });
+  }
+  saveMeetings(data);
+  return data;
+}
+
+function removeFavoriteMeeting(meetingId) {
+  const data = loadMeetings();
+  data.favorites = data.favorites.filter(m => m.meetingId !== String(meetingId).replace(/\s+/g, ''));
+  saveMeetings(data);
+  return data;
+}
+
+function getMeetings() {
+  return loadMeetings();
+}
+
 module.exports = {
   loadUserConfig,
   saveUserConfig,
@@ -102,4 +174,8 @@ module.exports = {
   getCurrentConfig,
   needsConfiguration,
   getConfigPath,
+  addRecentMeeting,
+  toggleFavoriteMeeting,
+  removeFavoriteMeeting,
+  getMeetings,
 };

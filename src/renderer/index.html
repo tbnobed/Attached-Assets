@@ -687,6 +687,119 @@
       margin-right: auto;
     }
 
+    .meeting-picker {
+      position: relative;
+      display: inline-block;
+    }
+
+    .meeting-picker-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .meeting-picker-btn:hover {
+      background: var(--bg-card-hover);
+      color: var(--text-primary);
+    }
+
+    .meeting-dropdown {
+      display: none;
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      min-width: 320px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+      z-index: 500;
+      overflow: hidden;
+    }
+
+    .meeting-dropdown.open { display: block; }
+
+    .meeting-dropdown-section {
+      padding: 6px 0;
+    }
+
+    .meeting-dropdown-section:not(:last-child) {
+      border-bottom: 1px solid var(--border);
+    }
+
+    .meeting-dropdown-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      padding: 4px 12px;
+    }
+
+    .meeting-dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      cursor: pointer;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .meeting-dropdown-item:hover {
+      background: var(--bg-card-hover);
+      color: var(--text-primary);
+    }
+
+    .meeting-dropdown-item .mtg-id {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .meeting-dropdown-item .mtg-label {
+      color: var(--text-muted);
+      font-size: 11px;
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .meeting-dropdown-item .mtg-action {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 2px 4px;
+      font-size: 14px;
+      border-radius: 4px;
+      line-height: 1;
+    }
+
+    .meeting-dropdown-item .mtg-action:hover {
+      color: var(--accent-blue);
+      background: var(--bg-card);
+    }
+
+    .meeting-dropdown-item .mtg-action.fav-active {
+      color: #f59e0b;
+    }
+
+    .meeting-dropdown-empty {
+      padding: 8px 12px;
+      font-size: 11px;
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
     .decklink-output-list {
       display: flex;
       flex-direction: column;
@@ -773,8 +886,16 @@
     <div class="toolbar">
       <div class="toolbar-group">
         <span class="toolbar-label">Meeting</span>
+        <div class="meeting-picker">
+          <button class="meeting-picker-btn" id="btnMeetingPicker" title="Recent & Favorite Meetings">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="meeting-dropdown" id="meetingDropdown"></div>
+        </div>
         <input type="text" id="meetingIdInput" placeholder="Meeting ID" style="width:160px" />
         <input type="text" id="meetingPasswordInput" placeholder="Passcode" style="width:120px" />
+        <button class="meeting-picker-btn" id="btnFavCurrent" title="Save to favorites" style="font-size:16px;padding:4px 6px;">&#9734;</button>
         <button class="primary" id="btnJoinMeeting">Join Meeting</button>
         <button class="danger" id="btnLeaveMeeting" disabled>Leave</button>
       </div>
@@ -1107,6 +1228,137 @@
       log(`Removed ${p?.displayName || userId}`, 'warn');
     }
 
+    let meetingsData = { recent: [], favorites: [] };
+
+    async function loadMeetingsData() {
+      if (window.zoomISO) {
+        meetingsData = await window.zoomISO.getMeetings();
+      }
+    }
+
+    function formatMeetingId(id) {
+      const s = String(id).replace(/\D/g, '');
+      if (s.length >= 10) return s.replace(/(\d{3})(\d{4})(\d+)/, '$1 $2 $3');
+      return s;
+    }
+
+    function isFavorite(meetingId) {
+      return meetingsData.favorites.some(m => m.meetingId === String(meetingId).replace(/\s+/g, ''));
+    }
+
+    function renderMeetingDropdown() {
+      const dd = document.getElementById('meetingDropdown');
+      let html = '';
+
+      if (meetingsData.favorites.length > 0) {
+        html += '<div class="meeting-dropdown-section"><div class="meeting-dropdown-label">Favorites</div>';
+        for (const m of meetingsData.favorites) {
+          html += `<div class="meeting-dropdown-item" data-id="${m.meetingId}" data-pass="${m.passcode || ''}">
+            <span class="mtg-id">${formatMeetingId(m.meetingId)}</span>
+            <span class="mtg-label">${m.label || ''}</span>
+            <button class="mtg-action fav-active" data-fav-remove="${m.meetingId}" title="Remove from favorites">&#9733;</button>
+          </div>`;
+        }
+        html += '</div>';
+      }
+
+      if (meetingsData.recent.length > 0) {
+        html += '<div class="meeting-dropdown-section"><div class="meeting-dropdown-label">Recent</div>';
+        for (const m of meetingsData.recent) {
+          const isFav = isFavorite(m.meetingId);
+          html += `<div class="meeting-dropdown-item" data-id="${m.meetingId}" data-pass="${m.passcode || ''}">
+            <span class="mtg-id">${formatMeetingId(m.meetingId)}</span>
+            <span class="mtg-label">${m.label || ''}</span>
+            <button class="mtg-action ${isFav ? 'fav-active' : ''}" data-fav-toggle="${m.meetingId}" data-pass="${m.passcode || ''}" title="${isFav ? 'Remove from favorites' : 'Add to favorites'}">${isFav ? '&#9733;' : '&#9734;'}</button>
+          </div>`;
+        }
+        html += '</div>';
+      }
+
+      if (!html) {
+        html = '<div class="meeting-dropdown-empty">No recent or favorite meetings yet</div>';
+      }
+
+      dd.innerHTML = html;
+
+      dd.querySelectorAll('.meeting-dropdown-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+          if (e.target.closest('.mtg-action')) return;
+          document.getElementById('meetingIdInput').value = item.dataset.id;
+          document.getElementById('meetingPasswordInput').value = item.dataset.pass || '';
+          dd.classList.remove('open');
+          updateFavButton();
+        });
+      });
+
+      dd.querySelectorAll('[data-fav-remove]').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          meetingsData = await window.zoomISO.toggleFavoriteMeeting(btn.dataset.favRemove, '', '');
+          renderMeetingDropdown();
+          updateFavButton();
+        });
+      });
+
+      dd.querySelectorAll('[data-fav-toggle]').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          meetingsData = await window.zoomISO.toggleFavoriteMeeting(btn.dataset.favToggle, btn.dataset.pass, '');
+          renderMeetingDropdown();
+          updateFavButton();
+        });
+      });
+    }
+
+    function updateFavButton() {
+      const id = document.getElementById('meetingIdInput').value.trim().replace(/\s+/g, '');
+      const btn = document.getElementById('btnFavCurrent');
+      if (id && isFavorite(id)) {
+        btn.innerHTML = '&#9733;';
+        btn.classList.add('fav-active');
+        btn.style.color = '#f59e0b';
+        btn.title = 'Remove from favorites';
+      } else {
+        btn.innerHTML = '&#9734;';
+        btn.classList.remove('fav-active');
+        btn.style.color = '';
+        btn.title = 'Save to favorites';
+      }
+    }
+
+    document.getElementById('btnMeetingPicker').addEventListener('click', async () => {
+      const dd = document.getElementById('meetingDropdown');
+      if (dd.classList.contains('open')) {
+        dd.classList.remove('open');
+        return;
+      }
+      await loadMeetingsData();
+      renderMeetingDropdown();
+      dd.classList.add('open');
+    });
+
+    document.addEventListener('click', (e) => {
+      const dd = document.getElementById('meetingDropdown');
+      if (!e.target.closest('.meeting-picker')) {
+        dd.classList.remove('open');
+      }
+    });
+
+    document.getElementById('btnFavCurrent').addEventListener('click', async () => {
+      const id = document.getElementById('meetingIdInput').value.trim();
+      if (!id) { log('Enter a Meeting ID first', 'warn'); return; }
+      const pass = document.getElementById('meetingPasswordInput').value.trim();
+      meetingsData = await window.zoomISO.toggleFavoriteMeeting(id, pass, '');
+      updateFavButton();
+      if (isFavorite(id)) {
+        log(`Meeting ${formatMeetingId(id)} added to favorites`, 'success');
+      } else {
+        log(`Meeting ${formatMeetingId(id)} removed from favorites`, 'info');
+      }
+    });
+
+    document.getElementById('meetingIdInput').addEventListener('input', updateFavButton);
+
     document.getElementById('btnJoinMeeting').addEventListener('click', async () => {
       const meetingId = document.getElementById('meetingIdInput').value.trim();
       const password = document.getElementById('meetingPasswordInput').value.trim();
@@ -1119,6 +1371,8 @@
       const result = await window.zoomISO.joinMeeting(meetingId, password);
       if (result.success) {
         log(`Join initiated for meeting ${meetingId}`, 'success');
+        meetingsData = await window.zoomISO.addRecentMeeting(meetingId, password, '');
+        updateFavButton();
       } else {
         log(`Join failed: ${result.error || result.message || 'Unknown error'}`, 'error');
         document.getElementById('meetingStatusBar').style.display = 'none';
@@ -1426,6 +1680,8 @@
 
         ctx.putImageData(imgData, 0, 0);
       });
+
+      loadMeetingsData();
 
       window.zoomISO.getSettings().then(s => {
         state.settings = s;

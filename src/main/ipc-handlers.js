@@ -1,6 +1,6 @@
 const { dialog } = require('electron');
 const { settings, ensureOutputDir, getOutputDir } = require('../config/settings');
-const { getCurrentConfig, saveUserConfig } = require('../config/user-config');
+const { getCurrentConfig, saveUserConfig, getMeetings, addRecentMeeting, toggleFavoriteMeeting, removeFavoriteMeeting } = require('../config/user-config');
 
 let simulatedUserCounter = 0;
 
@@ -255,6 +255,22 @@ function setupIpcHandlers(ipcMain, context) {
     } catch (err) {
       return { success: false, error: err.message };
     }
+  });
+
+  ipcMain.handle('get-meetings', () => {
+    return getMeetings();
+  });
+
+  ipcMain.handle('add-recent-meeting', (_event, meetingId, passcode, label) => {
+    return addRecentMeeting(meetingId, passcode, label);
+  });
+
+  ipcMain.handle('toggle-favorite-meeting', (_event, meetingId, passcode, label) => {
+    return toggleFavoriteMeeting(meetingId, passcode, label);
+  });
+
+  ipcMain.handle('remove-favorite-meeting', (_event, meetingId) => {
+    return removeFavoriteMeeting(meetingId);
   });
 }
 

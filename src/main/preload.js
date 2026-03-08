@@ -120,4 +120,9 @@ contextBridge.exposeInMainWorld('zoomISO', {
 
   getAppConfig: () => ipcRenderer.invoke('get-app-config'),
   saveAppConfig: (config) => ipcRenderer.invoke('save-app-config', config),
+
+  getMeetings: () => ipcRenderer.invoke('get-meetings'),
+  addRecentMeeting: (meetingId, passcode, label) => ipcRenderer.invoke('add-recent-meeting', meetingId, passcode, label),
+  toggleFavoriteMeeting: (meetingId, passcode, label) => ipcRenderer.invoke('toggle-favorite-meeting', meetingId, passcode, label),
+  removeFavoriteMeeting: (meetingId) => ipcRenderer.invoke('remove-favorite-meeting', meetingId),
 });
