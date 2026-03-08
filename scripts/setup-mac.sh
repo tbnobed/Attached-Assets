@@ -213,33 +213,29 @@ else
     DECKLINK_FW="/Library/Frameworks/DeckLinkAPI.framework"
     DECKLINK_HEADERS="$DECKLINK_FW/Headers"
 
-    SDK_SEARCH_DIRS=(
-        "/Users/debo/Documents/Blackmagic DeckLink SDK 15.2"
-        "/Users/debo/Documents/Blackmagic DeckLink SDK"*
-        "$HOME/Documents/Blackmagic DeckLink SDK"*
-        "/Users/Shared/Blackmagic DeckLink SDK"*
-    )
-
     if [ ! -f "$DECKLINK_HEADERS/DeckLinkAPI.h" ]; then
         echo "  DeckLink SDK headers not in framework — searching for SDK..."
         SDK_INCLUDE=""
-        for search_dir in "${SDK_SEARCH_DIRS[@]}"; do
-            if [ -d "$search_dir" ]; then
-                echo "    Checking: $search_dir"
-                FOUND=$(find "$search_dir" -name "DeckLinkAPI.h" -type f 2>/dev/null | head -1)
-                if [ -n "$FOUND" ]; then
-                    SDK_INCLUDE="$(dirname "$FOUND")"
-                    echo "  Found SDK headers at: $SDK_INCLUDE"
-                    break
-                fi
-            fi
-        done
 
-        if [ -n "$SDK_INCLUDE" ]; then
+        FOUND=$(find /Users/debo/Documents -maxdepth 5 -name "DeckLinkAPI.h" -type f 2>/dev/null | head -1)
+        if [ -z "$FOUND" ]; then
+            FOUND=$(find "$HOME/Documents" -maxdepth 5 -name "DeckLinkAPI.h" -type f 2>/dev/null | head -1)
+        fi
+        if [ -z "$FOUND" ]; then
+            FOUND=$(find /Users/Shared -maxdepth 5 -name "DeckLinkAPI.h" -type f 2>/dev/null | head -1)
+        fi
+
+        if [ -n "$FOUND" ]; then
+            SDK_INCLUDE="$(dirname "$FOUND")"
+            echo "  Found SDK headers at: $SDK_INCLUDE"
             echo "  Copying DeckLink SDK headers into framework..."
             sudo mkdir -p "$DECKLINK_HEADERS"
             sudo cp "$SDK_INCLUDE"/*.h "$DECKLINK_HEADERS/" 2>/dev/null || true
-            echo -e "${GREEN}  Copied SDK headers to $DECKLINK_HEADERS${NC}"
+            if [ -f "$DECKLINK_HEADERS/DeckLinkAPI.h" ]; then
+                echo -e "${GREEN}  Copied SDK headers to $DECKLINK_HEADERS${NC}"
+            else
+                echo -e "${YELLOW}  Copy failed — try manually: sudo cp \"$SDK_INCLUDE\"/*.h \"$DECKLINK_HEADERS/\"${NC}"
+            fi
         fi
     fi
 
