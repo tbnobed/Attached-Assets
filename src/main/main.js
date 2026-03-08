@@ -25,6 +25,7 @@ function createWindow() {
     minHeight: 700,
     title: 'ZoomLink',
     backgroundColor: '#0f172a',
+    icon: path.join(__dirname, '..', '..', 'build', 'icon.png'),
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,

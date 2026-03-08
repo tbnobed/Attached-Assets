@@ -84,15 +84,23 @@ Press Enter.
 
 If the script stops and says "re-run this script" (because Xcode tools needed to install), wait for the Xcode install to finish, then run the same command again.
 
-### Step 5: Start ZoomLink
+### Step 5: Launch ZoomLink
 
-Once setup finishes and shows "All checks passed", type:
+The setup script automatically builds a `ZoomLink.app` in the `dist/` folder. You have two options:
+
+**Option A: Double-click the app (recommended)**
+
+1. Open Finder and navigate to the `dist` folder inside your ZoomLink project
+2. You'll see `ZoomLink.app` — drag it to your **Applications** folder (or leave it in `dist/`)
+3. The first time you open it: **right-click** the app and choose **Open** (this bypasses macOS security since the app isn't signed)
+4. Click "Open" on the security dialog
+
+**Option B: Run from Terminal**
 
 ```
+cd /Users/YourName/Documents/ZoomLink
 npm start
 ```
-
-The ZoomLink app window will open.
 
 ### Step 6: Enter Your Zoom Credentials
 
@@ -103,11 +111,7 @@ On first launch, a Settings dialog will automatically appear. Enter:
 
 The other fields (Account ID, Client ID, Client Secret) are optional — they enable automatic recording permission when joining meetings. You can add them later.
 
-Click **Save**, then quit and relaunch the app:
-
-```
-npm start
-```
+Click **Save**, then quit and relaunch the app.
 
 ### Step 7: Join a Meeting
 
@@ -121,16 +125,11 @@ npm start
 
 ## Running ZoomLink After Setup
 
-Every time you want to use ZoomLink:
-
-1. Open Terminal
-2. Type:
-   ```
-   cd /Users/YourName/Documents/ZoomLink
-   npm start
-   ```
+Just double-click **ZoomLink.app** (from your Applications folder or the `dist/` folder).
 
 That's it. The setup only needs to happen once.
+
+If you prefer Terminal: `cd /Users/YourName/Documents/ZoomLink && npm start`
 
 ---
 

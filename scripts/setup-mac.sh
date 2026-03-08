@@ -482,9 +482,19 @@ if [ "$ALL_OK" = true ]; then
         echo -e "${GREEN}  Updated ~/.zshrc with PATH for node/npm${NC}"
     fi
 
+    # Build the .app bundle
     echo ""
-    echo "  To run now:"
+    echo -e "${CYAN}  Building ZoomLink.app...${NC}"
+    bash "$SCRIPT_DIR/build-app.sh" || fail "ZoomLink.app build failed"
+
+    echo ""
+    echo "  To run from Terminal:"
     echo "    cd $PROJECT_DIR && npm start"
+    echo ""
+    echo "  Or use the app bundle:"
+    echo "    open $PROJECT_DIR/dist/ZoomLink.app"
+    echo ""
+    echo "  To install permanently, drag dist/ZoomLink.app to /Applications"
     echo ""
     echo "  If 'npm' is not found, open a NEW terminal window first."
     echo ""

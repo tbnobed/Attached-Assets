@@ -47,13 +47,17 @@
     .header-left { display: flex; align-items: center; gap: 16px; }
 
     .logo {
-      font-size: 18px;
-      font-weight: 700;
-      letter-spacing: -0.5px;
-      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 0;
+      height: 32px;
     }
 
-    .logo span { font-weight: 400; color: var(--accent-blue); }
+    .logo img {
+      height: 32px;
+      width: auto;
+      object-fit: contain;
+    }
 
     .status-badge {
       display: inline-flex;
@@ -747,7 +751,7 @@
   <div class="app" id="app">
     <header class="header">
       <div class="header-left">
-        <div class="logo">Zoom<span>Link</span></div>
+        <div class="logo"><img src="assets/logo.png" alt="ZoomLink" /></div>
         <div id="connectionBadge" class="status-badge disconnected">
           <div class="status-dot off"></div>
           <span>Disconnected</span>

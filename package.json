@@ -9,7 +9,9 @@
     "install-sdk": "node scripts/install-zoom-sdk.js",
     "build-addon": "cd zoom-meeting-sdk-addon && npx node-gyp rebuild",
     "build-decklink": "cd decklink-output-addon && npx node-gyp rebuild",
-    "link-frameworks": "node scripts/link-electron-frameworks.js"
+    "link-frameworks": "node scripts/link-electron-frameworks.js",
+    "build-app": "bash scripts/build-app.sh",
+    "create-icns": "bash scripts/create-icns.sh"
   },
   "keywords": [
     "zoom",

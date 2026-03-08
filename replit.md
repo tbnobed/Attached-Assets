@@ -97,7 +97,7 @@ Electron desktop application that bridges Zoom meetings to professional broadcas
 - `ZOOM_ACCOUNT_ID` - Zoom Server-to-Server OAuth Account ID (for local recording token)
 - `ZOOM_CLIENT_ID` - Zoom Server-to-Server OAuth Client ID (for local recording token)
 - `ZOOM_CLIENT_SECRET` - Zoom Server-to-Server OAuth Client Secret (for local recording token)
-- `ZOOM_MEETING_BOT_NAME` - Display name when joining meetings (default: PlexISO)
+- `ZOOM_MEETING_BOT_NAME` - Display name when joining meetings (default: ZoomLink)
 - `DEFAULT_OUTPUT_DIR` - Recording output directory (default: ./recordings)
 
 ## Quick Setup (macOS)
@@ -115,10 +115,16 @@ cd zoom-meeting-sdk-addon && CXX="$(pwd)/build-tools/cxx-objcpp.sh" npx node-gyp
 cd decklink-output-addon && npm install && npx node-gyp rebuild && cd ..
 ```
 
-Create `.env` with your ZOOM_SDK_KEY and ZOOM_SDK_SECRET, then:
+Configure credentials via the Settings UI (gear icon) or `.env` file, then:
 ```bash
 npm start
 ```
+
+## Building the .app Bundle
+```bash
+npm run build-app
+```
+Creates `dist/ZoomLink.app` — a double-clickable macOS app bundle. The setup script runs this automatically. Drag to /Applications to install.
 
 ## Quick Setup (Windows)
 ```
