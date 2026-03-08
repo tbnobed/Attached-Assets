@@ -10,7 +10,7 @@ struct OutputState {
     IDeckLink* device = nullptr;
     IDeckLinkOutput* output = nullptr;
     IDeckLinkMutableVideoFrame* mutableFrame = nullptr;
-    IDeckLinkVideoFrame* videoFrame = nullptr;
+    IDeckLinkVideoBuffer* videoBuffer = nullptr;
     void* frameBuffer = nullptr;
     size_t frameBufferSize = 0;
     int width = 0;
@@ -178,22 +178,22 @@ public:
             return;
         }
 
-        IDeckLinkVideoFrame* videoFrame = nullptr;
-        hr = mutableFrame->QueryInterface(IID_IDeckLinkVideoFrame, (void**)&videoFrame);
-        if (hr != S_OK || !videoFrame) {
+        IDeckLinkVideoBuffer* videoBuffer = nullptr;
+        hr = mutableFrame->QueryInterface(IID_IDeckLinkVideoBuffer, (void**)&videoBuffer);
+        if (hr != S_OK || !videoBuffer) {
             mutableFrame->Release();
             output->DisableAudioOutput();
             output->DisableVideoOutput();
             output->Release();
             deckLink->Release();
-            SetError("QueryInterface for IDeckLinkVideoFrame failed (HRESULT=" + std::to_string(hr) + ")");
+            SetError("QueryInterface for IDeckLinkVideoBuffer failed (HRESULT=" + std::to_string(hr) + ")");
             return;
         }
 
         void* frameBuffer = nullptr;
-        hr = videoFrame->GetBytes(&frameBuffer);
+        hr = videoBuffer->GetBytes(&frameBuffer);
         if (hr != S_OK || !frameBuffer) {
-            videoFrame->Release();
+            videoBuffer->Release();
             mutableFrame->Release();
             output->DisableAudioOutput();
             output->DisableVideoOutput();
@@ -207,7 +207,7 @@ public:
         state->device = deckLink;
         state->output = output;
         state->mutableFrame = mutableFrame;
-        state->videoFrame = videoFrame;
+        state->videoBuffer = videoBuffer;
         state->frameBuffer = frameBuffer;
         state->frameBufferSize = (size_t)frameHeight * (size_t)rowBytes;
         state->width = frameWidth;
@@ -326,7 +326,7 @@ public:
             memset((uint8_t*)state->frameBuffer + copySize, 0, state->frameBufferSize - copySize);
         }
 
-        HRESULT hr = state->output->DisplayVideoFrameSync(state->videoFrame);
+        HRESULT hr = state->output->DisplayVideoFrameSync(state->mutableFrame);
         if (hr != S_OK) {
             SetError("DisplayVideoFrameSync failed (HRESULT=" + std::to_string(hr) + ")");
             return;
@@ -407,8 +407,8 @@ Napi::Value CloseOutput(const Napi::CallbackInfo& info) {
     }
 
     if (state) {
-        if (state->videoFrame) {
-            state->videoFrame->Release();
+        if (state->videoBuffer) {
+            state->videoBuffer->Release();
         }
         if (state->mutableFrame) {
             state->mutableFrame->Release();
@@ -446,7 +446,7 @@ static void CleanupOutputs(void* /*arg*/) {
     for (auto& pair : g_outputs) {
         OutputState* state = pair.second;
         if (state) {
-            if (state->videoFrame) state->videoFrame->Release();
+            if (state->videoBuffer) state->videoBuffer->Release();
             if (state->mutableFrame) state->mutableFrame->Release();
             if (state->output) {
                 if (state->audioEnabled) state->output->DisableAudioOutput();
