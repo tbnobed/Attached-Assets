@@ -1,106 +1,18 @@
 #import <CoreFoundation/CoreFoundation.h>
-#include <dlfcn.h>
 #include <napi.h>
 #include <map>
 #include <string>
 #include <mutex>
-#include <atomic>
 
 #include "DeckLinkAPI.h"
-
-class CustomVideoFrame : public IDeckLinkVideoFrame {
-public:
-    CustomVideoFrame(int width, int height, int rowBytes, BMDPixelFormat pixelFormat)
-        : width_(width), height_(height), rowBytes_(rowBytes),
-          pixelFormat_(pixelFormat), refCount_(1) {
-        bufferSize_ = (size_t)height * (size_t)rowBytes;
-        buffer_ = (uint8_t*)calloc(1, bufferSize_);
-    }
-
-    ~CustomVideoFrame() {
-        if (buffer_) free(buffer_);
-    }
-
-    uint8_t* GetRawBuffer() { return buffer_; }
-    size_t GetBufferSize() { return bufferSize_; }
-
-    HRESULT QueryInterface(REFIID iid, LPVOID* ppv) override {
-        if (!ppv) return E_INVALIDARG;
-        *ppv = static_cast<IDeckLinkVideoFrame*>(this);
-        AddRef();
-        return S_OK;
-    }
-
-    ULONG AddRef() override {
-        return ++refCount_;
-    }
-
-    ULONG Release() override {
-        ULONG c = --refCount_;
-        if (c == 0) delete this;
-        return c;
-    }
-
-    long GetWidth() override { return width_; }
-    long GetHeight() override { return height_; }
-    long GetRowBytes() override { return rowBytes_; }
-    BMDPixelFormat GetPixelFormat() override { return pixelFormat_; }
-    BMDFrameFlags GetFlags() override { return bmdFrameFlagDefault; }
-
-    HRESULT GetBytes(void** buffer) override {
-        if (!buffer) return E_INVALIDARG;
-        *buffer = buffer_;
-        return S_OK;
-    }
-
-    HRESULT GetTimecode(BMDTimecodeFormat, IDeckLinkTimecode**) override {
-        return S_FALSE;
-    }
-
-    HRESULT GetAncillaryData(IDeckLinkVideoFrameAncillary**) override {
-        return S_FALSE;
-    }
-
-private:
-    int width_;
-    int height_;
-    int rowBytes_;
-    size_t bufferSize_;
-    uint8_t* buffer_;
-    BMDPixelFormat pixelFormat_;
-    std::atomic<ULONG> refCount_;
-};
-
-static IDeckLinkIterator* CreateDeckLinkIteratorInstance_Compat() {
-    static void* cached_func = nullptr;
-    static bool tried = false;
-    if (!tried) {
-        tried = true;
-        void* h = dlopen("/Library/Frameworks/DeckLinkAPI.framework/DeckLinkAPI", RTLD_LAZY | RTLD_GLOBAL);
-        if (h) {
-            const char* names[] = {
-                "CreateDeckLinkIteratorInstance_0004",
-                "CreateDeckLinkIteratorInstance_0003",
-                "CreateDeckLinkIteratorInstance_0002",
-                "CreateDeckLinkIteratorInstance_0001",
-                "CreateDeckLinkIteratorInstance",
-                nullptr
-            };
-            for (int i = 0; names[i]; i++) {
-                cached_func = dlsym(h, names[i]);
-                if (cached_func) break;
-            }
-        }
-    }
-    if (!cached_func) return nullptr;
-    typedef IDeckLinkIterator* (*Func)(void);
-    return ((Func)cached_func)();
-}
 
 struct OutputState {
     IDeckLink* device = nullptr;
     IDeckLinkOutput* output = nullptr;
-    CustomVideoFrame* videoFrame = nullptr;
+    IDeckLinkMutableVideoFrame* mutableFrame = nullptr;
+    IDeckLinkVideoFrame* videoFrame = nullptr;
+    void* frameBuffer = nullptr;
+    size_t frameBufferSize = 0;
     int width = 0;
     int height = 0;
     int rowBytes = 0;
@@ -125,89 +37,48 @@ Napi::Value GetDevices(const Napi::CallbackInfo& info) {
     Napi::Env env = info.Env();
     Napi::Array result = Napi::Array::New(env);
 
-    IDeckLinkIterator* iterator = CreateDeckLinkIteratorInstance_Compat();
+    IDeckLinkIterator* iterator = CreateDeckLinkIteratorInstance();
     if (!iterator) {
         return result;
     }
 
     IDeckLink* deckLink = nullptr;
-    int index = 0;
+    uint32_t index = 0;
     while (iterator->Next(&deckLink) == S_OK) {
-        Napi::Object device = Napi::Object::New(env);
-        device.Set("index", Napi::Number::New(env, index));
+        CFStringRef nameStr = nullptr;
+        Napi::Object devObj = Napi::Object::New(env);
+        devObj.Set("index", Napi::Number::New(env, index));
 
-        CFStringRef nameRef = nullptr;
-        if (deckLink->GetDisplayName(&nameRef) == S_OK && nameRef) {
-            device.Set("name", Napi::String::New(env, CFStringToStd(nameRef)));
-            CFRelease(nameRef);
+        if (deckLink->GetDisplayName(&nameStr) == S_OK && nameStr) {
+            std::string name = CFStringToStd(nameStr);
+            devObj.Set("name", Napi::String::New(env, name));
+            CFRelease(nameStr);
         } else {
-            device.Set("name", Napi::String::New(env, "DeckLink Device"));
+            devObj.Set("name", Napi::String::New(env, "Unknown"));
         }
 
-        CFStringRef modelRef = nullptr;
-        if (deckLink->GetModelName(&modelRef) == S_OK && modelRef) {
-            device.Set("modelName", Napi::String::New(env, CFStringToStd(modelRef)));
-            CFRelease(modelRef);
+        bool supportsOutput = false;
+        IDeckLinkOutput* testOutput = nullptr;
+        if (deckLink->QueryInterface(IID_IDeckLinkOutput, (void**)&testOutput) == S_OK && testOutput) {
+            supportsOutput = true;
+            testOutput->Release();
         }
+        devObj.Set("supportsOutput", Napi::Boolean::New(env, supportsOutput));
 
-        IDeckLinkOutput* output = nullptr;
-        bool hasOutput = (deckLink->QueryInterface(IID_IDeckLinkOutput, (void**)&output) == S_OK);
-        device.Set("hasOutput", Napi::Boolean::New(env, hasOutput));
-
-        if (hasOutput && output) {
-            Napi::Array modes = Napi::Array::New(env);
-            IDeckLinkDisplayModeIterator* modeIter = nullptr;
-            if (output->GetDisplayModeIterator(&modeIter) == S_OK && modeIter) {
-                IDeckLinkDisplayMode* mode = nullptr;
-                int modeIdx = 0;
-                while (modeIter->Next(&mode) == S_OK) {
-                    Napi::Object modeObj = Napi::Object::New(env);
-
-                    CFStringRef modeNameRef = nullptr;
-                    if (mode->GetName(&modeNameRef) == S_OK && modeNameRef) {
-                        modeObj.Set("name", Napi::String::New(env, CFStringToStd(modeNameRef)));
-                        CFRelease(modeNameRef);
-                    }
-
-                    modeObj.Set("width", Napi::Number::New(env, (double)mode->GetWidth()));
-                    modeObj.Set("height", Napi::Number::New(env, (double)mode->GetHeight()));
-
-                    BMDTimeValue frameDuration;
-                    BMDTimeScale timeScale;
-                    if (mode->GetFrameRate(&frameDuration, &timeScale) == S_OK) {
-                        double fps = (double)timeScale / (double)frameDuration;
-                        modeObj.Set("fps", Napi::Number::New(env, fps));
-                        modeObj.Set("frameDuration", Napi::Number::New(env, (double)frameDuration));
-                        modeObj.Set("timeScale", Napi::Number::New(env, (double)timeScale));
-                    }
-
-                    modeObj.Set("displayMode", Napi::Number::New(env, (double)mode->GetDisplayMode()));
-
-                    modes.Set(modeIdx++, modeObj);
-                    mode->Release();
-                }
-                modeIter->Release();
-            }
-            device.Set("displayModes", modes);
-            output->Release();
-        }
-
-        result.Set(index, device);
+        result.Set(index, devObj);
         deckLink->Release();
         index++;
     }
+
     iterator->Release();
     return result;
 }
 
 class OpenOutputWorker : public Napi::AsyncWorker {
 public:
-    OpenOutputWorker(Napi::Env env,
-                     int deviceIndex,
-                     BMDDisplayMode displayMode,
-                     BMDPixelFormat pixelFormat,
-                     uint32_t audioSampleRate,
-                     uint32_t audioSampleType,
+    OpenOutputWorker(Napi::Env env, int deviceIndex,
+                     BMDDisplayMode displayMode, BMDPixelFormat pixelFormat,
+                     uint32_t audioSampleRate, uint32_t audioSampleType,
                      uint32_t audioChannels)
         : Napi::AsyncWorker(env),
           deferred_(Napi::Promise::Deferred::New(env)),
@@ -222,9 +93,9 @@ public:
     Napi::Promise Promise() { return deferred_.Promise(); }
 
     void Execute() override {
-        IDeckLinkIterator* iterator = CreateDeckLinkIteratorInstance_Compat();
+        IDeckLinkIterator* iterator = CreateDeckLinkIteratorInstance();
         if (!iterator) {
-            SetError("Failed to create DeckLink iterator - drivers not installed?");
+            SetError("DeckLink drivers not installed");
             return;
         }
 
@@ -295,21 +166,50 @@ public:
             rowBytes = ((frameWidth + 47) / 48) * 128;
         }
 
-        CustomVideoFrame* videoFrame = new CustomVideoFrame(frameWidth, frameHeight, rowBytes, pixelFormat_);
-        if (!videoFrame->GetRawBuffer()) {
-            videoFrame->Release();
+        IDeckLinkMutableVideoFrame* mutableFrame = nullptr;
+        hr = output->CreateVideoFrame(frameWidth, frameHeight, rowBytes,
+                                       pixelFormat_, bmdFrameFlagDefault, &mutableFrame);
+        if (hr != S_OK || !mutableFrame) {
             output->DisableAudioOutput();
             output->DisableVideoOutput();
             output->Release();
             deckLink->Release();
-            SetError("Failed to allocate video frame buffer");
+            SetError("CreateVideoFrame failed (HRESULT=" + std::to_string(hr) + ")");
+            return;
+        }
+
+        IDeckLinkVideoFrame* videoFrame = nullptr;
+        hr = mutableFrame->QueryInterface(IID_IDeckLinkVideoFrame, (void**)&videoFrame);
+        if (hr != S_OK || !videoFrame) {
+            mutableFrame->Release();
+            output->DisableAudioOutput();
+            output->DisableVideoOutput();
+            output->Release();
+            deckLink->Release();
+            SetError("QueryInterface for IDeckLinkVideoFrame failed (HRESULT=" + std::to_string(hr) + ")");
+            return;
+        }
+
+        void* frameBuffer = nullptr;
+        hr = videoFrame->GetBytes(&frameBuffer);
+        if (hr != S_OK || !frameBuffer) {
+            videoFrame->Release();
+            mutableFrame->Release();
+            output->DisableAudioOutput();
+            output->DisableVideoOutput();
+            output->Release();
+            deckLink->Release();
+            SetError("GetBytes failed (HRESULT=" + std::to_string(hr) + ")");
             return;
         }
 
         OutputState* state = new OutputState();
         state->device = deckLink;
         state->output = output;
+        state->mutableFrame = mutableFrame;
         state->videoFrame = videoFrame;
+        state->frameBuffer = frameBuffer;
+        state->frameBufferSize = (size_t)frameHeight * (size_t)rowBytes;
         state->width = frameWidth;
         state->height = frameHeight;
         state->rowBytes = rowBytes;
@@ -415,17 +315,15 @@ public:
             if (it != g_outputs.end()) state = it->second;
         }
 
-        if (!state || !state->output || !state->videoFrame) {
+        if (!state || !state->output || !state->frameBuffer) {
             SetError("Invalid output handle " + std::to_string(handle_));
             return;
         }
 
-        uint8_t* frameBytes = state->videoFrame->GetRawBuffer();
-        size_t frameSize = state->videoFrame->GetBufferSize();
-        size_t copySize = videoSize_ < frameSize ? videoSize_ : frameSize;
-        memcpy(frameBytes, videoData_, copySize);
-        if (copySize < frameSize) {
-            memset(frameBytes + copySize, 0, frameSize - copySize);
+        size_t copySize = videoSize_ < state->frameBufferSize ? videoSize_ : state->frameBufferSize;
+        memcpy(state->frameBuffer, videoData_, copySize);
+        if (copySize < state->frameBufferSize) {
+            memset((uint8_t*)state->frameBuffer + copySize, 0, state->frameBufferSize - copySize);
         }
 
         HRESULT hr = state->output->DisplayVideoFrameSync(state->videoFrame);
@@ -512,6 +410,9 @@ Napi::Value CloseOutput(const Napi::CallbackInfo& info) {
         if (state->videoFrame) {
             state->videoFrame->Release();
         }
+        if (state->mutableFrame) {
+            state->mutableFrame->Release();
+        }
         if (state->output) {
             if (state->audioEnabled) state->output->DisableAudioOutput();
             if (state->videoEnabled) state->output->DisableVideoOutput();
@@ -527,7 +428,7 @@ Napi::Value CloseOutput(const Napi::CallbackInfo& info) {
 }
 
 Napi::Value IsAvailable(const Napi::CallbackInfo& info) {
-    IDeckLinkIterator* iterator = CreateDeckLinkIteratorInstance_Compat();
+    IDeckLinkIterator* iterator = CreateDeckLinkIteratorInstance();
     if (iterator) {
         iterator->Release();
         return Napi::Boolean::New(info.Env(), true);
@@ -546,6 +447,7 @@ static void CleanupOutputs(void* /*arg*/) {
         OutputState* state = pair.second;
         if (state) {
             if (state->videoFrame) state->videoFrame->Release();
+            if (state->mutableFrame) state->mutableFrame->Release();
             if (state->output) {
                 if (state->audioEnabled) state->output->DisableAudioOutput();
                 if (state->videoEnabled) state->output->DisableVideoOutput();

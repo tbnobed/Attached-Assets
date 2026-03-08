@@ -232,6 +232,7 @@ else
             echo "  Copying DeckLink SDK headers into framework..."
             sudo mkdir -p "$DECKLINK_HEADERS"
             sudo cp "$SDK_INCLUDE"/*.h "$DECKLINK_HEADERS/" 2>/dev/null || true
+            sudo cp "$SDK_INCLUDE"/*.cpp "$DECKLINK_HEADERS/" 2>/dev/null || true
             if [ -f "$DECKLINK_HEADERS/DeckLinkAPI.h" ]; then
                 echo -e "${GREEN}  Copied SDK headers to $DECKLINK_HEADERS${NC}"
             else

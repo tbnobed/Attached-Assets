@@ -5,7 +5,8 @@
       "cflags!": ["-fno-exceptions"],
       "cflags_cc!": ["-fno-exceptions"],
       "sources": [
-        "src/decklink_output.mm"
+        "src/decklink_output.mm",
+        "/Library/Frameworks/DeckLinkAPI.framework/Headers/DeckLinkAPIDispatch.cpp"
       ],
       "include_dirs": [
         "<!@(node -p \"require('node-addon-api').include\")"
