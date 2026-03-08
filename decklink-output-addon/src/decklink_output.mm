@@ -4,8 +4,72 @@
 #include <map>
 #include <string>
 #include <mutex>
+#include <atomic>
 
 #include "DeckLinkAPI.h"
+
+class CustomVideoFrame : public IDeckLinkVideoFrame {
+public:
+    CustomVideoFrame(int width, int height, int rowBytes, BMDPixelFormat pixelFormat)
+        : width_(width), height_(height), rowBytes_(rowBytes),
+          pixelFormat_(pixelFormat), refCount_(1) {
+        bufferSize_ = (size_t)height * (size_t)rowBytes;
+        buffer_ = (uint8_t*)calloc(1, bufferSize_);
+    }
+
+    ~CustomVideoFrame() {
+        if (buffer_) free(buffer_);
+    }
+
+    uint8_t* GetRawBuffer() { return buffer_; }
+    size_t GetBufferSize() { return bufferSize_; }
+
+    HRESULT QueryInterface(REFIID iid, LPVOID* ppv) override {
+        if (!ppv) return E_INVALIDARG;
+        *ppv = static_cast<IDeckLinkVideoFrame*>(this);
+        AddRef();
+        return S_OK;
+    }
+
+    ULONG AddRef() override {
+        return ++refCount_;
+    }
+
+    ULONG Release() override {
+        ULONG c = --refCount_;
+        if (c == 0) delete this;
+        return c;
+    }
+
+    long GetWidth() override { return width_; }
+    long GetHeight() override { return height_; }
+    long GetRowBytes() override { return rowBytes_; }
+    BMDPixelFormat GetPixelFormat() override { return pixelFormat_; }
+    BMDFrameFlags GetFlags() override { return bmdFrameFlagDefault; }
+
+    HRESULT GetBytes(void** buffer) override {
+        if (!buffer) return E_INVALIDARG;
+        *buffer = buffer_;
+        return S_OK;
+    }
+
+    HRESULT GetTimecode(BMDTimecodeFormat, IDeckLinkTimecode**) override {
+        return S_FALSE;
+    }
+
+    HRESULT GetAncillaryData(IDeckLinkVideoFrameAncillary**) override {
+        return S_FALSE;
+    }
+
+private:
+    int width_;
+    int height_;
+    int rowBytes_;
+    size_t bufferSize_;
+    uint8_t* buffer_;
+    BMDPixelFormat pixelFormat_;
+    std::atomic<ULONG> refCount_;
+};
 
 static IDeckLinkIterator* CreateDeckLinkIteratorInstance_Compat() {
     static void* cached_func = nullptr;
@@ -36,7 +100,7 @@ static IDeckLinkIterator* CreateDeckLinkIteratorInstance_Compat() {
 struct OutputState {
     IDeckLink* device = nullptr;
     IDeckLinkOutput* output = nullptr;
-    IDeckLinkMutableVideoFrame* videoFrame = nullptr;
+    CustomVideoFrame* videoFrame = nullptr;
     int width = 0;
     int height = 0;
     int rowBytes = 0;
@@ -231,15 +295,14 @@ public:
             rowBytes = ((frameWidth + 47) / 48) * 128;
         }
 
-        IDeckLinkMutableVideoFrame* videoFrame = nullptr;
-        hr = output->CreateVideoFrame(frameWidth, frameHeight, rowBytes,
-                                       pixelFormat_, bmdFrameFlagDefault, &videoFrame);
-        if (hr != S_OK || !videoFrame) {
+        CustomVideoFrame* videoFrame = new CustomVideoFrame(frameWidth, frameHeight, rowBytes, pixelFormat_);
+        if (!videoFrame->GetRawBuffer()) {
+            videoFrame->Release();
             output->DisableAudioOutput();
             output->DisableVideoOutput();
             output->Release();
             deckLink->Release();
-            SetError("CreateVideoFrame failed (HRESULT=" + std::to_string(hr) + ")");
+            SetError("Failed to allocate video frame buffer");
             return;
         }
 
@@ -357,21 +420,15 @@ public:
             return;
         }
 
-        void* frameBytes = nullptr;
-        HRESULT hr = state->videoFrame->GetBytes(&frameBytes);
-        if (hr != S_OK || !frameBytes) {
-            SetError("GetBytes failed");
-            return;
-        }
-
-        size_t frameSize = (size_t)state->height * (size_t)state->rowBytes;
+        uint8_t* frameBytes = state->videoFrame->GetRawBuffer();
+        size_t frameSize = state->videoFrame->GetBufferSize();
         size_t copySize = videoSize_ < frameSize ? videoSize_ : frameSize;
         memcpy(frameBytes, videoData_, copySize);
         if (copySize < frameSize) {
-            memset((uint8_t*)frameBytes + copySize, 0, frameSize - copySize);
+            memset(frameBytes + copySize, 0, frameSize - copySize);
         }
 
-        hr = state->output->DisplayVideoFrameSync(state->videoFrame);
+        HRESULT hr = state->output->DisplayVideoFrameSync(state->videoFrame);
         if (hr != S_OK) {
             SetError("DisplayVideoFrameSync failed (HRESULT=" + std::to_string(hr) + ")");
             return;
