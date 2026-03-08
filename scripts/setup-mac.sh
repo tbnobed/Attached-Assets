@@ -218,7 +218,13 @@ else
         echo "  DeckLink SDK headers not in framework — searching for SDK..."
         SDK_INCLUDE=""
 
-        FOUND=$(find /Users/debo/Documents -maxdepth 5 -name "DeckLinkAPI.h" -type f 2>/dev/null | head -1)
+        FOUND=$(find /Users/debo/Downloads -maxdepth 5 -name "DeckLinkAPI.h" -type f 2>/dev/null | head -1)
+        if [ -z "$FOUND" ]; then
+            FOUND=$(find /Users/debo/Documents -maxdepth 5 -name "DeckLinkAPI.h" -type f 2>/dev/null | head -1)
+        fi
+        if [ -z "$FOUND" ]; then
+            FOUND=$(find "$HOME/Downloads" -maxdepth 5 -name "DeckLinkAPI.h" -type f 2>/dev/null | head -1)
+        fi
         if [ -z "$FOUND" ]; then
             FOUND=$(find "$HOME/Documents" -maxdepth 5 -name "DeckLinkAPI.h" -type f 2>/dev/null | head -1)
         fi
