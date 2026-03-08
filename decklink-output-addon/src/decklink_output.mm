@@ -3,14 +3,41 @@
 #include <map>
 #include <string>
 #include <mutex>
+#include <atomic>
 
 #include "DeckLinkAPI.h"
+
+class SimpleVideoBuffer : public IDeckLinkVideoBuffer {
+public:
+    SimpleVideoBuffer(uint32_t size) : refCount_(1) {
+        bufferSize_ = size;
+        buffer_ = (uint8_t*)calloc(1, size);
+    }
+
+    ~SimpleVideoBuffer() {
+        if (buffer_) free(buffer_);
+    }
+
+    uint8_t* RawPtr() { return buffer_; }
+    uint32_t Size() { return bufferSize_; }
+
+    HRESULT QueryInterface(REFIID, LPVOID* ppv) { *ppv = this; AddRef(); return S_OK; }
+    ULONG AddRef() { return ++refCount_; }
+    ULONG Release() { ULONG c = --refCount_; if (c == 0) delete this; return c; }
+
+    HRESULT GetBytes(void** buffer) { *buffer = buffer_; return S_OK; }
+
+private:
+    uint8_t* buffer_;
+    uint32_t bufferSize_;
+    std::atomic<ULONG> refCount_;
+};
 
 struct OutputState {
     IDeckLink* device = nullptr;
     IDeckLinkOutput* output = nullptr;
     IDeckLinkMutableVideoFrame* mutableFrame = nullptr;
-    IDeckLinkVideoBuffer* videoBuffer = nullptr;
+    SimpleVideoBuffer* videoBuffer = nullptr;
     void* frameBuffer = nullptr;
     size_t frameBufferSize = 0;
     int width = 0;
@@ -166,40 +193,29 @@ public:
             rowBytes = ((frameWidth + 47) / 48) * 128;
         }
 
-        IDeckLinkMutableVideoFrame* mutableFrame = nullptr;
-        hr = output->CreateVideoFrame(frameWidth, frameHeight, rowBytes,
-                                       pixelFormat_, bmdFrameFlagDefault, &mutableFrame);
-        if (hr != S_OK || !mutableFrame) {
-            output->DisableAudioOutput();
-            output->DisableVideoOutput();
-            output->Release();
-            deckLink->Release();
-            SetError("CreateVideoFrame failed (HRESULT=" + std::to_string(hr) + ")");
-            return;
-        }
-
-        IDeckLinkVideoBuffer* videoBuffer = nullptr;
-        hr = mutableFrame->QueryInterface(IID_IDeckLinkVideoBuffer, (void**)&videoBuffer);
-        if (hr != S_OK || !videoBuffer) {
-            mutableFrame->Release();
-            output->DisableAudioOutput();
-            output->DisableVideoOutput();
-            output->Release();
-            deckLink->Release();
-            SetError("QueryInterface for IDeckLinkVideoBuffer failed (HRESULT=" + std::to_string(hr) + ")");
-            return;
-        }
-
-        void* frameBuffer = nullptr;
-        hr = videoBuffer->GetBytes(&frameBuffer);
-        if (hr != S_OK || !frameBuffer) {
+        size_t frameBufferSize = (size_t)frameHeight * (size_t)rowBytes;
+        SimpleVideoBuffer* videoBuffer = new SimpleVideoBuffer((uint32_t)frameBufferSize);
+        if (!videoBuffer->RawPtr()) {
             videoBuffer->Release();
-            mutableFrame->Release();
             output->DisableAudioOutput();
             output->DisableVideoOutput();
             output->Release();
             deckLink->Release();
-            SetError("GetBytes failed (HRESULT=" + std::to_string(hr) + ")");
+            SetError("Failed to allocate video buffer");
+            return;
+        }
+
+        IDeckLinkMutableVideoFrame* mutableFrame = nullptr;
+        hr = output->CreateVideoFrameWithBuffer(frameWidth, frameHeight, rowBytes,
+                                                 pixelFormat_, bmdFrameFlagDefault,
+                                                 videoBuffer, &mutableFrame);
+        if (hr != S_OK || !mutableFrame) {
+            videoBuffer->Release();
+            output->DisableAudioOutput();
+            output->DisableVideoOutput();
+            output->Release();
+            deckLink->Release();
+            SetError("CreateVideoFrameWithBuffer failed (HRESULT=" + std::to_string(hr) + ")");
             return;
         }
 
@@ -208,8 +224,8 @@ public:
         state->output = output;
         state->mutableFrame = mutableFrame;
         state->videoBuffer = videoBuffer;
-        state->frameBuffer = frameBuffer;
-        state->frameBufferSize = (size_t)frameHeight * (size_t)rowBytes;
+        state->frameBuffer = videoBuffer->RawPtr();
+        state->frameBufferSize = frameBufferSize;
         state->width = frameWidth;
         state->height = frameHeight;
         state->rowBytes = rowBytes;
