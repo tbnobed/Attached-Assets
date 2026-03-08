@@ -26,6 +26,8 @@ public:
     ULONG Release() { ULONG c = --refCount_; if (c == 0) delete this; return c; }
 
     HRESULT GetBytes(void** buffer) { *buffer = buffer_; return S_OK; }
+    HRESULT StartAccess(BMDBufferAccessFlags) { return S_OK; }
+    HRESULT EndAccess(BMDBufferAccessFlags) { return S_OK; }
 
 private:
     uint8_t* buffer_;
