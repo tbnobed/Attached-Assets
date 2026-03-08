@@ -252,6 +252,8 @@ class DeckLinkManager extends EventEmitter {
         _frameRate: frameRate,
         _exactFps: exactFps,
         _audioLogCount: 0,
+        _pumpTimer: null,
+        _hasFrame: false,
       };
 
       this.outputs.set(deviceIndex, output);
@@ -274,6 +276,8 @@ class DeckLinkManager extends EventEmitter {
     deviceIndex = typeof deviceIndex === 'string' ? parseInt(deviceIndex, 10) : deviceIndex;
     const output = this.outputs.get(deviceIndex);
     if (!output) return;
+
+    this._stopFramePump(output);
 
     try {
       if (output.playback && typeof output.playback.stop === 'function') {
@@ -320,6 +324,7 @@ class DeckLinkManager extends EventEmitter {
     output._audioTotalIn = 0;
     output._audioTotalOut = 0;
     output._audioLogCount = 0;
+    output._hasFrame = false;
     console.log(`[DeckLink] Audio buffer flushed for device ${deviceIndex} on participant assign`);
 
     this.emit('assignment-changed', { userId, deviceIndex });
@@ -355,21 +360,49 @@ class DeckLinkManager extends EventEmitter {
     const output = this.outputs.get(deviceIndex);
     if (!output || !output.active || !output.playback) return;
 
-    const now = Date.now();
-    if (now - output._lastFrameTime < output._frameInterval * 0.8) return;
-    output._lastFrameTime = now;
+    const outW = output.modeInfo.width;
+    const outH = output.modeInfo.height;
+    const uyvySize = outW * outH * 2;
+
+    if (!output._uyvyBuf || output._uyvyBuf.length !== uyvySize) {
+      output._uyvyBuf = Buffer.alloc(uyvySize);
+    }
+
+    this._bgraToUyvy(frameBuffer, width, height, output._uyvyBuf, outW, outH);
+    output._hasFrame = true;
+
+    if (!output._pumpTimer) {
+      this._startFramePump(deviceIndex, output);
+    }
+  }
+
+  _startFramePump(deviceIndex, output) {
+    if (output._pumpTimer) return;
+
+    const intervalMs = output._frameInterval;
+    console.log(`[DeckLink] Starting frame pump dev=${deviceIndex} interval=${intervalMs.toFixed(2)}ms`);
+
+    output._pumpTimer = setInterval(() => {
+      this._pumpFrame(deviceIndex, output);
+    }, intervalMs);
+  }
+
+  _stopFramePump(output) {
+    if (output._pumpTimer) {
+      clearInterval(output._pumpTimer);
+      output._pumpTimer = null;
+    }
+  }
+
+  _pumpFrame(deviceIndex, output) {
+    if (!output || !output.active || !output.playback) {
+      this._stopFramePump(output);
+      return;
+    }
+
+    if (!output._uyvyBuf || !output._hasFrame) return;
 
     try {
-      const outW = output.modeInfo.width;
-      const outH = output.modeInfo.height;
-      const uyvySize = outW * outH * 2;
-
-      if (!output._uyvyBuf || output._uyvyBuf.length !== uyvySize) {
-        output._uyvyBuf = Buffer.alloc(uyvySize);
-      }
-
-      this._bgraToUyvy(frameBuffer, width, height, output._uyvyBuf, outW, outH);
-
       const ticksPerFrame = output._frameRate[0] || 1001;
 
       const nextFrameNum = output.framesSent + 1;
@@ -446,17 +479,13 @@ class DeckLinkManager extends EventEmitter {
       const shouldLog = output.framesSent <= 5 || output.framesSent % 300 === 0 || output.framesSent === 100 || output.framesSent === 200;
       if (shouldLog) {
         const remLen = output._audioRemainder ? output._audioRemainder.length / 4 : 0;
-        let hexSnip = '';
-        if ((output.framesSent <= 10 || output.framesSent === 100 || output.framesSent === 200) && audioBuf.length >= 8) {
-          hexSnip = ' hex=' + audioBuf.slice(0, 32).toString('hex');
-        }
         let hwInfo = '';
-        if (output.framesSent === 100 || output.framesSent === 200) {
+        if (output.framesSent === 5 || output.framesSent === 100 || output.framesSent === 200) {
           try {
             hwInfo = ` hwAudioBuf=${output.playback.bufferedAudioFrames()} hwVideoBuf=${output.playback.bufferedFrames()}`;
           } catch (e) {}
         }
-        console.log(`[DeckLink] Frame #${output.framesSent} dev=${deviceIndex} audio=${audioBuf.length}B samples=${audioSampleFrameCount} rem=${remLen} totalOut=${output._audioTotalOut}${hexSnip}${hwInfo}`);
+        console.log(`[DeckLink] Frame #${output.framesSent} dev=${deviceIndex} audio=${audioBuf.length}B samples=${audioSampleFrameCount} rem=${remLen} totalOut=${output._audioTotalOut}${hwInfo}`);
       }
     } catch (err) {
       if (!output._videoErrorLogged) {
