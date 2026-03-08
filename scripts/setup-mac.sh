@@ -258,6 +258,19 @@ else
         echo "  Building decklink-output-addon (direct DeckLink SDK)..."
         cd "$DECKLINK_ADDON_DIR"
 
+        if [ ! -f "src/DeckLinkAPIDispatch.cpp" ] && [ -f "$DECKLINK_HEADERS/DeckLinkAPIDispatch.cpp" ]; then
+            cp "$DECKLINK_HEADERS/DeckLinkAPIDispatch.cpp" src/
+        fi
+        if [ ! -f "src/DeckLinkAPIDispatch.cpp" ] && [ -n "$SDK_INCLUDE" ] && [ -f "$SDK_INCLUDE/DeckLinkAPIDispatch.cpp" ]; then
+            cp "$SDK_INCLUDE/DeckLinkAPIDispatch.cpp" src/
+        fi
+        if [ ! -f "src/DeckLinkAPIDispatch.cpp" ]; then
+            DISPATCH_FILE=$(find /Users/debo/Downloads /Users/debo/Documents "$HOME/Downloads" "$HOME/Documents" -maxdepth 6 -name "DeckLinkAPIDispatch.cpp" -type f 2>/dev/null | head -1)
+            if [ -n "$DISPATCH_FILE" ]; then
+                cp "$DISPATCH_FILE" src/
+            fi
+        fi
+
         npm install --ignore-scripts 2>/dev/null || true
 
         PYTHON="$PYTHON_PATH" npx node-gyp rebuild 2>&1 || {

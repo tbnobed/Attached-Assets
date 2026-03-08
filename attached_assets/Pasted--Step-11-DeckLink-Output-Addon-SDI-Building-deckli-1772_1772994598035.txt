@@ -1,0 +1,61 @@
+[Step 11] DeckLink Output Addon (SDI)
+--------------------------------------------
+  Building decklink-output-addon (direct DeckLink SDK)...
+
+added 100 packages, and audited 101 packages in 369ms
+
+14 packages are looking for funding
+  run `npm fund` for details
+
+4 high severity vulnerabilities
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+gyp info it worked if it ends with ok
+gyp info using node-gyp@10.3.1
+gyp info using node@20.20.1 | darwin | arm64
+gyp info find Python using Python version 3.12.13 found at "/opt/homebrew/opt/python@3.12/bin/python3.12"
+
+gyp info spawn /opt/homebrew/opt/python@3.12/bin/python3.12
+gyp info spawn args [
+gyp info spawn args '/Users/debo/Documents/Attached-Assets/decklink-output-addon/node_modules/node-gyp/gyp/gyp_main.py',
+gyp info spawn args 'binding.gyp',
+gyp info spawn args '-f',
+gyp info spawn args 'make',
+gyp info spawn args '-I',
+gyp info spawn args '/Users/debo/Documents/Attached-Assets/decklink-output-addon/build/config.gypi',
+gyp info spawn args '-I',
+gyp info spawn args '/Users/debo/Documents/Attached-Assets/decklink-output-addon/node_modules/node-gyp/addon.gypi',
+gyp info spawn args '-I',
+gyp info spawn args '/Users/debo/Library/Caches/node-gyp/20.20.1/include/node/common.gypi',
+gyp info spawn args '-Dlibrary=shared_library',
+gyp info spawn args '-Dvisibility=default',
+gyp info spawn args '-Dnode_root_dir=/Users/debo/Library/Caches/node-gyp/20.20.1',
+gyp info spawn args '-Dnode_gyp_dir=/Users/debo/Documents/Attached-Assets/decklink-output-addon/node_modules/node-gyp',
+gyp info spawn args '-Dnode_lib_file=/Users/debo/Library/Caches/node-gyp/20.20.1/<(target_arch)/node.lib',
+gyp info spawn args '-Dmodule_root_dir=/Users/debo/Documents/Attached-Assets/decklink-output-addon',
+gyp info spawn args '-Dnode_engine=v8',
+gyp info spawn args '--depth=.',
+gyp info spawn args '--no-parallel',
+gyp info spawn args '--generator-output',
+gyp info spawn args 'build',
+gyp info spawn args '-Goutput_dir=.'
+gyp info spawn args ]
+gyp info spawn make
+gyp info spawn args [ 'BUILDTYPE=Release', '-C', 'build' ]
+  CXX(target) Release/obj.target/decklink_output/src/decklink_output.o
+make: *** No rule to make target `Release/obj.target/decklink_output//Library/Frameworks/DeckLinkAPI.framework/Headers/DeckLinkAPIDispatch.o', needed by `Release/decklink_output.node'.  Stop.
+gyp ERR! build error 
+gyp ERR! stack Error: `make` failed with exit code: 2
+gyp ERR! stack at ChildProcess.<anonymous> (/Users/debo/Documents/Attached-Assets/decklink-output-addon/node_modules/node-gyp/lib/build.js:216:23)
+gyp ERR! System Darwin 24.3.0
+gyp ERR! command "/opt/homebrew/Cellar/node@20/20.20.1/bin/node" "/Users/debo/Documents/Attached-Assets/decklink-output-addon/node_modules/.bin/node-gyp" "rebuild"
+gyp ERR! cwd /Users/debo/Documents/Attached-Assets/decklink-output-addon
+gyp ERR! node -v v20.20.1
+gyp ERR! node-gyp -v v10.3.1
+gyp ERR! not ok 
+  DeckLink addon build failed — SDI output will be unavailable
+  decklink_output.node not produced — DeckLink features disabled
+
