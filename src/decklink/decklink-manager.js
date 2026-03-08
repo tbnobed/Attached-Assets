@@ -288,6 +288,8 @@ class DeckLinkManager extends EventEmitter {
   }
 
   async _pumpFrameLoop(deviceIndex, output) {
+    const maxSamplesPerWrite = Math.round(48000 / output._exactFps) * 2;
+
     while (output._pumpRunning && output.active && output.handle !== undefined) {
       if (!output._uyvyBuf || !output._hasFrame) {
         await new Promise(r => setTimeout(r, 5));
@@ -295,8 +297,6 @@ class DeckLinkManager extends EventEmitter {
       }
 
       try {
-        const samplesPerFrame = Math.round(48000 / output._exactFps);
-
         const parts = [];
         if (output._audioRemainder) {
           parts.push(output._audioRemainder);
@@ -307,25 +307,23 @@ class DeckLinkManager extends EventEmitter {
         }
         output._audioPendingBufs = [];
 
-        const allAudio = parts.length > 0 ? Buffer.concat(parts) : Buffer.alloc(0);
-        const bytesNeeded = samplesPerFrame * 4;
+        let allAudio = parts.length > 0 ? Buffer.concat(parts) : null;
 
         let audioBuf;
-        if (allAudio.length >= bytesNeeded) {
-          audioBuf = Buffer.alloc(bytesNeeded);
-          allAudio.copy(audioBuf, 0, 0, bytesNeeded);
-          if (allAudio.length > bytesNeeded) {
-            const rem = Buffer.alloc(allAudio.length - bytesNeeded);
-            allAudio.copy(rem, 0, bytesNeeded);
-            output._audioRemainder = rem;
+        if (allAudio && allAudio.length > 0) {
+          const maxBytes = maxSamplesPerWrite * 4;
+          if (allAudio.length > maxBytes) {
+            audioBuf = allAudio.subarray(0, maxBytes);
+            output._audioRemainder = Buffer.from(allAudio.subarray(maxBytes));
+          } else {
+            audioBuf = allAudio;
           }
-        } else if (allAudio.length > 0) {
-          audioBuf = Buffer.alloc(bytesNeeded);
-          allAudio.copy(audioBuf, 0, 0, allAudio.length);
         } else {
-          audioBuf = Buffer.alloc(bytesNeeded);
+          audioBuf = Buffer.alloc(0);
         }
-        output._audioTotalOut += samplesPerFrame;
+
+        const samplesSent = Math.floor(audioBuf.length / 4);
+        output._audioTotalOut += samplesSent;
 
         const result = await decklink.displayFrame(output.handle, output._uyvyBuf, audioBuf);
 
@@ -334,7 +332,7 @@ class DeckLinkManager extends EventEmitter {
         if (shouldLog) {
           const remLen = output._audioRemainder ? output._audioRemainder.length / 4 : 0;
           const written = result ? result.samplesWritten : '?';
-          console.log(`[DeckLink] Frame #${output.framesSent} dev=${deviceIndex} audio=${audioBuf.length}B samples=${samplesPerFrame} written=${written} rem=${remLen} totalOut=${output._audioTotalOut}`);
+          console.log(`[DeckLink] Frame #${output.framesSent} dev=${deviceIndex} audio=${audioBuf.length}B samples=${samplesSent} written=${written} rem=${remLen} totalOut=${output._audioTotalOut}`);
         }
       } catch (err) {
         if (!output._videoErrorLogged) {
