@@ -104,9 +104,7 @@ function setupIpcHandlers(ipcMain, context) {
     }
     const recorder = recorderManager.startRecording(
       userId,
-      participant.displayName,
-      settings.video.targetWidth,
-      settings.video.targetHeight
+      participant.displayName
     );
     return { success: !!recorder };
   });
@@ -123,9 +121,7 @@ function setupIpcHandlers(ipcMain, context) {
       if (!recorderManager.isRecording(p.userId)) {
         const recorder = recorderManager.startRecording(
           p.userId,
-          p.displayName,
-          settings.video.targetWidth,
-          settings.video.targetHeight
+          p.displayName
         );
         if (recorder) started++;
       }

@@ -36,7 +36,7 @@ class RecorderManager extends EventEmitter {
     return `${safeName}_${timestamp}.mp4`;
   }
 
-  startRecording(userId, displayName, width, height) {
+  startRecording(userId, displayName) {
     if (!this.ffmpegAvailable) {
       this.emit('recording-error', { userId, displayName, error: 'FFmpeg not found' });
       return null;
@@ -49,12 +49,35 @@ class RecorderManager extends EventEmitter {
 
     const filename = this._generateFilename(displayName);
     const filepath = path.join(this.outputDir, filename);
-    const { recording, audio } = this.settings;
 
+    const recorder = {
+      userId,
+      displayName,
+      filename,
+      filepath,
+      ffmpeg: null,
+      startedAt: Date.now(),
+      frameCount: 0,
+      audioChunks: 0,
+      fileSize: 0,
+      active: true,
+      width: 0,
+      height: 0,
+      pendingAudio: [],
+    };
+
+    this.recorders.set(userId, recorder);
+    this.emit('recording-started', { userId, displayName, filename, filepath });
+    console.log(`[Recorder] Recording queued for ${displayName}: ${filename} (waiting for first frame)`);
+    return recorder;
+  }
+
+  _spawnFfmpeg(recorder, width, height) {
+    const { recording, audio } = this.settings;
     const ffmpegArgs = [
       '-y',
       '-f', 'rawvideo',
-      '-pix_fmt', 'rgba',
+      '-pix_fmt', 'bgra',
       '-s', `${width}x${height}`,
       '-r', String(this.settings.video.frameRate),
       '-i', 'pipe:0',
@@ -69,7 +92,7 @@ class RecorderManager extends EventEmitter {
       '-c:a', recording.audioCodec,
       '-b:a', recording.audioBitrate,
       '-movflags', '+faststart',
-      filepath,
+      recorder.filepath,
     ];
 
     try {
@@ -77,63 +100,60 @@ class RecorderManager extends EventEmitter {
         stdio: ['pipe', 'pipe', 'pipe', 'pipe'],
       });
 
-      const recorder = {
-        userId,
-        displayName,
-        filename,
-        filepath,
-        ffmpeg,
-        startedAt: Date.now(),
-        frameCount: 0,
-        audioChunks: 0,
-        fileSize: 0,
-        active: true,
-        width,
-        height,
-      };
+      recorder.ffmpeg = ffmpeg;
+      recorder.width = width;
+      recorder.height = height;
 
       ffmpeg.stderr.on('data', (data) => {
         const msg = data.toString();
         if (msg.includes('Error') || msg.includes('error')) {
-          console.error(`[Recorder] FFmpeg error for ${displayName}:`, msg);
+          console.error(`[Recorder] FFmpeg error for ${recorder.displayName}:`, msg);
         }
       });
 
       ffmpeg.on('close', (code) => {
-        console.log(`[Recorder] FFmpeg closed for ${displayName} with code ${code}`);
+        console.log(`[Recorder] FFmpeg closed for ${recorder.displayName} with code ${code}`);
         recorder.active = false;
-        this.recorders.delete(userId);
+        this.recorders.delete(recorder.userId);
 
         try {
-          const stats = fs.statSync(filepath);
+          const stats = fs.statSync(recorder.filepath);
           recorder.fileSize = stats.size;
         } catch (e) {}
 
         this.emit('recording-stopped', {
-          userId,
-          displayName,
-          filename,
-          filepath,
+          userId: recorder.userId,
+          displayName: recorder.displayName,
+          filename: recorder.filename,
+          filepath: recorder.filepath,
           duration: Date.now() - recorder.startedAt,
           fileSize: recorder.fileSize,
         });
       });
 
       ffmpeg.on('error', (err) => {
-        console.error(`[Recorder] FFmpeg process error for ${displayName}:`, err);
+        console.error(`[Recorder] FFmpeg process error for ${recorder.displayName}:`, err);
         recorder.active = false;
-        this.recorders.delete(userId);
-        this.emit('recording-error', { userId, displayName, error: err.message });
+        this.recorders.delete(recorder.userId);
+        this.emit('recording-error', { userId: recorder.userId, displayName: recorder.displayName, error: err.message });
       });
 
-      this.recorders.set(userId, recorder);
-      this.emit('recording-started', { userId, displayName, filename, filepath });
-      console.log(`[Recorder] Started recording for ${displayName}: ${filename}`);
-      return recorder;
+      if (recorder.pendingAudio.length > 0) {
+        const audioStream = ffmpeg.stdio[3];
+        if (audioStream && audioStream.writable) {
+          for (const buf of recorder.pendingAudio) {
+            audioStream.write(buf);
+          }
+        }
+        recorder.pendingAudio = [];
+      }
+
+      console.log(`[Recorder] FFmpeg started for ${recorder.displayName}: ${width}x${height} bgra`);
     } catch (err) {
-      console.error(`[Recorder] Failed to start recording for ${displayName}:`, err);
-      this.emit('recording-error', { userId, displayName, error: err.message });
-      return null;
+      console.error(`[Recorder] Failed to spawn FFmpeg for ${recorder.displayName}:`, err);
+      recorder.active = false;
+      this.recorders.delete(recorder.userId);
+      this.emit('recording-error', { userId: recorder.userId, displayName: recorder.displayName, error: err.message });
     }
   }
 
@@ -142,6 +162,17 @@ class RecorderManager extends EventEmitter {
     if (!recorder) return null;
 
     recorder.active = false;
+    recorder.pendingAudio = [];
+
+    if (!recorder.ffmpeg) {
+      this.recorders.delete(userId);
+      this.emit('recording-stopped', {
+        userId, displayName: recorder.displayName,
+        filename: recorder.filename, filepath: recorder.filepath,
+        duration: Date.now() - recorder.startedAt, fileSize: 0,
+      });
+      return recorder;
+    }
 
     try {
       if (recorder.ffmpeg.stdin.writable) {
@@ -160,9 +191,16 @@ class RecorderManager extends EventEmitter {
     return recorder;
   }
 
-  writeVideoFrame(userId, frameBuffer) {
+  writeVideoFrame(userId, frameBuffer, width, height) {
     const recorder = this.recorders.get(userId);
     if (!recorder || !recorder.active) return false;
+
+    if (!recorder.ffmpeg) {
+      if (width && height) {
+        this._spawnFfmpeg(recorder, width, height);
+      }
+      if (!recorder.ffmpeg) return false;
+    }
 
     try {
       if (recorder.ffmpeg.stdin.writable) {
@@ -179,6 +217,13 @@ class RecorderManager extends EventEmitter {
   writeAudioData(userId, audioBuffer) {
     const recorder = this.recorders.get(userId);
     if (!recorder || !recorder.active) return false;
+
+    if (!recorder.ffmpeg) {
+      if (recorder.pendingAudio.length < 500) {
+        recorder.pendingAudio.push(Buffer.from(audioBuffer));
+      }
+      return true;
+    }
 
     try {
       const audioStream = recorder.ffmpeg.stdio[3];

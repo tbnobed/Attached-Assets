@@ -117,7 +117,7 @@ function initManagers() {
   streamHandler.on('video-frame', ({ userId, frameData }) => {
     ndiManager.sendVideoFrame(userId, frameData.buffer, frameData.width, frameData.height);
     deckLinkManager.sendVideoFrame(userId, frameData.buffer, frameData.width, frameData.height);
-    recorderManager.writeVideoFrame(userId, frameData.buffer);
+    recorderManager.writeVideoFrame(userId, frameData.buffer, frameData.width, frameData.height);
 
     const now = Date.now();
     const lastSent = previewThrottle.get(userId) || 0;
