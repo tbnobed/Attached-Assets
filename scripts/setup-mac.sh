@@ -214,62 +214,96 @@ else
     DECKLINK_FW="/Library/Frameworks/DeckLinkAPI.framework"
     DECKLINK_HEADERS="$DECKLINK_FW/Headers"
 
-    if [ ! -f "$DECKLINK_HEADERS/DeckLinkAPI.h" ]; then
-        echo "  DeckLink SDK headers not in framework — searching for SDK..."
-        SDK_INCLUDE=""
+    echo "  Searching for DeckLink SDK..."
+    SDK_INCLUDE=""
+    FOUND=$(find /Users/debo/Downloads /Users/debo/Documents "$HOME/Downloads" "$HOME/Documents" /Users/Shared -maxdepth 6 -name "DeckLinkAPI.h" -type f 2>/dev/null | head -1)
+    if [ -n "$FOUND" ]; then
+        SDK_INCLUDE="$(dirname "$FOUND")"
+        echo "  Found SDK at: $SDK_INCLUDE"
+    fi
 
-        FOUND=$(find /Users/debo/Downloads -maxdepth 5 -name "DeckLinkAPI.h" -type f 2>/dev/null | head -1)
-        if [ -z "$FOUND" ]; then
-            FOUND=$(find /Users/debo/Documents -maxdepth 5 -name "DeckLinkAPI.h" -type f 2>/dev/null | head -1)
-        fi
-        if [ -z "$FOUND" ]; then
-            FOUND=$(find "$HOME/Downloads" -maxdepth 5 -name "DeckLinkAPI.h" -type f 2>/dev/null | head -1)
-        fi
-        if [ -z "$FOUND" ]; then
-            FOUND=$(find "$HOME/Documents" -maxdepth 5 -name "DeckLinkAPI.h" -type f 2>/dev/null | head -1)
-        fi
-        if [ -z "$FOUND" ]; then
-            FOUND=$(find /Users/Shared -maxdepth 5 -name "DeckLinkAPI.h" -type f 2>/dev/null | head -1)
-        fi
-
-        if [ -n "$FOUND" ]; then
-            SDK_INCLUDE="$(dirname "$FOUND")"
-            echo "  Found SDK headers at: $SDK_INCLUDE"
-            echo "  Copying DeckLink SDK headers into framework..."
-            sudo mkdir -p "$DECKLINK_HEADERS"
-            sudo cp "$SDK_INCLUDE"/*.h "$DECKLINK_HEADERS/" 2>/dev/null || true
-            sudo cp "$SDK_INCLUDE"/*.cpp "$DECKLINK_HEADERS/" 2>/dev/null || true
-            if [ -f "$DECKLINK_HEADERS/DeckLinkAPI.h" ]; then
-                echo -e "${GREEN}  Copied SDK headers to $DECKLINK_HEADERS${NC}"
-            else
-                echo -e "${YELLOW}  Copy failed — try manually: sudo cp \"$SDK_INCLUDE\"/*.h \"$DECKLINK_HEADERS/\"${NC}"
-            fi
+    if [ ! -f "$DECKLINK_HEADERS/DeckLinkAPI.h" ] && [ -n "$SDK_INCLUDE" ]; then
+        echo "  Copying DeckLink SDK headers into framework..."
+        sudo mkdir -p "$DECKLINK_HEADERS"
+        sudo cp "$SDK_INCLUDE"/*.h "$DECKLINK_HEADERS/" 2>/dev/null || true
+        sudo cp "$SDK_INCLUDE"/*.cpp "$DECKLINK_HEADERS/" 2>/dev/null || true
+        if [ -f "$DECKLINK_HEADERS/DeckLinkAPI.h" ]; then
+            echo -e "${GREEN}  Copied SDK headers to $DECKLINK_HEADERS${NC}"
+        else
+            echo -e "${YELLOW}  Copy to framework failed — will use SDK path directly${NC}"
         fi
     fi
 
-    if [ ! -d "$DECKLINK_FW" ]; then
-        echo -e "${YELLOW}  DeckLinkAPI.framework not installed — DeckLink output will be unavailable${NC}"
-        echo -e "${YELLOW}  Install Blackmagic Desktop Video from https://www.blackmagicdesign.com/support${NC}"
-    elif [ ! -f "$DECKLINK_HEADERS/DeckLinkAPI.h" ]; then
-        echo -e "${YELLOW}  DeckLink SDK headers not found at $DECKLINK_HEADERS${NC}"
+    INCLUDE_PATH="$DECKLINK_HEADERS"
+    if [ ! -f "$INCLUDE_PATH/DeckLinkAPI.h" ] && [ -n "$SDK_INCLUDE" ]; then
+        INCLUDE_PATH="$SDK_INCLUDE"
+    fi
+
+    if [ ! -f "$INCLUDE_PATH/DeckLinkAPI.h" ]; then
+        echo -e "${YELLOW}  DeckLink SDK headers not found — DeckLink output will be unavailable${NC}"
         echo -e "${YELLOW}  Download the DeckLink SDK from https://www.blackmagicdesign.com/developer/product/decklink${NC}"
-        echo -e "${YELLOW}  Then copy Mac/include/*.h into $DECKLINK_HEADERS/${NC}"
     else
         echo "  Building decklink-output-addon (direct DeckLink SDK)..."
+        echo "  Using headers from: $INCLUDE_PATH"
         cd "$DECKLINK_ADDON_DIR"
 
-        if [ ! -f "src/DeckLinkAPIDispatch.cpp" ] && [ -f "$DECKLINK_HEADERS/DeckLinkAPIDispatch.cpp" ]; then
-            cp "$DECKLINK_HEADERS/DeckLinkAPIDispatch.cpp" src/
-        fi
-        if [ ! -f "src/DeckLinkAPIDispatch.cpp" ] && [ -n "$SDK_INCLUDE" ] && [ -f "$SDK_INCLUDE/DeckLinkAPIDispatch.cpp" ]; then
-            cp "$SDK_INCLUDE/DeckLinkAPIDispatch.cpp" src/
-        fi
         if [ ! -f "src/DeckLinkAPIDispatch.cpp" ]; then
-            DISPATCH_FILE=$(find /Users/debo/Downloads /Users/debo/Documents "$HOME/Downloads" "$HOME/Documents" -maxdepth 6 -name "DeckLinkAPIDispatch.cpp" -type f 2>/dev/null | head -1)
-            if [ -n "$DISPATCH_FILE" ]; then
-                cp "$DISPATCH_FILE" src/
+            if [ -f "$INCLUDE_PATH/DeckLinkAPIDispatch.cpp" ]; then
+                cp "$INCLUDE_PATH/DeckLinkAPIDispatch.cpp" src/
+                echo "  Copied DeckLinkAPIDispatch.cpp into addon src/"
+            elif [ -n "$SDK_INCLUDE" ] && [ -f "$SDK_INCLUDE/DeckLinkAPIDispatch.cpp" ]; then
+                cp "$SDK_INCLUDE/DeckLinkAPIDispatch.cpp" src/
+                echo "  Copied DeckLinkAPIDispatch.cpp into addon src/"
+            else
+                echo -e "${YELLOW}  DeckLinkAPIDispatch.cpp not found — build may fail${NC}"
             fi
         fi
+
+        BINDING_GYP_INCLUDE="$INCLUDE_PATH"
+        cat > binding_override.gyp.tmp <<GYPI_EOF
+{
+  "targets": [
+    {
+      "target_name": "decklink_output",
+      "cflags!": ["-fno-exceptions"],
+      "cflags_cc!": ["-fno-exceptions"],
+      "sources": [
+        "src/decklink_output.mm",
+        "src/DeckLinkAPIDispatch.cpp"
+      ],
+      "include_dirs": [
+        "<!@(node -p \\"require('node-addon-api').include\\")"
+      ],
+      "defines": ["NAPI_DISABLE_CPP_EXCEPTIONS"],
+      "conditions": [
+        ["OS=='mac'", {
+          "include_dirs": [
+            "$BINDING_GYP_INCLUDE"
+          ],
+          "xcode_settings": {
+            "GCC_ENABLE_CPP_EXCEPTIONS": "YES",
+            "CLANG_CXX_LIBRARY": "libc++",
+            "MACOSX_DEPLOYMENT_TARGET": "10.15",
+            "GCC_INPUT_FILETYPE": "sourcecode.cpp.objcpp",
+            "OTHER_CPLUSPLUSFLAGS": [
+              "-x", "objective-c++",
+              "-std=c++17",
+              "-fobjc-arc"
+            ],
+            "OTHER_LDFLAGS": [
+              "-framework", "CoreFoundation"
+            ]
+          },
+          "libraries": [
+            "-framework CoreFoundation"
+          ]
+        }]
+      ]
+    }
+  ]
+}
+GYPI_EOF
+        mv binding_override.gyp.tmp binding.gyp
 
         npm install --ignore-scripts 2>/dev/null || true
 
