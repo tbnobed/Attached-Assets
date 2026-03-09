@@ -11,10 +11,12 @@ if [ ! -f "$INPUT" ]; then
     exit 1
 fi
 
-if [ -f "$OUTPUT" ]; then
-    echo "icon.icns already exists at $OUTPUT"
+if [ -f "$OUTPUT" ] && [ "$OUTPUT" -nt "$INPUT" ]; then
+    echo "icon.icns is up to date at $OUTPUT"
     exit 0
 fi
+
+rm -f "$OUTPUT"
 
 rm -rf "$ICONSET"
 mkdir -p "$ICONSET"
