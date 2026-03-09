@@ -147,6 +147,10 @@ FRAMEWORKS="$CONTENTS/Frameworks"
 export DYLD_LIBRARY_PATH="$APP_DIR/node_modules/grandiose/build/Release:$DYLD_LIBRARY_PATH"
 export DYLD_FRAMEWORK_PATH="$FRAMEWORKS:$DYLD_FRAMEWORK_PATH"
 
+for p in /opt/homebrew/bin /usr/local/bin /opt/homebrew/sbin /usr/local/sbin; do
+    [ -d "$p" ] && export PATH="$p:$PATH"
+done
+
 exec "$DIR/ZoomLink_electron" "$APP_DIR" --no-sandbox --disable-gpu-sandbox "$@"
 LAUNCHEOF
 chmod +x "$LAUNCHER"

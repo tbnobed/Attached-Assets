@@ -9,18 +9,26 @@ class RecorderManager extends EventEmitter {
     this.settings = settings;
     this.recorders = new Map();
     this.outputDir = '';
-    this.ffmpegAvailable = this._checkFfmpeg();
+    this.ffmpegPath = this._findFfmpeg();
+    this.ffmpegAvailable = !!this.ffmpegPath;
   }
 
-  _checkFfmpeg() {
-    try {
-      execSync('ffmpeg -version', { stdio: 'pipe' });
-      console.log('[Recorder] FFmpeg found');
-      return true;
-    } catch (err) {
-      console.error('[Recorder] FFmpeg not found - recording disabled');
-      return false;
+  _findFfmpeg() {
+    const candidates = [
+      'ffmpeg',
+      '/opt/homebrew/bin/ffmpeg',
+      '/usr/local/bin/ffmpeg',
+      '/usr/bin/ffmpeg',
+    ];
+    for (const candidate of candidates) {
+      try {
+        execSync(`"${candidate}" -version`, { stdio: 'pipe' });
+        console.log(`[Recorder] FFmpeg found: ${candidate}`);
+        return candidate;
+      } catch (_) {}
     }
+    console.error('[Recorder] FFmpeg not found - recording disabled');
+    return null;
   }
 
   setOutputDir(dir) {
@@ -96,7 +104,7 @@ class RecorderManager extends EventEmitter {
     ];
 
     try {
-      const ffmpeg = spawn('ffmpeg', ffmpegArgs, {
+      const ffmpeg = spawn(this.ffmpegPath, ffmpegArgs, {
         stdio: ['pipe', 'pipe', 'pipe', 'pipe'],
       });
 
