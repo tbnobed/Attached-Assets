@@ -126,6 +126,11 @@ npm run build-app
 ```
 Creates `dist/ZoomLink.app` — a double-clickable macOS app bundle. The setup script runs this automatically. Drag to /Applications to install.
 
+```
+npm run create-dmg
+```
+Creates `dist/ZoomLink-Installer.dmg` — a distributable macOS disk image with drag-to-Applications layout. Setup script builds this automatically after the .app.
+
 ## Quick Setup (Windows)
 ```
 node scripts/install-zoom-sdk.js "C:\path\to\zoom-sdk\x64"

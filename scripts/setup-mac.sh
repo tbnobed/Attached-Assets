@@ -488,11 +488,18 @@ if [ "$ALL_OK" = true ]; then
     bash "$SCRIPT_DIR/build-app.sh" || fail "ZoomLink.app build failed"
 
     echo ""
+    echo -e "${CYAN}  Creating ZoomLink installer DMG...${NC}"
+    bash "$SCRIPT_DIR/create-dmg.sh" || echo -e "${YELLOW}  DMG creation skipped (non-fatal)${NC}"
+
+    echo ""
     echo "  To run from Terminal:"
     echo "    cd $PROJECT_DIR && npm start"
     echo ""
     echo "  Or use the app bundle:"
     echo "    open $PROJECT_DIR/dist/ZoomLink.app"
+    echo ""
+    echo "  Or share the installer:"
+    echo "    $PROJECT_DIR/dist/ZoomLink-Installer.dmg"
     echo ""
     echo "  To install permanently, drag dist/ZoomLink.app to /Applications"
     echo ""
