@@ -11,6 +11,7 @@
       ],
       "include_dirs": [
         "<!@(node -p \"require('node-addon-api').include\")",
+        "<!(node -e \"console.log(require('path').resolve(__dirname, 'sdk-include'))\")",
         "/usr/include",
         "/usr/local/include"
       ],

@@ -125,34 +125,76 @@ npm install 2>&1 || {
 echo ""
 echo -e "${CYAN}[5/7] Checking DeckLink SDK...${NC}"
 
-DECKLINK_HEADER=""
-SEARCH_PATHS=(
-    "/usr/include/DeckLinkAPI.h"
-    "/usr/local/include/DeckLinkAPI.h"
-    "/opt/decklink/include/DeckLinkAPI.h"
-)
+DECKLINK_SDK_INCLUDE=""
 
-for p in "${SEARCH_PATHS[@]}"; do
-    if [ -f "$p" ]; then
-        DECKLINK_HEADER="$p"
-        break
+if [ -n "$DECKLINK_SDK_PATH" ]; then
+    if [ -f "$DECKLINK_SDK_PATH/DeckLinkAPI.h" ]; then
+        DECKLINK_SDK_INCLUDE="$DECKLINK_SDK_PATH"
+        echo -e "  DeckLink SDK found via DECKLINK_SDK_PATH: $DECKLINK_SDK_INCLUDE"
+    elif [ -d "$DECKLINK_SDK_PATH/Linux/include" ] && [ -f "$DECKLINK_SDK_PATH/Linux/include/DeckLinkAPI.h" ]; then
+        DECKLINK_SDK_INCLUDE="$DECKLINK_SDK_PATH/Linux/include"
+        echo -e "  DeckLink SDK found via DECKLINK_SDK_PATH: $DECKLINK_SDK_INCLUDE"
+    else
+        echo -e "${YELLOW}  DECKLINK_SDK_PATH set but DeckLinkAPI.h not found there${NC}"
+        echo "  Searched: $DECKLINK_SDK_PATH"
+        echo "            $DECKLINK_SDK_PATH/Linux/include"
     fi
-done
+fi
 
-if [ -z "$DECKLINK_HEADER" ]; then
-    echo -e "${YELLOW}  DeckLink SDK headers not found in standard locations.${NC}"
+if [ -z "$DECKLINK_SDK_INCLUDE" ]; then
+    SYSTEM_PATHS=(
+        "/usr/include"
+        "/usr/local/include"
+        "/opt/decklink/include"
+    )
+    for p in "${SYSTEM_PATHS[@]}"; do
+        if [ -f "$p/DeckLinkAPI.h" ]; then
+            DECKLINK_SDK_INCLUDE="$p"
+            echo -e "  DeckLink SDK found: $p/DeckLinkAPI.h"
+            break
+        fi
+    done
+fi
+
+if [ -z "$DECKLINK_SDK_INCLUDE" ]; then
+    echo "  Searching common download locations..."
+    DOWNLOAD_PATTERNS=(
+        "$HOME/Downloads/Blackmagic_DeckLink_SDK_*/Blackmagic DeckLink SDK */Linux/include"
+        "$HOME/Downloads/Blackmagic_DeckLink_SDK*/Linux/include"
+        "$HOME/Desktop/Blackmagic_DeckLink_SDK_*/Blackmagic DeckLink SDK */Linux/include"
+        "/tmp/Blackmagic_DeckLink_SDK_*/Blackmagic DeckLink SDK */Linux/include"
+    )
+    for pattern in "${DOWNLOAD_PATTERNS[@]}"; do
+        for d in $pattern; do
+            if [ -f "$d/DeckLinkAPI.h" ]; then
+                DECKLINK_SDK_INCLUDE="$d"
+                echo -e "  DeckLink SDK found: $d"
+                break 2
+            fi
+        done
+    done
+fi
+
+if [ -z "$DECKLINK_SDK_INCLUDE" ]; then
+    echo -e "${YELLOW}  DeckLink SDK headers not found.${NC}"
     echo ""
-    echo "  To install DeckLink support:"
-    echo "    1. Download Blackmagic Desktop Video from:"
-    echo "       https://www.blackmagicdesign.com/support/download/deb"
-    echo "    2. Install: sudo dpkg -i desktopvideo_*.deb"
-    echo "    3. The SDK headers will be installed to /usr/include/"
-    echo "    4. Re-run this script to build the DeckLink addon"
+    echo "  To install DeckLink support, provide the SDK path:"
+    echo ""
+    echo "    DECKLINK_SDK_PATH=~/Downloads/Blackmagic_DeckLink_SDK_15.2 bash install.sh"
+    echo ""
+    echo "  The path should point to either:"
+    echo "    - The extracted SDK root (containing Linux/include/)"
+    echo "    - Or directly to the include/ folder with DeckLinkAPI.h"
+    echo ""
+    echo "  Download the SDK from:"
+    echo "    https://www.blackmagicdesign.com/developer/product/decklink"
+    echo ""
+    echo "  Also install Desktop Video drivers:"
+    echo "    sudo dpkg -i desktopvideo_*.deb"
     echo ""
     echo -e "${YELLOW}  Continuing without DeckLink support...${NC}"
     SKIP_DECKLINK=1
 else
-    echo -e "  DeckLink SDK found: $DECKLINK_HEADER"
     SKIP_DECKLINK=0
 fi
 
@@ -162,27 +204,27 @@ echo -e "${CYAN}[6/7] Building DeckLink addon...${NC}"
 if [ "$SKIP_DECKLINK" = "1" ]; then
     echo -e "${YELLOW}  Skipped (DeckLink SDK not found)${NC}"
 else
-    DISPATCH_CPP="$SCRIPT_DIR/decklink-addon/src/DeckLinkAPIDispatch.cpp"
-    if [ ! -f "$DISPATCH_CPP" ]; then
-        DISPATCH_SRC=""
-        for d in /usr/include /usr/local/include /opt/decklink/include; do
-            if [ -f "$d/DeckLinkAPIDispatch.cpp" ]; then
-                DISPATCH_SRC="$d/DeckLinkAPIDispatch.cpp"
-                break
-            fi
-        done
+    ADDON_SRC="$SCRIPT_DIR/decklink-addon/src"
+    ADDON_INCLUDE="$SCRIPT_DIR/decklink-addon/sdk-include"
 
-        if [ -n "$DISPATCH_SRC" ]; then
-            cp "$DISPATCH_SRC" "$DISPATCH_CPP"
-            echo "  Copied DeckLinkAPIDispatch.cpp from $DISPATCH_SRC"
+    mkdir -p "$ADDON_INCLUDE"
+    echo "  Copying SDK headers from $DECKLINK_SDK_INCLUDE..."
+    cp -f "$DECKLINK_SDK_INCLUDE"/DeckLinkAPI*.h "$ADDON_INCLUDE/" 2>/dev/null || true
+    cp -f "$DECKLINK_SDK_INCLUDE"/LinuxCOM.h "$ADDON_INCLUDE/" 2>/dev/null || true
+
+    DISPATCH_CPP="$ADDON_SRC/DeckLinkAPIDispatch.cpp"
+    if [ ! -f "$DISPATCH_CPP" ]; then
+        if [ -f "$DECKLINK_SDK_INCLUDE/DeckLinkAPIDispatch.cpp" ]; then
+            cp "$DECKLINK_SDK_INCLUDE/DeckLinkAPIDispatch.cpp" "$DISPATCH_CPP"
+            echo "  Copied DeckLinkAPIDispatch.cpp"
         else
-            echo -e "${YELLOW}  DeckLinkAPIDispatch.cpp not found — addon may not build${NC}"
+            echo -e "${YELLOW}  DeckLinkAPIDispatch.cpp not found in SDK — addon may not build${NC}"
         fi
     fi
 
     cd "$SCRIPT_DIR/decklink-addon"
     npm install
-    npx node-gyp rebuild || {
+    npx node-gyp rebuild --decklink_sdk_include="$ADDON_INCLUDE" || {
         echo -e "${YELLOW}  DeckLink addon build failed (non-fatal)${NC}"
         echo "  The server will run without DeckLink output."
     }
