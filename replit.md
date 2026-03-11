@@ -28,6 +28,7 @@ Electron desktop application that bridges Zoom meetings to professional broadcas
 - `decklink-output-addon/src/decklink_output.mm` - C++ native addon wrapping DeckLink SDK directly (getDevices, openOutput, displayFrame, closeOutput)
 - `decklink-output-addon/index.js` - JS wrapper with soft-loading and BMD constant exports
 - `src/recorder/recorder-manager.js` - FFmpeg spawn and pipe management
+- `src/network/stream-client.js` - TCP client for streaming frames to Linux SDI server
 - `src/config/settings.js` - Environment variable loader
 - `src/config/user-config.js` - Persistent user config (~/Library/Application Support/ZoomLink/config.json)
 - `zoom-meeting-sdk-addon/index.js` - JS bridge for the native addon (handles DLL/dylib/framework paths per platform)
@@ -69,6 +70,18 @@ Electron desktop application that bridges Zoom meetings to professional broadcas
 - Uses `std::wstring` conversions for all SDK string parameters
 - SDK binary: `sdk.dll` + `sdk.lib`
 
+## Remote SDI (Mac→Linux TCP Client)
+- **Module**: `src/network/stream-client.js` — `RemoteSDIClient` class
+- Connects to the Linux SDI server over TCP (port 9300 default)
+- Sends BGRA video frames, PCM audio, participant join/leave, and SDI device assignments using the binary protocol from `linux-server/protocol.js`
+- Auto-reconnect with exponential backoff (up to 10 attempts)
+- Heartbeat every 5 seconds to keep connection alive
+- Back-pressure aware: drops video frames if socket can't drain fast enough
+- Wired into main.js: every video-frame and audio-data event is forwarded to the remote client alongside NDI/DeckLink/recorder
+- UI section in index.html: "Remote SDI (Linux Server)" panel with host/port input, connect/disconnect, live stats (frames sent, dropped, bytes), and per-participant device index assignment
+- IPC: `remote-sdi-connect`, `remote-sdi-disconnect`, `remote-sdi-status`, `remote-sdi-assign`, `remote-sdi-unassign`
+- Preload bridge: `remoteSDIConnect()`, `remoteSDIDisconnect()`, `remoteSDIStatus()`, `remoteSDIAssign()`, `remoteSDIUnassign()`, `onRemoteSDIStatus()`, `onRemoteSDIError()`
+
 ## Data Flow
 1. Native addon joins Zoom meeting, MEETING_STATUS_INMEETING fires
 2. Calls StartRawRecording() — macOS: `[recCtrl startRawRecording]`; Windows: `recCtrl->StartRawRecording()`
@@ -82,7 +95,7 @@ Electron desktop application that bridges Zoom meetings to professional broadcas
 10. Per-participant PCM audio → sent via ThreadSafeFunction to JS
 11. SessionManager receives frames → routes to StreamHandler
 12. StreamHandler emits video-frame/audio-data events
-13. main.js routes to NDIManager (BGRA frames → NDI sources), DeckLinkManager (BGRA→UYVY for SDI output), and RecorderManager (FFmpeg pipes)
+13. main.js routes to NDIManager (BGRA frames → NDI sources), DeckLinkManager (BGRA→UYVY for SDI output), RecorderManager (FFmpeg pipes), and RemoteSDIClient (TCP to Linux server)
 
 ## Dependencies
 - electron - Desktop app framework

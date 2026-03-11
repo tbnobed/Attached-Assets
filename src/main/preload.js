@@ -125,4 +125,20 @@ contextBridge.exposeInMainWorld('zoomISO', {
   addRecentMeeting: (meetingId, passcode, label) => ipcRenderer.invoke('add-recent-meeting', meetingId, passcode, label),
   toggleFavoriteMeeting: (meetingId, passcode, label) => ipcRenderer.invoke('toggle-favorite-meeting', meetingId, passcode, label),
   removeFavoriteMeeting: (meetingId) => ipcRenderer.invoke('remove-favorite-meeting', meetingId),
+
+  remoteSDIConnect: (host, port) => ipcRenderer.invoke('remote-sdi-connect', host, port),
+  remoteSDIDisconnect: () => ipcRenderer.invoke('remote-sdi-disconnect'),
+  remoteSDIStatus: () => ipcRenderer.invoke('remote-sdi-status'),
+  remoteSDIAssign: (userId, deviceIndex) => ipcRenderer.invoke('remote-sdi-assign', userId, deviceIndex),
+  remoteSDIUnassign: (userId) => ipcRenderer.invoke('remote-sdi-unassign', userId),
+  onRemoteSDIStatus: (callback) => {
+    const handler = (_event, data) => callback(data);
+    ipcRenderer.on('remote-sdi-status', handler);
+    return () => ipcRenderer.removeListener('remote-sdi-status', handler);
+  },
+  onRemoteSDIError: (callback) => {
+    const handler = (_event, data) => callback(data);
+    ipcRenderer.on('remote-sdi-error', handler);
+    return () => ipcRenderer.removeListener('remote-sdi-error', handler);
+  },
 });

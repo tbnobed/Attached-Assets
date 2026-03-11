@@ -858,6 +858,44 @@
     .overlay-badge.dl {
       background: var(--accent-purple);
     }
+
+    .remote-sdi-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .remote-sdi-stats {
+      display: flex;
+      gap: 16px;
+      padding: 6px 0;
+    }
+
+    .remote-sdi-assignments {
+      border-top: 1px solid var(--border);
+      padding-top: 4px;
+    }
+
+    .remote-sdi-assign-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 4px 0;
+      font-size: 12px;
+    }
+
+    .remote-sdi-assign-row .assign-name {
+      font-weight: 600;
+      min-width: 120px;
+      color: var(--text-primary);
+    }
+
+    .remote-sdi-assign-row input {
+      width: 60px;
+      padding: 3px 6px;
+      font-size: 12px;
+    }
   </style>
 </head>
 <body>
@@ -971,6 +1009,28 @@
           <button id="btnDecklinkRefresh">Refresh</button>
         </div>
         <div id="decklinkOutputList" class="decklink-output-list"></div>
+      </div>
+
+      <div class="section-title">Remote SDI (Linux Server)</div>
+      <div class="config-panel" id="remoteSDIPanel">
+        <div class="remote-sdi-controls">
+          <input type="text" id="remoteSDIHost" placeholder="Linux server IP (e.g. 192.168.1.100)" style="width:220px;" />
+          <input type="text" id="remoteSDIPort" placeholder="9300" style="width:70px;" />
+          <button class="primary" id="btnRemoteSDIConnect">Connect</button>
+          <button class="danger" id="btnRemoteSDIDisconnect" style="display:none;">Disconnect</button>
+          <span id="remoteSDIStatusBadge" class="status-badge disconnected" style="margin-left:8px;">
+            <span class="status-dot off"></span><span>Disconnected</span>
+          </span>
+        </div>
+        <div id="remoteSDIStats" class="remote-sdi-stats" style="display:none;">
+          <span class="meta-item">Frames: <strong id="remoteSDIFrames">0</strong></span>
+          <span class="meta-item">Dropped: <strong id="remoteSDIDropped">0</strong></span>
+          <span class="meta-item">Sent: <strong id="remoteSDIBytes">0 B</strong></span>
+        </div>
+        <div id="remoteSDIAssignments" class="remote-sdi-assignments" style="display:none;">
+          <div class="section-title" style="margin-top:8px;margin-bottom:6px;">Remote SDI Assignments</div>
+          <div id="remoteSDIAssignList"></div>
+        </div>
       </div>
 
       <div class="section-title">Activity Log</div>
@@ -1653,6 +1713,23 @@
         updateMeetingStatusBar('Raw recording active — capturing participant feeds. NDI auto-enabled.', 'active');
       });
 
+      window.zoomISO.onRemoteSDIStatus((info) => {
+        updateRemoteSDIUI(info);
+        if (info.state === 'connected') {
+          log(`Remote SDI: Connected to ${info.host}:${info.port}`, 'success');
+        } else if (info.state === 'disconnected') {
+          log('Remote SDI: Disconnected', 'warn');
+        } else if (info.state === 'reconnecting') {
+          log(`Remote SDI: Reconnecting (attempt ${info.attempt}/${info.maxAttempts})`, 'warn');
+        } else if (info.state === 'failed') {
+          log('Remote SDI: Connection failed — max attempts reached', 'error');
+        }
+      });
+
+      window.zoomISO.onRemoteSDIError((info) => {
+        log(`Remote SDI error: ${info.message}`, 'error');
+      });
+
       window.zoomISO.onVideoPreviewFrame(({ userId, buffer, width, height }) => {
         const canvas = document.getElementById(`preview-canvas-${userId}`);
         const placeholder = document.getElementById(`preview-placeholder-${userId}`);
@@ -1715,6 +1792,103 @@
     } else {
       log('Running without Electron IPC - display mode only', 'warn');
     }
+
+    state.remoteSDIConnected = false;
+
+    document.getElementById('btnRemoteSDIConnect').addEventListener('click', async () => {
+      const host = document.getElementById('remoteSDIHost').value.trim();
+      const port = parseInt(document.getElementById('remoteSDIPort').value.trim()) || 9300;
+      if (!host) {
+        log('Enter a Linux server IP address', 'error');
+        return;
+      }
+      log(`Remote SDI: Connecting to ${host}:${port}...`, 'info');
+      const result = await window.zoomISO.remoteSDIConnect(host, port);
+      if (!result.success) {
+        log(`Remote SDI: Connection failed — ${result.error}`, 'error');
+      }
+    });
+
+    document.getElementById('btnRemoteSDIDisconnect').addEventListener('click', async () => {
+      await window.zoomISO.remoteSDIDisconnect();
+      state.remoteSDIConnected = false;
+      updateRemoteSDIUI({ state: 'disconnected' });
+    });
+
+    function updateRemoteSDIUI(info) {
+      const badge = document.getElementById('remoteSDIStatusBadge');
+      const btnConnect = document.getElementById('btnRemoteSDIConnect');
+      const btnDisconnect = document.getElementById('btnRemoteSDIDisconnect');
+      const statsDiv = document.getElementById('remoteSDIStats');
+
+      if (info.state === 'connected') {
+        state.remoteSDIConnected = true;
+        badge.className = 'status-badge connected';
+        badge.innerHTML = '<span class="status-dot on"></span><span>Connected</span>';
+        btnConnect.style.display = 'none';
+        btnDisconnect.style.display = '';
+        statsDiv.style.display = 'flex';
+      } else if (info.state === 'reconnecting') {
+        badge.className = 'status-badge disconnected';
+        badge.innerHTML = `<span class="status-dot off"></span><span>Reconnecting ${info.attempt}/${info.maxAttempts}</span>`;
+      } else if (info.state === 'connecting') {
+        badge.className = 'status-badge disconnected';
+        badge.innerHTML = '<div class="spinner" style="width:10px;height:10px;border-width:1.5px;"></div><span>Connecting...</span>';
+      } else {
+        state.remoteSDIConnected = false;
+        badge.className = 'status-badge disconnected';
+        badge.innerHTML = '<span class="status-dot off"></span><span>Disconnected</span>';
+        btnConnect.style.display = '';
+        btnDisconnect.style.display = 'none';
+        statsDiv.style.display = 'none';
+      }
+    }
+
+    function updateRemoteSDIStats(status) {
+      if (!status || !status.remoteSDI) return;
+      const r = status.remoteSDI;
+      if (r.connected) {
+        document.getElementById('remoteSDIFrames').textContent = r.framesSent || 0;
+        document.getElementById('remoteSDIDropped').textContent = r.framesDropped || 0;
+        document.getElementById('remoteSDIBytes').textContent = formatBytes(r.bytesSent || 0);
+
+        const assignDiv = document.getElementById('remoteSDIAssignments');
+        if (state.participants.size > 0) {
+          assignDiv.style.display = '';
+          const list = document.getElementById('remoteSDIAssignList');
+          let html = '';
+          for (const [userId, p] of state.participants) {
+            const currentAssign = r.assignments ? (r.assignments[userId] !== undefined ? r.assignments[userId] : '') : '';
+            html += `<div class="remote-sdi-assign-row">
+              <span class="assign-name">${p.displayName}</span>
+              <span style="color:var(--text-muted);font-size:11px;">Device Index:</span>
+              <input type="number" min="0" max="15" value="${currentAssign}" placeholder="—"
+                onchange="remoteSDIAssign('${userId}', this.value)" />
+            </div>`;
+          }
+          list.innerHTML = html;
+        } else {
+          assignDiv.style.display = 'none';
+        }
+      }
+    }
+
+    async function remoteSDIAssign(userId, deviceIndex) {
+      const idx = parseInt(deviceIndex);
+      if (isNaN(idx) || idx < 0) {
+        await window.zoomISO.remoteSDIUnassign(userId);
+        log(`Remote SDI: Unassigned ${state.participants.get(userId)?.displayName || userId}`, 'warn');
+      } else {
+        await window.zoomISO.remoteSDIAssign(userId, idx);
+        log(`Remote SDI: Assigned ${state.participants.get(userId)?.displayName || userId} to device ${idx}`, 'success');
+      }
+    }
+
+    const origUpdateStatusCounts = updateStatusCounts;
+    updateStatusCounts = function(status) {
+      origUpdateStatusCounts(status);
+      updateRemoteSDIStats(status);
+    };
 
     setInterval(() => {
       document.getElementById('footerTime').textContent = new Date().toLocaleTimeString();
