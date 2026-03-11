@@ -1,0 +1,10 @@
+{
+  "name": "zoomlink-remote-sdi",
+  "version": "1.0.0",
+  "description": "ZoomLink Remote SDI — captures Zoom ISO feeds and streams to Linux SDI server",
+  "main": "main.js",
+  "scripts": {
+    "start": "npx electron . --no-sandbox --disable-gpu-sandbox"
+  },
+  "dependencies": {}
+}

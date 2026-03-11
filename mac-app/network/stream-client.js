@@ -250,7 +250,8 @@ class RemoteSDIClient extends EventEmitter {
   }
 
   sendAudioData(userId, buffer, sampleRate, channels) {
-    if (!this._connected || this._draining) return;
+    if (!this._connected) return;
+    if (this._draining) return;
 
     const numericId = typeof userId === 'number' ? userId : this._hashUserId(userId);
     const payload = Buffer.isBuffer(buffer) ? buffer : Buffer.from(buffer);

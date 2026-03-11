@@ -28,7 +28,6 @@ Electron desktop application that bridges Zoom meetings to professional broadcas
 - `decklink-output-addon/src/decklink_output.mm` - C++ native addon wrapping DeckLink SDK directly (getDevices, openOutput, displayFrame, closeOutput)
 - `decklink-output-addon/index.js` - JS wrapper with soft-loading and BMD constant exports
 - `src/recorder/recorder-manager.js` - FFmpeg spawn and pipe management
-- `src/network/stream-client.js` - TCP client for streaming frames to Linux SDI server
 - `src/config/settings.js` - Environment variable loader
 - `src/config/user-config.js` - Persistent user config (~/Library/Application Support/ZoomLink/config.json)
 - `zoom-meeting-sdk-addon/index.js` - JS bridge for the native addon (handles DLL/dylib/framework paths per platform)
@@ -70,17 +69,30 @@ Electron desktop application that bridges Zoom meetings to professional broadcas
 - Uses `std::wstring` conversions for all SDK string parameters
 - SDK binary: `sdk.dll` + `sdk.lib`
 
-## Remote SDI (Mac→Linux TCP Client)
-- **Module**: `src/network/stream-client.js` — `RemoteSDIClient` class
-- Connects to the Linux SDI server over TCP (port 9300 default)
-- Sends BGRA video frames, PCM audio, participant join/leave, and SDI device assignments using the binary protocol from `linux-server/protocol.js`
-- Auto-reconnect with exponential backoff (up to 10 attempts)
-- Heartbeat every 5 seconds to keep connection alive
-- Back-pressure aware: drops video frames if socket can't drain fast enough
-- Wired into main.js: every video-frame and audio-data event is forwarded to the remote client alongside NDI/DeckLink/recorder
-- UI section in index.html: "Remote SDI (Linux Server)" panel with host/port input, connect/disconnect, live stats (frames sent, dropped, bytes), and per-participant device index assignment
+## Mac Companion App (`mac-app/`)
+A completely separate standalone Electron app that includes ALL original app functionality PLUS Remote SDI streaming to the Linux server. The original app files are left completely untouched — `mac-app/` references shared business logic modules from `../src/` via relative paths.
+
+```
+mac-app/
+├── package.json              # Standalone app config
+├── main.js                   # Electron main — all original managers + RemoteSDIClient
+├── ipc-handlers.js           # All original IPC + remote-sdi-connect/disconnect/assign
+├── preload.js                # All original bridge + remoteSDI* methods
+├── network/stream-client.js  # TCP client — binary protocol to linux-server
+└── renderer/
+    ├── index.html            # Full UI with Remote SDI Server panel
+    └── assets/logo.png       # App logo
+```
+
+- **RemoteSDIClient**: TCP binary protocol matching linux-server exactly (magic `0x5A4C4B31`, 23-byte header)
+- Auto-reconnect with exponential backoff (up to 10 attempts), heartbeat every 5s
+- Back-pressure aware: drops video/audio frames if socket can't drain
+- Video frames + audio data are forwarded to remote client alongside NDI/DeckLink/recorder
+- On connect, backfills all current participants to the server
+- UI: host/port input, connect/disconnect, status badge, live stats (frames/dropped/bytes/fps), 8-output assignment grid
+- Status update includes `remoteSDI` key with connection stats
 - IPC: `remote-sdi-connect`, `remote-sdi-disconnect`, `remote-sdi-status`, `remote-sdi-assign`, `remote-sdi-unassign`
-- Preload bridge: `remoteSDIConnect()`, `remoteSDIDisconnect()`, `remoteSDIStatus()`, `remoteSDIAssign()`, `remoteSDIUnassign()`, `onRemoteSDIStatus()`, `onRemoteSDIError()`
+- Run: `cd mac-app && npx electron . --no-sandbox --disable-gpu-sandbox`
 
 ## Data Flow
 1. Native addon joins Zoom meeting, MEETING_STATUS_INMEETING fires
