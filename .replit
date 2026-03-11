@@ -18,6 +18,10 @@ author = "agent"
 task = "workflow.run"
 args = "Start application"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Mac App (Remote SDI)"
+
 [[workflows.workflow]]
 name = "Start application"
 author = "agent"
@@ -25,6 +29,17 @@ author = "agent"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "npx electron . --no-sandbox --disable-gpu-sandbox"
+
+[workflows.workflow.metadata]
+outputType = "vnc"
+
+[[workflows.workflow]]
+name = "Mac App (Remote SDI)"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd mac-app && npx electron . --no-sandbox --disable-gpu-sandbox"
 
 [workflows.workflow.metadata]
 outputType = "vnc"
