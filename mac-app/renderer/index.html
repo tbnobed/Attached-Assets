@@ -179,12 +179,6 @@
     }
     button.success:hover { background: #16a34a; }
 
-    button.warning {
-      background: var(--accent-amber);
-      border-color: var(--accent-amber);
-      color: #1e293b;
-    }
-
     button:disabled { opacity: 0.4; cursor: not-allowed; }
 
     .main-content {
@@ -263,21 +257,15 @@
       letter-spacing: 0.5px;
     }
 
-    .overlay-badge.rec {
-      background: var(--accent-red);
-      color: white;
-      animation: pulse 1s infinite;
-    }
-
-    .overlay-badge.ndi {
-      background: var(--accent-purple);
-      color: white;
-    }
-
     .overlay-badge.iso {
       background: rgba(0,0,0,0.6);
       color: var(--text-primary);
       border: 1px solid var(--border);
+    }
+
+    .overlay-badge.rsdi {
+      background: var(--accent-blue);
+      color: white;
     }
 
     .participant-info {
@@ -294,7 +282,7 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      max-width: 150px;
+      max-width: 200px;
     }
 
     .participant-controls {
@@ -305,129 +293,6 @@
     .participant-controls button {
       padding: 4px 8px;
       font-size: 11px;
-    }
-
-    .participant-meta {
-      padding: 0 12px 10px;
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    .meta-item {
-      font-size: 11px;
-      color: var(--text-muted);
-    }
-
-    .meta-item strong { color: var(--text-secondary); }
-
-    .config-panel {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 8px 14px;
-      margin-bottom: 16px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      flex-wrap: wrap;
-    }
-
-    .config-dir {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex: 1;
-      min-width: 200px;
-    }
-
-    .config-dir-label {
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--text-secondary);
-      white-space: nowrap;
-    }
-
-    .config-dir-value {
-      font-size: 12px;
-      color: var(--text-muted);
-      font-family: 'SF Mono', 'Fira Code', monospace;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      flex: 1;
-    }
-
-    .config-dir button {
-      font-size: 11px;
-      padding: 2px 8px;
-      background: var(--bg-primary);
-      color: var(--text-secondary);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      cursor: pointer;
-    }
-
-    .config-dir button:hover {
-      background: var(--bg-card-hover);
-      color: var(--text-primary);
-    }
-
-    .status-indicators {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-left: auto;
-    }
-
-    .status-indicator {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 11px;
-      color: var(--text-secondary);
-      cursor: default;
-    }
-
-    .status-indicator .dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--text-muted);
-      flex-shrink: 0;
-    }
-
-    .status-indicator .dot.ok { background: var(--accent-green); }
-    .status-indicator .dot.fail { background: var(--accent-red); }
-
-    .config-row {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 10px;
-    }
-
-    .config-row:last-child { margin-bottom: 0; }
-
-    .config-label {
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--text-secondary);
-      min-width: 120px;
-    }
-
-    .config-value {
-      font-size: 13px;
-      color: var(--text-primary);
-      font-family: 'SF Mono', 'Fira Code', monospace;
-      background: var(--bg-primary);
-      padding: 4px 10px;
-      border-radius: 4px;
-      border: 1px solid var(--border);
-      flex: 1;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
     }
 
     input[type="text"] {
@@ -526,39 +391,44 @@
       to { transform: rotate(360deg); }
     }
 
-    .decklink-panel {
-      padding: 12px 20px;
-    }
-
-    .decklink-controls {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      margin-bottom: 12px;
-    }
-
-    .decklink-controls select {
-      background: var(--bg-primary);
-      color: var(--text-primary);
+    .config-panel {
+      background: var(--bg-card);
       border: 1px solid var(--border);
-      padding: 6px 10px;
-      border-radius: 6px;
-      font-size: 13px;
+      border-radius: 8px;
+      padding: 8px 14px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
     }
 
-    .decklink-controls button {
-      background: var(--accent-purple);
-      color: white;
-      border: none;
-      padding: 6px 14px;
-      border-radius: 6px;
-      font-size: 13px;
-      cursor: pointer;
+    .status-indicators {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-left: auto;
     }
 
-    .decklink-controls button:hover {
-      opacity: 0.85;
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      color: var(--text-secondary);
+      cursor: default;
     }
+
+    .status-indicator .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    .status-indicator .dot.ok { background: var(--accent-green); }
+    .status-indicator .dot.fail { background: var(--accent-red); }
 
     .settings-btn {
       background: transparent;
@@ -800,70 +670,6 @@
       font-style: italic;
     }
 
-    .decklink-output-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .decklink-output-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 10px 14px;
-      background: var(--bg-primary);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-    }
-
-    .decklink-output-item .dl-label {
-      font-weight: 600;
-      font-size: 13px;
-      min-width: 140px;
-    }
-
-    .decklink-output-item .dl-mode {
-      font-size: 12px;
-      color: var(--text-secondary);
-      min-width: 100px;
-    }
-
-    .decklink-output-item select {
-      background: var(--bg-secondary);
-      color: var(--text-primary);
-      border: 1px solid var(--border);
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-size: 12px;
-      flex: 1;
-    }
-
-    .decklink-output-item .dl-frames {
-      font-size: 11px;
-      color: var(--text-muted);
-      min-width: 80px;
-      text-align: right;
-    }
-
-    .decklink-output-item button {
-      background: var(--accent-red);
-      color: white;
-      border: none;
-      padding: 4px 10px;
-      border-radius: 4px;
-      font-size: 12px;
-      cursor: pointer;
-    }
-
-    .overlay-badge.dl {
-      background: var(--accent-purple);
-    }
-
-    .overlay-badge.rsdi {
-      background: var(--accent-blue);
-      color: white;
-    }
-
     .remote-sdi-panel {
       padding: 12px 20px;
     }
@@ -883,51 +689,35 @@
       padding: 6px 10px;
       border-radius: 6px;
       font-size: 13px;
-      font-family: 'SF Mono', 'Fira Code', monospace;
-    }
-
-    .remote-sdi-connect-bar input::placeholder {
-      color: var(--text-muted);
     }
 
     .remote-sdi-status {
       display: flex;
       align-items: center;
       gap: 8px;
-      padding: 8px 12px;
-      background: var(--bg-primary);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      margin-bottom: 12px;
+      margin-bottom: 8px;
     }
 
-    .remote-sdi-status .rsdi-dot {
+    .rsdi-dot {
       width: 10px;
       height: 10px;
       border-radius: 50%;
-      background: var(--text-muted);
+      background: var(--accent-red);
       flex-shrink: 0;
     }
 
-    .remote-sdi-status .rsdi-dot.connected { background: var(--accent-green); animation: pulse 2s infinite; }
-    .remote-sdi-status .rsdi-dot.connecting { background: var(--accent-amber); animation: pulse 0.5s infinite; }
-    .remote-sdi-status .rsdi-dot.disconnected { background: var(--accent-red); }
-    .remote-sdi-status .rsdi-dot.failed { background: var(--accent-red); }
+    .rsdi-dot.connected { background: var(--accent-green); animation: pulse 2s infinite; }
+    .rsdi-dot.connecting, .rsdi-dot.reconnecting { background: var(--accent-amber); animation: pulse 1s infinite; }
+    .rsdi-dot.failed { background: var(--accent-red); }
+    .rsdi-dot.disconnected { background: var(--text-muted); }
 
-    .remote-sdi-status .rsdi-text {
-      font-size: 13px;
-      color: var(--text-secondary);
-    }
-
-    .remote-sdi-status .rsdi-text strong {
-      color: var(--text-primary);
-    }
+    .rsdi-text { font-size: 13px; color: var(--text-secondary); }
 
     .remote-sdi-stats {
       display: flex;
       gap: 16px;
-      flex-wrap: wrap;
       margin-bottom: 12px;
+      flex-wrap: wrap;
     }
 
     .rsdi-stat {
@@ -935,9 +725,7 @@
       color: var(--text-muted);
     }
 
-    .rsdi-stat strong {
-      color: var(--text-secondary);
-    }
+    .rsdi-stat strong { color: var(--text-primary); }
 
     .remote-sdi-assignments {
       display: flex;
@@ -949,51 +737,49 @@
       display: flex;
       align-items: center;
       gap: 10px;
-      padding: 8px 12px;
+      padding: 6px 10px;
       background: var(--bg-primary);
       border: 1px solid var(--border);
       border-radius: 6px;
     }
 
-    .rsdi-assign-item .rsdi-label {
+    .rsdi-label {
+      font-size: 12px;
       font-weight: 600;
-      font-size: 13px;
-      min-width: 100px;
+      color: var(--text-secondary);
+      min-width: 80px;
     }
 
     .rsdi-assign-item select {
+      flex: 1;
       background: var(--bg-secondary);
       color: var(--text-primary);
       border: 1px solid var(--border);
       padding: 4px 8px;
       border-radius: 4px;
       font-size: 12px;
-      flex: 1;
     }
   </style>
 </head>
 <body>
-  <div class="app" id="app">
-    <header class="header">
+  <div class="app">
+    <div class="header">
       <div class="header-left">
-        <div class="logo"><img src="assets/logo.png" alt="ZoomLink" /></div>
+        <div class="logo">
+          <img src="assets/logo.png" alt="ZoomLink" onerror="this.style.display='none'" />
+        </div>
         <div id="connectionBadge" class="status-badge disconnected">
           <div class="status-dot off"></div>
           <span>Disconnected</span>
         </div>
       </div>
       <div class="header-right">
-        <div class="header-stat">Participants: <strong id="participantCount">0</strong></div>
-        <div class="header-stat">Recording: <strong id="recordingCount">0</strong></div>
-        <div class="header-stat">NDI: <strong id="ndiCount">0</strong></div>
-        <button id="btnSettings" class="settings-btn" title="Settings">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12.22 2h-.44a2 2 0 00-2 2v.18a2 2 0 01-1 1.73l-.43.25a2 2 0 01-2 0l-.15-.08a2 2 0 00-2.73.73l-.22.38a2 2 0 00.73 2.73l.15.1a2 2 0 011 1.72v.51a2 2 0 01-1 1.74l-.15.09a2 2 0 00-.73 2.73l.22.38a2 2 0 002.73.73l.15-.08a2 2 0 012 0l.43.25a2 2 0 011 1.73V20a2 2 0 002 2h.44a2 2 0 002-2v-.18a2 2 0 011-1.73l.43-.25a2 2 0 012 0l.15.08a2 2 0 002.73-.73l.22-.39a2 2 0 00-.73-2.73l-.15-.08a2 2 0 01-1-1.74v-.5a2 2 0 011-1.74l.15-.09a2 2 0 00.73-2.73l-.22-.38a2 2 0 00-2.73-.73l-.15.08a2 2 0 01-2 0l-.43-.25a2 2 0 01-1-1.73V4a2 2 0 00-2-2z"/>
-            <circle cx="12" cy="12" r="3"/>
-          </svg>
+        <span class="header-stat">Participants: <strong id="participantCount">0</strong></span>
+        <button class="settings-btn" id="btnSettings" title="Settings">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
         </button>
       </div>
-    </header>
+    </div>
 
     <div class="toolbar">
       <div class="toolbar-group">
@@ -1015,23 +801,6 @@
       <div class="toolbar-divider"></div>
 
       <div class="toolbar-group">
-        <span class="toolbar-label">Record</span>
-        <button class="success" id="btnRecordAll">REC All</button>
-        <button class="danger" id="btnStopRecordAll">Stop All</button>
-      </div>
-
-      <div class="toolbar-divider"></div>
-
-      <div class="toolbar-group">
-        <span class="toolbar-label">NDI</span>
-        <button id="btnNdiAllOn">All On</button>
-        <button id="btnNdiAllOff">All Off</button>
-        <button class="warning" id="btnTestPattern">Test Pattern</button>
-      </div>
-
-      <div class="toolbar-divider"></div>
-
-      <div class="toolbar-group">
         <span class="toolbar-label">Simulate</span>
         <button id="btnAddParticipant">+ Participant</button>
       </div>
@@ -1041,23 +810,12 @@
 
     <div class="main-content">
       <div class="config-panel" id="configPanel">
-        <div class="config-dir">
-          <span class="config-dir-label">Output</span>
-          <span class="config-dir-value" id="outputDirDisplay">./recordings</span>
-          <button id="btnSelectDir">Browse</button>
-        </div>
         <div class="status-indicators">
-          <div class="status-indicator" id="indNdi" title="NDI: Checking...">
-            <span class="dot" id="dotNdi"></span><span>NDI</span>
-          </div>
           <div class="status-indicator" id="indSdk" title="SDK Credentials: Checking...">
             <span class="dot" id="dotSdk"></span><span>Credentials</span>
           </div>
           <div class="status-indicator" id="indZoom" title="Meeting SDK: Checking...">
             <span class="dot" id="dotZoom"></span><span>SDK</span>
-          </div>
-          <div class="status-indicator" id="indDecklink" title="DeckLink: Checking...">
-            <span class="dot" id="dotDecklink"></span><span>DeckLink</span>
           </div>
         </div>
       </div>
@@ -1070,22 +828,11 @@
             <path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
           </svg>
           <h3>No Participants</h3>
-          <p>Join a Zoom meeting by entering a Meeting ID and passcode, or add simulated participants to test.</p>
+          <p>Join a Zoom meeting or add simulated participants to test. Connect to the Linux server below to stream feeds.</p>
         </div>
       </div>
 
-      <div class="section-title" id="decklinkSectionTitle" style="display:none;">DeckLink Outputs</div>
-      <div id="decklinkPanel" class="decklink-panel" style="display:none;">
-        <div class="decklink-controls">
-          <select id="decklinkDeviceSelect"><option value="">No devices found</option></select>
-          <select id="decklinkModeSelect"><option value="1080p2997">1080p 29.97</option></select>
-          <button id="btnDecklinkStart">Start Output</button>
-          <button id="btnDecklinkRefresh">Refresh</button>
-        </div>
-        <div id="decklinkOutputList" class="decklink-output-list"></div>
-      </div>
-
-      <div class="section-title" id="remoteSDISectionTitle">Remote SDI Server</div>
+      <div class="section-title">Remote SDI Server</div>
       <div id="remoteSDIPanel" class="remote-sdi-panel">
         <div class="remote-sdi-connect-bar">
           <input type="text" id="rsdiHost" placeholder="Linux server IP" style="width:180px" />
@@ -1163,7 +910,7 @@
     </div>
 
     <footer class="footer">
-      <span>ZoomLink Remote SDI v1.0.0</span>
+      <span>ZoomLink Remote SDI v1.0.0 (Capture Client)</span>
       <span>Target: 1080p @ 30fps | Audio: 48kHz 16-bit</span>
       <span id="footerTime"></span>
     </footer>
@@ -1174,7 +921,6 @@
       connected: false,
       participants: new Map(),
       settings: null,
-      testPatternActive: false,
       logs: [],
       simCounter: 0,
     };
@@ -1202,14 +948,6 @@
       return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
     }
 
-    function formatDuration(ms) {
-      const sec = Math.floor(ms / 1000);
-      const h = Math.floor(sec / 3600);
-      const m = Math.floor((sec % 3600) / 60);
-      const s = sec % 60;
-      return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
-    }
-
     function updateConnectionUI(connected) {
       state.connected = connected;
       const badge = document.getElementById('connectionBadge');
@@ -1233,7 +971,6 @@
 
     function renderParticipants() {
       const grid = document.getElementById('participantGrid');
-      const emptyState = document.getElementById('emptyState');
       const count = state.participants.size;
 
       document.getElementById('participantCount').textContent = count;
@@ -1241,14 +978,12 @@
 
       if (count === 0) {
         grid.innerHTML = '';
-        grid.appendChild(emptyState.cloneNode ? createEmptyState() : emptyState);
+        grid.appendChild(createEmptyState());
         return;
       }
 
       let html = '';
       for (const [userId, p] of state.participants) {
-        const isRec = p.recording;
-        const isNdi = p.ndiActive;
         html += `
           <div class="participant-card" data-user-id="${userId}">
             <div class="participant-preview">
@@ -1261,22 +996,13 @@
               </div>
               <div class="preview-overlay">
                 <span class="overlay-badge iso">ISO ${p.isoIndex || '?'}</span>
-                ${isRec ? '<span class="overlay-badge rec">REC</span>' : ''}
-                ${isNdi ? '<span class="overlay-badge ndi">NDI</span>' : ''}
               </div>
             </div>
             <div class="participant-info">
               <div class="participant-name" title="${p.displayName}">${p.displayName}</div>
               <div class="participant-controls">
-                <button onclick="toggleRecording('${userId}')" class="${isRec ? 'danger' : ''}">${isRec ? 'Stop' : 'REC'}</button>
-                <button onclick="toggleNdi('${userId}', ${!isNdi})" class="${isNdi ? 'success' : ''}">${isNdi ? 'NDI On' : 'NDI Off'}</button>
                 <button onclick="removeParticipant('${userId}')">X</button>
               </div>
-            </div>
-            <div class="participant-meta">
-              ${isRec && p.recDuration ? `<span class="meta-item">Duration: <strong>${formatDuration(p.recDuration)}</strong></span>` : ''}
-              ${isRec && p.recFileSize ? `<span class="meta-item">Size: <strong>${formatBytes(p.recFileSize)}</strong></span>` : ''}
-              ${p.ndiSourceName ? `<span class="meta-item">NDI: <strong>${p.ndiSourceName}</strong></span>` : ''}
             </div>
           </div>
         `;
@@ -1292,36 +1018,19 @@
           <path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
         </svg>
         <h3>No Participants</h3>
-        <p>Join a Zoom meeting by entering a Meeting ID and passcode, or add simulated participants to test.</p>
+        <p>Join a Zoom meeting or add simulated participants to test. Connect to the Linux server below to stream feeds.</p>
       `;
       return div;
     }
 
     function updateStatusCounts(status) {
-      if (status.recording) {
-        document.getElementById('recordingCount').textContent = status.recording.activeCount || 0;
-      }
-      if (status.ndi) {
-        document.getElementById('ndiCount').textContent = status.ndi.sourceCount || 0;
-      }
       if (status.session) {
         document.getElementById('participantCount').textContent = status.session.participantCount || 0;
 
         if (status.session.participants) {
           for (const p of status.session.participants) {
             const existing = state.participants.get(p.userId) || {};
-            const recStatus = status.recording?.recorders?.[p.userId];
-            const ndiSource = status.ndi?.sources?.[p.userId];
-
-            state.participants.set(p.userId, {
-              ...existing,
-              ...p,
-              recording: recStatus?.active || false,
-              recDuration: recStatus?.duration || 0,
-              recFileSize: recStatus?.fileSize || 0,
-              ndiActive: ndiSource?.active || false,
-              ndiSourceName: ndiSource?.sourceName || ndiSource?.videoSourceName || '',
-            });
+            state.participants.set(p.userId, { ...existing, ...p });
           }
 
           const sessionUserIds = new Set(status.session.participants.map(p => p.userId));
@@ -1333,26 +1042,7 @@
         }
       }
       renderParticipants();
-    }
-
-    async function toggleRecording(userId) {
-      userId = isNaN(userId) ? userId : Number(userId);
-      const p = state.participants.get(userId);
-      if (!p) return;
-      if (p.recording) {
-        await window.zoomISO.stopRecording(userId);
-        log(`Stopped recording for ${p.displayName}`, 'warn');
-      } else {
-        await window.zoomISO.startRecording(userId);
-        log(`Started recording for ${p.displayName}`, 'success');
-      }
-    }
-
-    async function toggleNdi(userId, active) {
-      userId = isNaN(userId) ? userId : Number(userId);
-      await window.zoomISO.toggleNdi(userId, active);
-      const p = state.participants.get(userId);
-      log(`NDI ${active ? 'enabled' : 'disabled'} for ${p?.displayName || userId}`, active ? 'success' : 'warn');
+      updateRemoteSDIStats(status);
     }
 
     async function removeParticipant(userId) {
@@ -1515,137 +1205,12 @@
       }
     });
 
-    state.decklinkDevices = [];
-    state.decklinkModes = {};
-    state.decklinkOutputs = {};
-
-    async function refreshDecklinkDevices() {
-      const result = await window.zoomISO.decklinkGetDevices();
-      if (!result.success) return;
-      state.decklinkDevices = result.devices || [];
-      state.decklinkModes = result.displayModes || {};
-      const devSelect = document.getElementById('decklinkDeviceSelect');
-      devSelect.innerHTML = state.decklinkDevices.length === 0
-        ? '<option value="">No devices found</option>'
-        : state.decklinkDevices.map((d, i) => `<option value="${i}">${d.name}</option>`).join('');
-      const modeSelect = document.getElementById('decklinkModeSelect');
-      const modes = state.decklinkModes;
-      modeSelect.innerHTML = Object.entries(modes).map(([k, v]) => `<option value="${k}">${v}</option>`).join('');
-    }
-
-    function renderDecklinkOutputs() {
-      const list = document.getElementById('decklinkOutputList');
-      const entries = Object.entries(state.decklinkOutputs);
-      if (entries.length === 0) {
-        list.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:8px 0;">No active DeckLink outputs</div>';
-        return;
-      }
-      list.innerHTML = entries.map(([idx, output]) => {
-        const participants = Array.from(state.participants.entries());
-        const optionsHtml = '<option value="">— unassigned —</option>' +
-          participants.map(([uid, p]) => `<option value="${uid}" ${String(output.assignedUser) === String(uid) ? 'selected' : ''}>${p.displayName}</option>`).join('');
-        return `
-          <div class="decklink-output-item">
-            <span class="dl-label">${output.deviceName || 'Output ' + idx}</span>
-            <span class="dl-mode">${output.mode || ''}</span>
-            <select onchange="assignDecklinkParticipant(this.value, ${idx})">${optionsHtml}</select>
-            <span class="dl-frames">${output.framesSent ? output.framesSent + ' frames' : ''}</span>
-            <button onclick="stopDecklinkOutput(${idx})">Stop</button>
-          </div>
-        `;
-      }).join('');
-    }
-
-    async function assignDecklinkParticipant(userId, deviceIndex) {
-      if (!userId) {
-        await window.zoomISO.decklinkUnassignParticipant(state.decklinkOutputs[deviceIndex]?.assignedUser);
-        delete state.decklinkOutputs[deviceIndex].assignedUser;
-        renderDecklinkOutputs();
-        log(`DeckLink output ${deviceIndex}: unassigned`, 'warn');
-        return;
-      }
-      const numericUserId = parseInt(userId) || userId;
-      const result = await window.zoomISO.decklinkAssignParticipant(numericUserId, deviceIndex);
-      if (result.success) {
-        state.decklinkOutputs[deviceIndex].assignedUser = numericUserId;
-        const p = state.participants.get(numericUserId) || state.participants.get(userId);
-        log(`DeckLink output ${deviceIndex}: assigned to ${p?.displayName || userId}`, 'success');
-        renderDecklinkOutputs();
-      } else {
-        log(`DeckLink assign failed: ${result.error}`, 'error');
-      }
-    }
-
-    async function stopDecklinkOutput(deviceIndex) {
-      await window.zoomISO.decklinkStopOutput(deviceIndex);
-      delete state.decklinkOutputs[deviceIndex];
-      renderDecklinkOutputs();
-      log(`DeckLink output ${deviceIndex} stopped`, 'warn');
-    }
-
-    document.getElementById('btnDecklinkStart').addEventListener('click', async () => {
-      const devIdx = parseInt(document.getElementById('decklinkDeviceSelect').value);
-      const mode = document.getElementById('decklinkModeSelect').value;
-      if (isNaN(devIdx)) { log('Select a DeckLink device first', 'error'); return; }
-      const result = await window.zoomISO.decklinkStartOutput(devIdx, mode);
-      if (result.success) {
-        state.decklinkOutputs[devIdx] = {
-          deviceName: state.decklinkDevices[devIdx]?.name || 'Output ' + devIdx,
-          mode: mode,
-          framesSent: 0,
-        };
-        renderDecklinkOutputs();
-        log(`DeckLink output started on ${state.decklinkDevices[devIdx]?.name || 'device ' + devIdx}`, 'success');
-      } else {
-        log(`DeckLink start failed: ${result.error}`, 'error');
-      }
-    });
-
-    document.getElementById('btnDecklinkRefresh').addEventListener('click', () => {
-      refreshDecklinkDevices();
-      log('DeckLink devices refreshed', 'info');
-    });
-
     document.getElementById('btnLeaveMeeting').addEventListener('click', async () => {
       await window.zoomISO.leaveMeeting();
       updateConnectionUI(false);
       state.participants.clear();
       renderParticipants();
       log('Left meeting', 'warn');
-    });
-
-    document.getElementById('btnRecordAll').addEventListener('click', async () => {
-      const result = await window.zoomISO.startAllRecording();
-      log(`Started recording for ${result.started} participants`, 'success');
-    });
-
-    document.getElementById('btnStopRecordAll').addEventListener('click', async () => {
-      await window.zoomISO.stopAllRecording();
-      log('Stopped all recordings', 'warn');
-    });
-
-    document.getElementById('btnNdiAllOn').addEventListener('click', async () => {
-      await window.zoomISO.toggleAllNdi(true);
-      log('All NDI sources enabled', 'success');
-    });
-
-    document.getElementById('btnNdiAllOff').addEventListener('click', async () => {
-      await window.zoomISO.toggleAllNdi(false);
-      log('All NDI sources disabled', 'warn');
-    });
-
-    document.getElementById('btnTestPattern').addEventListener('click', async () => {
-      if (state.testPatternActive) {
-        await window.zoomISO.stopTestPattern();
-        state.testPatternActive = false;
-        document.getElementById('btnTestPattern').textContent = 'Test Pattern';
-        log('Test pattern stopped', 'warn');
-      } else {
-        await window.zoomISO.startTestPattern();
-        state.testPatternActive = true;
-        document.getElementById('btnTestPattern').textContent = 'Stop Test';
-        log('Test pattern started - 8 NDI sources created', 'success');
-      }
     });
 
     document.getElementById('btnAddParticipant').addEventListener('click', async () => {
@@ -1655,14 +1220,6 @@
       const result = await window.zoomISO.addSimulatedParticipant(name);
       if (result.success) {
         log(`Added simulated participant: ${name}`, 'success');
-      }
-    });
-
-    document.getElementById('btnSelectDir').addEventListener('click', async () => {
-      const result = await window.zoomISO.selectOutputDir();
-      if (result.success) {
-        document.getElementById('outputDirDisplay').textContent = result.outputDir;
-        log(`Output directory set to: ${result.outputDir}`, 'success');
       }
     });
 
@@ -1759,25 +1316,9 @@
         log(`Reconnecting... attempt ${info.attempt}/${info.maxAttempts}`, 'warn');
       });
 
-      window.zoomISO.onRecordingStarted((info) => {
-        log(`Recording started: ${info.displayName} -> ${info.filename}`, 'success');
-      });
-
-      window.zoomISO.onRecordingStopped((info) => {
-        log(`Recording saved: ${info.filename} (${formatBytes(info.fileSize)})`, 'success');
-      });
-
-      window.zoomISO.onRecordingError((info) => {
-        log(`Recording error for ${info.displayName}: ${info.error}`, 'error');
-      });
-
       window.zoomISO.onReconnectFailed(() => {
         log('Reconnection failed - max attempts reached', 'error');
         updateConnectionUI(false);
-      });
-
-      window.zoomISO.onNdiSourceDestroyed((info) => {
-        log(`NDI source removed: ${info.displayName}`, 'warn');
       });
 
       window.zoomISO.onAuthSuccess(() => {
@@ -1786,7 +1327,7 @@
 
       window.zoomISO.onRawRecordingStarted(() => {
         log('Raw recording started — capturing ISO video/audio feeds', 'success');
-        updateMeetingStatusBar('Raw recording active — capturing participant feeds. NDI auto-enabled.', 'active');
+        updateMeetingStatusBar('Raw recording active — streaming feeds to Linux server.', 'active');
       });
 
       window.zoomISO.onVideoPreviewFrame(({ userId, buffer, width, height }) => {
@@ -1821,23 +1362,15 @@
 
       window.zoomISO.getSettings().then(s => {
         state.settings = s;
-        document.getElementById('outputDirDisplay').textContent = s.outputDir || './recordings';
 
         const setIndicator = (dotId, indId, ok, tipOk, tipFail) => {
           document.getElementById(dotId).className = 'dot ' + (ok ? 'ok' : 'fail');
           document.getElementById(indId).title = ok ? tipOk : tipFail;
         };
-        setIndicator('dotNdi', 'indNdi', s.ndiAvailable, 'NDI: Available', 'NDI: Unavailable');
         setIndicator('dotSdk', 'indSdk', s.hasCredentials, 'Credentials: Configured', 'Credentials: Not configured');
         setIndicator('dotZoom', 'indZoom', s.zoomAvailable, 'Meeting SDK: Loaded', 'Meeting SDK: Not available');
-        setIndicator('dotDecklink', 'indDecklink', s.decklinkAvailable, 'DeckLink: Available', 'DeckLink: Not available');
 
-        if (s.decklinkAvailable) {
-          document.getElementById('decklinkSectionTitle').style.display = '';
-          document.getElementById('decklinkPanel').style.display = '';
-          refreshDecklinkDevices();
-        }
-        log('Application initialized', 'success');
+        log('Application initialized (Capture Client)', 'success');
 
         if (!s.hasCredentials) {
           document.getElementById('btnSettings').click();
@@ -1993,12 +1526,6 @@
         log('Remote SDI error: ' + info.message, 'error');
       });
     }
-
-    const _origUpdateStatusCounts = updateStatusCounts;
-    updateStatusCounts = function(status) {
-      _origUpdateStatusCounts(status);
-      updateRemoteSDIStats(status);
-    };
 
     setInterval(() => {
       document.getElementById('footerTime').textContent = new Date().toLocaleTimeString();

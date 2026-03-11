@@ -29,7 +29,7 @@
     .status-dot.green { background: #22c55e; box-shadow: 0 0 8px #22c55e88; }
     .status-dot.red { background: #ef4444; box-shadow: 0 0 8px #ef444488; }
     .status-dot.yellow { background: #eab308; box-shadow: 0 0 8px #eab30888; }
-    .container { max-width: 1200px; margin: 0 auto; padding: 24px; }
+    .container { max-width: 1400px; margin: 0 auto; padding: 24px; }
     .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
     .card {
       background: #16213e;
@@ -52,6 +52,9 @@
       padding: 2px 8px;
       border-radius: 10px;
     }
+    .card h2 .count.purple { background: #a855f7; }
+    .card h2 .count.red { background: #ef4444; }
+    .card h2 .count.green { background: #22c55e; }
     .empty-state {
       color: #64748b;
       font-size: 14px;
@@ -71,7 +74,9 @@
     }
     .badge.active { background: #22c55e22; color: #22c55e; }
     .badge.idle { background: #eab30822; color: #eab308; }
-    .badge.offline { background: #ef444422; color: #ef4444; }
+    .badge.rec { background: #ef444422; color: #ef4444; animation: pulse 1s infinite; }
+    .badge.ndi { background: #a855f722; color: #a855f7; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
     .btn {
       background: #0ea5e9;
       color: #fff;
@@ -85,7 +90,12 @@
     .btn:hover { background: #0284c7; }
     .btn.danger { background: #ef4444; }
     .btn.danger:hover { background: #dc2626; }
+    .btn.success { background: #22c55e; }
+    .btn.success:hover { background: #16a34a; }
+    .btn.purple { background: #a855f7; }
+    .btn.purple:hover { background: #9333ea; }
     .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-group { display: flex; gap: 6px; align-items: center; }
     select {
       background: #1a1a2e;
       color: #e0e0e0;
@@ -104,20 +114,21 @@
       padding: 12px 16px;
       border-radius: 8px;
       flex: 1;
-      min-width: 120px;
+      min-width: 100px;
     }
     .stat-item .label { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
     .stat-item .value { font-size: 20px; font-weight: 700; color: #fff; margin-top: 4px; }
     .full-width { grid-column: 1 / -1; }
-    .assign-row { display: flex; align-items: center; gap: 8px; }
+    .assign-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
     .uptime { color: #94a3b8; font-size: 13px; }
+    .rec-info { font-size: 11px; color: #94a3b8; margin-top: 2px; }
   </style>
 </head>
 <body>
   <div class="header">
     <div>
       <h1>ZoomLink SDI Server</h1>
-      <div class="subtitle">Linux DeckLink Output Controller</div>
+      <div class="subtitle">Linux DeckLink + NDI + Recording Controller</div>
     </div>
     <div class="uptime">
       <span class="status-dot" id="serverStatus"></span>
@@ -127,7 +138,7 @@
 
   <div class="container">
     <div class="grid">
-      <div class="card">
+      <div class="card full-width">
         <h2>Server Stats</h2>
         <div class="stats-row">
           <div class="stat-item">
@@ -146,6 +157,14 @@
             <div class="label">Active Outputs</div>
             <div class="value" id="outputCount">0</div>
           </div>
+          <div class="stat-item">
+            <div class="label">NDI Sources</div>
+            <div class="value" id="ndiCount">0</div>
+          </div>
+          <div class="stat-item">
+            <div class="label">Recordings</div>
+            <div class="value" id="recCount">0</div>
+          </div>
         </div>
       </div>
 
@@ -154,9 +173,23 @@
         <div id="clientList"><div class="empty-state">No clients connected</div></div>
       </div>
 
+      <div class="card">
+        <h2>NDI Output <span class="count purple" id="ndiBadge">0</span></h2>
+        <div id="ndiList"><div class="empty-state">No NDI sources active</div></div>
+      </div>
+
       <div class="card full-width">
         <h2>DeckLink Devices <span class="count" id="deviceBadge">0</span></h2>
         <div id="deviceList"><div class="empty-state">No DeckLink devices detected</div></div>
+      </div>
+
+      <div class="card full-width">
+        <h2>Recording <span class="count red" id="recBadge">0</span></h2>
+        <div class="btn-group" style="margin-bottom:12px;">
+          <button class="btn success" onclick="startAllRecording()">Record All</button>
+          <button class="btn danger" onclick="stopAllRecording()">Stop All</button>
+        </div>
+        <div id="recList"><div class="empty-state">No active recordings</div></div>
       </div>
 
       <div class="card full-width">
@@ -189,6 +222,22 @@
       } catch (err) {}
     }
 
+    function formatBytes(b) {
+      if (!b) return '0 B';
+      const k = 1024;
+      const s = ['B','KB','MB','GB'];
+      const i = Math.floor(Math.log(b)/Math.log(k));
+      return (b/Math.pow(k,i)).toFixed(1)+' '+s[i];
+    }
+
+    function formatDuration(ms) {
+      const sec = Math.floor(ms/1000);
+      const h = Math.floor(sec/3600);
+      const m = Math.floor((sec%3600)/60);
+      const s = sec%60;
+      return `${h}h ${m}m ${s}s`;
+    }
+
     function updateUI(data) {
       const uptime = Math.floor(data.server.uptime);
       const h = Math.floor(uptime / 3600);
@@ -198,19 +247,27 @@
 
       const rx = data.receiver || {};
       const dl = data.decklink || {};
+      const ndi = data.ndi || {};
+      const rec = data.recording || {};
 
       document.getElementById('clientCount').textContent = rx.clientCount || 0;
       document.getElementById('participantCount').textContent = rx.participantCount || 0;
       document.getElementById('deviceCount').textContent = dl.deviceCount || 0;
       document.getElementById('outputCount').textContent = Object.keys(dl.outputs || {}).length;
+      document.getElementById('ndiCount').textContent = ndi.sourceCount || 0;
+      document.getElementById('recCount').textContent = rec.activeCount || 0;
 
       document.getElementById('clientBadge').textContent = rx.clientCount || 0;
       document.getElementById('deviceBadge').textContent = dl.deviceCount || 0;
+      document.getElementById('ndiBadge').textContent = ndi.sourceCount || 0;
+      document.getElementById('recBadge').textContent = rec.activeCount || 0;
       document.getElementById('participantBadge').textContent = rx.participantCount || 0;
 
       renderClients(rx.clients || []);
       renderDevices(dl.devices || [], dl.outputs || {});
-      renderParticipants(rx.participants || {}, dl);
+      renderNDI(ndi);
+      renderRecordings(rec);
+      renderParticipants(rx.participants || {}, dl, ndi, rec);
     }
 
     function renderClients(clients) {
@@ -267,7 +324,61 @@
       el.innerHTML = html;
     }
 
-    function renderParticipants(participants, dl) {
+    function renderNDI(ndi) {
+      const el = document.getElementById('ndiList');
+      const sources = ndi.sources || {};
+      const entries = Object.entries(sources);
+      if (entries.length === 0) {
+        el.innerHTML = '<div class="empty-state">No NDI sources active</div>';
+        return;
+      }
+      let html = '<table><tr><th>Source Name</th><th>User</th><th>Status</th><th>Frames</th><th>Actions</th></tr>';
+      for (const [userId, src] of entries) {
+        const status = src.active ? '<span class="badge ndi">Active</span>' : '<span class="badge idle">Paused</span>';
+        const mock = src.mock ? ' (mock)' : '';
+        html += `<tr>
+          <td>${src.sourceName}${mock}</td>
+          <td>${src.displayName}</td>
+          <td>${status}</td>
+          <td>${(src.framesSent || 0).toLocaleString()}</td>
+          <td>
+            <button class="btn${src.active ? ' danger' : ' purple'}" onclick="toggleNDI('${userId}', ${!src.active})">${src.active ? 'Pause' : 'Resume'}</button>
+            <button class="btn danger" onclick="destroyNDI('${userId}')">Remove</button>
+          </td>
+        </tr>`;
+      }
+      html += '</table>';
+      el.innerHTML = html;
+    }
+
+    function renderRecordings(rec) {
+      const el = document.getElementById('recList');
+      const recorders = rec.recorders || {};
+      const entries = Object.entries(recorders);
+      if (entries.length === 0) {
+        el.innerHTML = '<div class="empty-state">No active recordings</div>';
+        return;
+      }
+      let html = '<table><tr><th>Participant</th><th>File</th><th>Duration</th><th>Frames</th><th>Size</th><th>Actions</th></tr>';
+      for (const [userId, r] of entries) {
+        html += `<tr>
+          <td>${r.displayName}</td>
+          <td style="font-family:monospace;font-size:11px;">${r.filename}</td>
+          <td>${formatDuration(r.duration || 0)}</td>
+          <td>${(r.frameCount || 0).toLocaleString()}</td>
+          <td>${formatBytes(r.fileSize || 0)}</td>
+          <td><button class="btn danger" onclick="stopRecording('${userId}')">Stop</button></td>
+        </tr>`;
+      }
+      html += '</table>';
+      if (rec.outputDir) {
+        el.innerHTML = html + `<div class="rec-info">Output directory: ${rec.outputDir}</div>`;
+      } else {
+        el.innerHTML = html;
+      }
+    }
+
+    function renderParticipants(participants, dl, ndi, rec) {
       const el = document.getElementById('participantList');
       const entries = Object.entries(participants);
       if (entries.length === 0) {
@@ -278,18 +389,26 @@
       const devices = dl.devices || [];
       const outputs = dl.outputs || {};
       const assignments = dl.assignments || {};
+      const ndiSources = ndi.sources || {};
+      const recorders = rec.recorders || {};
 
-      let html = '<table><tr><th>ID</th><th>Name</th><th>Assigned To</th><th>Actions</th></tr>';
+      let html = '<table><tr><th>ID</th><th>Name</th><th>SDI</th><th>NDI</th><th>REC</th><th>Actions</th></tr>';
       for (const [uid, p] of entries) {
-        const userId = parseInt(uid);
+        const userId = parseInt(uid) || uid;
         const assignedDevice = assignments[userId];
-        const assignedText = assignedDevice !== undefined ? `Device ${assignedDevice}` : '<span style="color:#64748b">Unassigned</span>';
+        const sdiText = assignedDevice !== undefined ? `Device ${assignedDevice}` : '<span style="color:#64748b">—</span>';
+
+        const ndiSrc = ndiSources[userId];
+        const ndiText = ndiSrc ? (ndiSrc.active ? '<span class="badge ndi">Active</span>' : '<span class="badge idle">Paused</span>') : '<span style="color:#64748b">—</span>';
+
+        const isRec = recorders[userId] && recorders[userId].active;
+        const recText = isRec ? '<span class="badge rec">REC</span>' : '<span style="color:#64748b">—</span>';
 
         let actions = '<div class="assign-row">';
         const activeDevices = Object.entries(outputs).filter(([, o]) => o.active);
         if (activeDevices.length > 0) {
           actions += `<select id="assign_${userId}">`;
-          actions += '<option value="-1">-- Select --</option>';
+          actions += '<option value="-1">-- SDI --</option>';
           for (const [idx] of activeDevices) {
             const dev = devices.find(d => d.index === parseInt(idx));
             const name = dev ? dev.name : `Device ${idx}`;
@@ -297,16 +416,22 @@
             actions += `<option value="${idx}"${sel}>${name}</option>`;
           }
           actions += '</select>';
-          actions += ` <button class="btn" onclick="assignUser(${userId})">Assign</button>`;
-          if (assignedDevice !== undefined) {
-            actions += ` <button class="btn danger" onclick="unassignUser(${userId})">Unassign</button>`;
-          }
-        } else {
-          actions += '<span style="color:#64748b">No active outputs</span>';
+          actions += ` <button class="btn" onclick="assignUser('${userId}')">Assign</button>`;
         }
+
+        if (!isRec) {
+          actions += ` <button class="btn success" onclick="startRecording('${userId}','${(p.name||'').replace(/'/g,"\\'")}')">REC</button>`;
+        } else {
+          actions += ` <button class="btn danger" onclick="stopRecording('${userId}')">Stop REC</button>`;
+        }
+
+        if (assignedDevice !== undefined) {
+          actions += ` <button class="btn danger" onclick="unassignUser('${userId}')">Unassign</button>`;
+        }
+
         actions += '</div>';
 
-        html += `<tr><td>${userId}</td><td>${p.name || 'Unknown'}</td><td>${assignedText}</td><td>${actions}</td></tr>`;
+        html += `<tr><td>${userId}</td><td>${p.name || 'Unknown'}</td><td>${sdiText}</td><td>${ndiText}</td><td>${recText}</td><td>${actions}</td></tr>`;
       }
       html += '</table>';
       el.innerHTML = html;
@@ -322,9 +447,7 @@
           body: JSON.stringify({ deviceIndex, mode }),
         });
         fetchStatus();
-      } catch (err) {
-        alert('Failed to start output: ' + err.message);
-      }
+      } catch (err) { alert('Failed: ' + err.message); }
     }
 
     async function stopOutput(deviceIndex) {
@@ -335,9 +458,7 @@
           body: JSON.stringify({ deviceIndex }),
         });
         fetchStatus();
-      } catch (err) {
-        alert('Failed to stop output: ' + err.message);
-      }
+      } catch (err) { alert('Failed: ' + err.message); }
     }
 
     async function assignUser(userId) {
@@ -345,29 +466,91 @@
       if (!selectEl) return;
       const deviceIndex = parseInt(selectEl.value);
       if (deviceIndex < 0) return;
+      const numUserId = parseInt(userId) || userId;
       try {
         await fetch('/api/assign', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId, deviceIndex }),
+          body: JSON.stringify({ userId: numUserId, deviceIndex }),
         });
         fetchStatus();
-      } catch (err) {
-        alert('Failed to assign: ' + err.message);
-      }
+      } catch (err) { alert('Failed: ' + err.message); }
     }
 
     async function unassignUser(userId) {
+      const numUserId = parseInt(userId) || userId;
       try {
         await fetch('/api/unassign', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId }),
+          body: JSON.stringify({ userId: numUserId }),
         });
         fetchStatus();
-      } catch (err) {
-        alert('Failed to unassign: ' + err.message);
-      }
+      } catch (err) { alert('Failed: ' + err.message); }
+    }
+
+    async function toggleNDI(userId, active) {
+      const numUserId = parseInt(userId) || userId;
+      try {
+        await fetch('/api/ndi/toggle', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: numUserId, active }),
+        });
+        fetchStatus();
+      } catch (err) { alert('Failed: ' + err.message); }
+    }
+
+    async function destroyNDI(userId) {
+      const numUserId = parseInt(userId) || userId;
+      try {
+        await fetch('/api/ndi/destroy', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: numUserId }),
+        });
+        fetchStatus();
+      } catch (err) { alert('Failed: ' + err.message); }
+    }
+
+    async function startRecording(userId, displayName) {
+      const numUserId = parseInt(userId) || userId;
+      try {
+        await fetch('/api/recording/start', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: numUserId, displayName }),
+        });
+        fetchStatus();
+      } catch (err) { alert('Failed: ' + err.message); }
+    }
+
+    async function stopRecording(userId) {
+      const numUserId = parseInt(userId) || userId;
+      try {
+        await fetch('/api/recording/stop', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: numUserId }),
+        });
+        fetchStatus();
+      } catch (err) { alert('Failed: ' + err.message); }
+    }
+
+    async function startAllRecording() {
+      try {
+        const res = await fetch('/api/recording/start-all', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+        const data = await res.json();
+        if (data.started > 0) alert('Started recording for ' + data.started + ' participant(s)');
+        fetchStatus();
+      } catch (err) { alert('Failed: ' + err.message); }
+    }
+
+    async function stopAllRecording() {
+      try {
+        await fetch('/api/recording/stop-all', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+        fetchStatus();
+      } catch (err) { alert('Failed: ' + err.message); }
     }
 
     fetchDevices();

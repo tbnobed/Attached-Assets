@@ -6,7 +6,7 @@ const fs = require('fs');
 const { DISPLAY_MODES } = require('./decklink-manager');
 
 function createApi(options = {}) {
-  const { port = 9301, deckLinkManager, receiver } = options;
+  const { port = 9301, deckLinkManager, ndiManager, recorderManager, receiver } = options;
 
   const server = http.createServer((req, res) => {
     const url = new URL(req.url, `http://${req.headers.host}`);
@@ -46,6 +46,8 @@ function createApi(options = {}) {
         server: { uptime: process.uptime(), version: '1.0.0' },
         receiver: receiver ? receiver.getStatus() : null,
         decklink: deckLinkManager ? deckLinkManager.getStatus() : null,
+        ndi: ndiManager ? ndiManager.getStatus() : null,
+        recording: recorderManager ? recorderManager.getStatus() : null,
       });
       return;
     }
@@ -127,6 +129,140 @@ function createApi(options = {}) {
           }
           deckLinkManager.unassignParticipant(userId);
           json(res, { success: true });
+        } catch (err) {
+          json(res, { success: false, error: err.message }, 500);
+        }
+      });
+      return;
+    }
+
+    if (req.method === 'POST' && pathname === '/api/ndi/create') {
+      readBody(req, async (body) => {
+        try {
+          const { userId, displayName, isoIndex } = body;
+          if (userId === undefined || !displayName) {
+            json(res, { success: false, error: 'userId and displayName required' }, 400);
+            return;
+          }
+          const source = await ndiManager.createSource(userId, displayName, isoIndex || 1);
+          json(res, { success: !!source, source: source ? { sourceName: source.sourceName, mock: source.mock } : null });
+        } catch (err) {
+          json(res, { success: false, error: err.message }, 500);
+        }
+      });
+      return;
+    }
+
+    if (req.method === 'POST' && pathname === '/api/ndi/destroy') {
+      readBody(req, (body) => {
+        try {
+          const { userId } = body;
+          if (userId === undefined) {
+            json(res, { success: false, error: 'userId required' }, 400);
+            return;
+          }
+          ndiManager.destroySource(userId);
+          json(res, { success: true });
+        } catch (err) {
+          json(res, { success: false, error: err.message }, 500);
+        }
+      });
+      return;
+    }
+
+    if (req.method === 'POST' && pathname === '/api/ndi/toggle') {
+      readBody(req, (body) => {
+        try {
+          const { userId, active } = body;
+          if (userId === undefined) {
+            json(res, { success: false, error: 'userId required' }, 400);
+            return;
+          }
+          ndiManager.toggleSource(userId, active !== false);
+          json(res, { success: true });
+        } catch (err) {
+          json(res, { success: false, error: err.message }, 500);
+        }
+      });
+      return;
+    }
+
+    if (req.method === 'POST' && pathname === '/api/recording/start') {
+      readBody(req, (body) => {
+        try {
+          const { userId, displayName } = body;
+          if (userId === undefined) {
+            json(res, { success: false, error: 'userId required' }, 400);
+            return;
+          }
+          const name = displayName || (receiver.participants.get(userId) || {}).name || `User_${userId}`;
+          const recorder = recorderManager.startRecording(userId, name);
+          json(res, { success: !!recorder });
+        } catch (err) {
+          json(res, { success: false, error: err.message }, 500);
+        }
+      });
+      return;
+    }
+
+    if (req.method === 'POST' && pathname === '/api/recording/stop') {
+      readBody(req, (body) => {
+        try {
+          const { userId } = body;
+          if (userId === undefined) {
+            json(res, { success: false, error: 'userId required' }, 400);
+            return;
+          }
+          const recorder = recorderManager.stopRecording(userId);
+          json(res, { success: !!recorder });
+        } catch (err) {
+          json(res, { success: false, error: err.message }, 500);
+        }
+      });
+      return;
+    }
+
+    if (req.method === 'POST' && pathname === '/api/recording/start-all') {
+      readBody(req, (body) => {
+        try {
+          const participants = receiver ? receiver.participants : new Map();
+          let started = 0;
+          for (const [userId, p] of participants) {
+            if (!recorderManager.isRecording(userId)) {
+              const recorder = recorderManager.startRecording(userId, p.name || `User_${userId}`);
+              if (recorder) started++;
+            }
+          }
+          json(res, { success: true, started });
+        } catch (err) {
+          json(res, { success: false, error: err.message }, 500);
+        }
+      });
+      return;
+    }
+
+    if (req.method === 'POST' && pathname === '/api/recording/stop-all') {
+      readBody(req, (body) => {
+        try {
+          recorderManager.stopAll();
+          json(res, { success: true });
+        } catch (err) {
+          json(res, { success: false, error: err.message }, 500);
+        }
+      });
+      return;
+    }
+
+    if (req.method === 'POST' && pathname === '/api/recording/set-dir') {
+      readBody(req, (body) => {
+        try {
+          const { dir } = body;
+          if (!dir) {
+            json(res, { success: false, error: 'dir required' }, 400);
+            return;
+          }
+          recorderManager.setOutputDir(dir);
+          json(res, { success: true, outputDir: dir });
         } catch (err) {
           json(res, { success: false, error: err.message }, 500);
         }

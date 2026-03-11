@@ -5,18 +5,12 @@ const { settings, ensureOutputDir, getOutputDir } = require('../src/config/setti
 const { applyUserConfigToSettings, needsConfiguration } = require('../src/config/user-config');
 const { SessionManager } = require('../src/zoom/session-manager');
 const { StreamHandler } = require('../src/zoom/stream-handler');
-const { NDIManager } = require('../src/ndi/ndi-manager');
-const { DeckLinkManager } = require('../src/decklink/decklink-manager');
-const { RecorderManager } = require('../src/recorder/recorder-manager');
 const { RemoteSDIClient } = require('./network/stream-client');
 const { setupIpcHandlers } = require('./ipc-handlers');
 
 let mainWindow = null;
 let sessionManager = null;
 let streamHandler = null;
-let ndiManager = null;
-let deckLinkManager = null;
-let recorderManager = null;
 let remoteSDIClient = null;
 
 function createWindow() {
@@ -45,9 +39,6 @@ function createWindow() {
 function initManagers() {
   sessionManager = new SessionManager(settings);
   streamHandler = new StreamHandler(settings);
-  ndiManager = new NDIManager(settings);
-  deckLinkManager = new DeckLinkManager(settings);
-  recorderManager = new RecorderManager(settings);
   remoteSDIClient = new RemoteSDIClient();
 
   remoteSDIClient.on('status', (info) => {
@@ -67,12 +58,7 @@ function initManagers() {
 
   sessionManager.setStreamHandler(streamHandler);
 
-  const outputDir = ensureOutputDir();
-  recorderManager.setOutputDir(outputDir);
-
   sessionManager.on('participant-joined', async (participant) => {
-    await ndiManager.createSource(participant.userId, participant.displayName, participant.isoIndex);
-    ndiManager.toggleSource(participant.userId, true);
     remoteSDIClient.sendParticipantJoin(participant.userId, participant.displayName);
     sendToRenderer('participant-joined', participant);
     sendStatusUpdate();
@@ -81,16 +67,12 @@ function initManagers() {
   sessionManager.on('participant-left', (participant) => {
     streamHandler.stopVideoCapture(participant.userId);
     streamHandler.stopAudioCapture(participant.userId);
-    recorderManager.stopRecording(participant.userId);
-    deckLinkManager.unassignParticipant(participant.userId);
-    ndiManager.destroySource(participant.userId);
     remoteSDIClient.sendParticipantLeave(participant.userId);
     sendToRenderer('participant-left', participant);
     sendStatusUpdate();
   });
 
   sessionManager.on('participant-name-updated', async (participant) => {
-    await ndiManager.renameSource(participant.userId, participant.displayName, participant.isoIndex);
     sendToRenderer('participant-updated', participant);
     sendStatusUpdate();
   });
@@ -137,9 +119,6 @@ function initManagers() {
   const PREVIEW_INTERVAL_MS = 200;
 
   streamHandler.on('video-frame', ({ userId, frameData }) => {
-    ndiManager.sendVideoFrame(userId, frameData.buffer, frameData.width, frameData.height);
-    deckLinkManager.sendVideoFrame(userId, frameData.buffer, frameData.width, frameData.height);
-    recorderManager.writeVideoFrame(userId, frameData.buffer, frameData.width, frameData.height);
     remoteSDIClient.sendVideoFrame(userId, frameData.buffer, frameData.width, frameData.height);
 
     const now = Date.now();
@@ -171,34 +150,7 @@ function initManagers() {
       console.log(`[AudioDiag] #${_audioLogCount} t=${elapsed}s userId=${userId} bufLen=${audioData.buffer.length} samples=${samples} rate=${Math.round(rate)}/sec sr=${audioData.sampleRate} ch=${audioData.channels}`);
     }
 
-    ndiManager.sendAudioData(userId, audioData.buffer, audioData.sampleRate, audioData.channels);
-    deckLinkManager.sendAudioData(userId, audioData.buffer, audioData.sampleRate, audioData.channels);
-    recorderManager.writeAudioData(userId, audioData.buffer);
     remoteSDIClient.sendAudioData(userId, audioData.buffer, audioData.sampleRate, audioData.channels);
-  });
-
-  recorderManager.on('recording-started', (info) => {
-    sendToRenderer('recording-started', info);
-    sendStatusUpdate();
-  });
-
-  recorderManager.on('recording-stopped', (info) => {
-    sendToRenderer('recording-stopped', info);
-    sendStatusUpdate();
-  });
-
-  recorderManager.on('recording-error', (info) => {
-    sendToRenderer('recording-error', info);
-  });
-
-  ndiManager.on('source-created', (info) => {
-    sendToRenderer('ndi-source-created', info);
-    sendStatusUpdate();
-  });
-
-  ndiManager.on('source-destroyed', (info) => {
-    sendToRenderer('ndi-source-destroyed', info);
-    sendStatusUpdate();
   });
 }
 
@@ -212,9 +164,6 @@ function sendStatusUpdate() {
   const status = {
     session: sessionManager.getStatus(),
     streams: streamHandler.getStatus(),
-    ndi: ndiManager.getStatus(),
-    decklink: deckLinkManager.getStatus(),
-    recording: recorderManager.getStatus(),
     remoteSDI: remoteSDIClient.getStatus(),
   };
   sendToRenderer('status-update', status);
@@ -226,9 +175,6 @@ app.whenReady().then(() => {
   setupIpcHandlers(ipcMain, {
     sessionManager,
     streamHandler,
-    ndiManager,
-    deckLinkManager,
-    recorderManager,
     remoteSDIClient,
     sendStatusUpdate,
     getMainWindow: () => mainWindow,
@@ -240,9 +186,6 @@ app.whenReady().then(() => {
 
 app.on('window-all-closed', () => {
   streamHandler.destroy();
-  recorderManager.destroy();
-  deckLinkManager.destroy();
-  ndiManager.destroy();
   remoteSDIClient.destroy();
   sessionManager.destroy();
   app.quit();
