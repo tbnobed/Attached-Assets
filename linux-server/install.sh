@@ -128,9 +128,37 @@ if [ -d "$GRANDIOSE_DIR" ]; then
     UTIL_CC="$GRANDIOSE_DIR/src/grandiose_util.cc"
     if [ -f "$UTIL_CC" ]; then
         if grep -q 'itoa' "$UTIL_CC"; then
-            sed -i 's/itoa(errorInfo->error_code, errorCode, 10)/snprintf(errorCode, sizeof(errorCode), "%d", errorInfo->error_code)/g' "$UTIL_CC"
-            sed -i 's/itoa(c->status, errorChars, 10)/snprintf(errorChars, sizeof(errorChars), "%d", c->status)/g' "$UTIL_CC"
-            echo "  Patched itoa -> snprintf in grandiose_util.cc"
+            cat > /tmp/grandiose_patch.py << 'PYEOF'
+import re, sys
+with open(sys.argv[1], 'r') as f:
+    code = f.read()
+
+# Fix line ~48: napi_throw_error(env, itoa(..., errorCode, 10), ...)
+# Original: napi_throw_error(env, itoa(errorInfo->error_code, errorCode, 10), errorInfo->error_message);
+# Need: snprintf(errorCode, sizeof(errorCode), "%d", errorInfo->error_code);
+#       napi_throw_error(env, errorCode, errorInfo->error_message);
+code = re.sub(
+    r'napi_throw_error\(env,\s*itoa\(errorInfo->error_code,\s*errorCode,\s*10\),\s*errorInfo->error_message\)',
+    'snprintf(errorCode, sizeof(errorCode), "%d", errorInfo->error_code);\n    napi_throw_error(env, errorCode, errorInfo->error_message)',
+    code
+)
+
+# Fix line ~134: napi_create_string_utf8(env, itoa(c->status, errorChars, 10), ...)
+# Original: status = napi_create_string_utf8(env, itoa(c->status, errorChars, 10), ...
+# Need: snprintf(errorChars, sizeof(errorChars), "%d", c->status);
+#       status = napi_create_string_utf8(env, errorChars, ...
+code = re.sub(
+    r'napi_create_string_utf8\(env,\s*itoa\(c->status,\s*errorChars,\s*10\)',
+    'snprintf(errorChars, sizeof(errorChars), "%d", c->status);\n    status = napi_create_string_utf8(env, errorChars',
+    code
+)
+
+with open(sys.argv[1], 'w') as f:
+    f.write(code)
+print("  Applied grandiose itoa patch successfully")
+PYEOF
+            python3 /tmp/grandiose_patch.py "$UTIL_CC"
+            rm -f /tmp/grandiose_patch.py
         else
             echo "  grandiose_util.cc already patched or doesn't use itoa"
         fi
@@ -160,19 +188,29 @@ if [ -n "$DECKLINK_SDK_PATH" ]; then
         DECKLINK_SDK_INCLUDE="$DECKLINK_SDK_PATH/Linux/include"
         echo -e "  DeckLink SDK found via DECKLINK_SDK_PATH: $DECKLINK_SDK_INCLUDE"
     else
-        echo "  Searching inside DECKLINK_SDK_PATH for SDK headers..."
+        echo "  Searching inside DECKLINK_SDK_PATH for Linux SDK headers..."
         while IFS= read -r -d '' found; do
             FOUND_DIR="$(dirname "$found")"
-            if [ -f "$FOUND_DIR/DeckLinkAPI.h" ]; then
-                DECKLINK_SDK_INCLUDE="$FOUND_DIR"
-                echo -e "  DeckLink SDK found: $DECKLINK_SDK_INCLUDE"
-                break
-            fi
-        done < <(find "$DECKLINK_SDK_PATH" -name "DeckLinkAPI.h" -print0 2>/dev/null)
+            DECKLINK_SDK_INCLUDE="$FOUND_DIR"
+            echo -e "  DeckLink SDK found (Linux): $DECKLINK_SDK_INCLUDE"
+            break
+        done < <(find "$DECKLINK_SDK_PATH" -path "*/Linux/include/DeckLinkAPI.h" -print0 2>/dev/null)
 
         if [ -z "$DECKLINK_SDK_INCLUDE" ]; then
-            echo -e "${YELLOW}  DECKLINK_SDK_PATH set but DeckLinkAPI.h not found inside${NC}"
+            while IFS= read -r -d '' found; do
+                FOUND_DIR="$(dirname "$found")"
+                if echo "$FOUND_DIR" | grep -qiv "Mac\|Win\|Windows"; then
+                    DECKLINK_SDK_INCLUDE="$FOUND_DIR"
+                    echo -e "  DeckLink SDK found: $DECKLINK_SDK_INCLUDE"
+                    break
+                fi
+            done < <(find "$DECKLINK_SDK_PATH" -name "DeckLinkAPI.h" -print0 2>/dev/null)
+        fi
+
+        if [ -z "$DECKLINK_SDK_INCLUDE" ]; then
+            echo -e "${YELLOW}  DECKLINK_SDK_PATH set but Linux DeckLinkAPI.h not found inside${NC}"
             echo "  Searched recursively in: $DECKLINK_SDK_PATH"
+            echo "  Make sure the SDK contains a Linux/include/ subfolder"
         fi
     fi
 fi
@@ -203,13 +241,10 @@ if [ -z "$DECKLINK_SDK_INCLUDE" ]; then
     for root in "${SEARCH_ROOTS[@]}"; do
         if [ -d "$root" ]; then
             while IFS= read -r -d '' found; do
-                FOUND_DIR="$(dirname "$found")"
-                if echo "$FOUND_DIR" | grep -qi "linux"; then
-                    DECKLINK_SDK_INCLUDE="$FOUND_DIR"
-                    echo -e "  DeckLink SDK found: $FOUND_DIR"
-                    break 2
-                fi
-            done < <(find "$root" -maxdepth 5 -name "DeckLinkAPI.h" -path "*/Linux/*" -print0 2>/dev/null)
+                DECKLINK_SDK_INCLUDE="$(dirname "$found")"
+                echo -e "  DeckLink SDK found (Linux): $DECKLINK_SDK_INCLUDE"
+                break 2
+            done < <(find "$root" -maxdepth 6 -path "*/Linux/include/DeckLinkAPI.h" -print0 2>/dev/null)
         fi
     done
 
@@ -217,10 +252,13 @@ if [ -z "$DECKLINK_SDK_INCLUDE" ]; then
         for root in "${SEARCH_ROOTS[@]}"; do
             if [ -d "$root" ]; then
                 while IFS= read -r -d '' found; do
-                    DECKLINK_SDK_INCLUDE="$(dirname "$found")"
-                    echo -e "  DeckLink SDK found: $DECKLINK_SDK_INCLUDE"
-                    break 2
-                done < <(find "$root" -maxdepth 5 -name "DeckLinkAPI.h" -print0 2>/dev/null)
+                    FOUND_DIR="$(dirname "$found")"
+                    if echo "$FOUND_DIR" | grep -qiv "Mac\|Win\|Windows"; then
+                        DECKLINK_SDK_INCLUDE="$FOUND_DIR"
+                        echo -e "  DeckLink SDK found: $DECKLINK_SDK_INCLUDE"
+                        break 2
+                    fi
+                done < <(find "$root" -maxdepth 6 -name "DeckLinkAPI.h" -print0 2>/dev/null)
             fi
         done
     fi
