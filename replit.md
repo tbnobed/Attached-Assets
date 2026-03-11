@@ -131,6 +131,29 @@ npm run create-dmg
 ```
 Creates `dist/ZoomLink-Installer.dmg` — a distributable macOS disk image with drag-to-Applications layout. Setup script builds this automatically after the .app.
 
+## Linux SDI Server
+A completely separate standalone project in `linux-server/` that receives video/audio frames from the Mac app over TCP and outputs to DeckLink SDI cards on a Linux machine.
+
+```
+linux-server/
+├── server.js           # Main entry point — TCP receiver + API
+├── receiver.js         # TCP frame receiver, decodes binary protocol
+├── protocol.js         # Binary TCP protocol (encode/decode)
+├── decklink-manager.js # DeckLink device management, frame pump, BGRA→UYVY
+├── api.js              # REST API (status, devices, assign/unassign)
+├── web/index.html      # Web dashboard
+├── install.sh          # One-command setup for Ubuntu
+├── decklink-addon/     # Native C++ addon for Linux DeckLink SDK
+└── README.md           # Full setup and API documentation
+```
+
+Setup on Linux:
+```bash
+cd linux-server && bash install.sh
+node server.js
+```
+TCP port 9300 (frame stream), HTTP port 9301 (API + dashboard).
+
 ## Quick Setup (Windows)
 ```
 node scripts/install-zoom-sdk.js "C:\path\to\zoom-sdk\x64"
