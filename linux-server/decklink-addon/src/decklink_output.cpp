@@ -14,6 +14,7 @@ struct OutputState {
     IDeckLink* device = nullptr;
     IDeckLinkOutput* output = nullptr;
     IDeckLinkMutableVideoFrame* videoFrame = nullptr;
+    IDeckLinkVideoBuffer* videoBuffer = nullptr;
     void* frameBuffer = nullptr;
     int width = 0;
     int height = 0;
@@ -178,28 +179,49 @@ public:
         }
 
         void* frameBuffer = nullptr;
-        IDeckLinkVideoFrame* readableFrame = nullptr;
-        hr = videoFrame->QueryInterface(IID_IDeckLinkVideoFrame, (void**)&readableFrame);
-        if (hr == S_OK && readableFrame) {
-            readableFrame->GetBytes(&frameBuffer);
-            readableFrame->Release();
-        }
-        if (!frameBuffer) {
+        IDeckLinkVideoBuffer* videoBuffer = nullptr;
+        hr = videoFrame->QueryInterface(IID_IDeckLinkVideoBuffer, (void**)&videoBuffer);
+        if (hr != S_OK || !videoBuffer) {
             videoFrame->Release();
             output->DisableAudioOutput();
             output->DisableVideoOutput();
             output->Release();
             deckLink->Release();
-            SetError("Cannot get frame buffer pointer from created video frame");
+            SetError("QueryInterface for IDeckLinkVideoBuffer failed");
+            return;
+        }
+        hr = videoBuffer->StartAccess(bmdBufferAccessReadAndWrite);
+        if (hr != S_OK) {
+            videoBuffer->Release();
+            videoFrame->Release();
+            output->DisableAudioOutput();
+            output->DisableVideoOutput();
+            output->Release();
+            deckLink->Release();
+            SetError("StartAccess failed on video buffer (HRESULT=" + std::to_string(hr) + ")");
+            return;
+        }
+        hr = videoBuffer->GetBytes(&frameBuffer);
+        if (hr != S_OK || !frameBuffer) {
+            videoBuffer->EndAccess(bmdBufferAccessReadAndWrite);
+            videoBuffer->Release();
+            videoFrame->Release();
+            output->DisableAudioOutput();
+            output->DisableVideoOutput();
+            output->Release();
+            deckLink->Release();
+            SetError("GetBytes failed on video buffer");
             return;
         }
 
         memset(frameBuffer, 0, (size_t)frameHeight * (size_t)rowBytes);
+        videoBuffer->EndAccess(bmdBufferAccessReadAndWrite);
 
         OutputState* state = new OutputState();
         state->device = deckLink;
         state->output = output;
         state->videoFrame = videoFrame;
+        state->videoBuffer = videoBuffer;
         state->frameBuffer = frameBuffer;
         state->width = frameWidth;
         state->height = frameHeight;
@@ -267,15 +289,15 @@ Napi::Value OpenDevice(const Napi::CallbackInfo& info) {
     if (opts.Has("pixelFormat"))
         pixelFormat = (BMDPixelFormat)opts.Get("pixelFormat").As<Napi::Number>().Uint32Value();
 
-    uint32_t audioSampleRate = opts.Has("audioSampleRate")
-        ? opts.Get("audioSampleRate").As<Napi::Number>().Uint32Value()
-        : 48000;
-    uint32_t audioSampleType = opts.Has("audioSampleType")
-        ? opts.Get("audioSampleType").As<Napi::Number>().Uint32Value()
-        : 16;
-    uint32_t audioChannels = opts.Has("audioChannels")
-        ? opts.Get("audioChannels").As<Napi::Number>().Uint32Value()
-        : 2;
+    uint32_t audioSampleRate = 48000;
+    if (opts.Has("audioSampleRate"))
+        audioSampleRate = opts.Get("audioSampleRate").As<Napi::Number>().Uint32Value();
+    uint32_t audioSampleType = 16;
+    if (opts.Has("audioSampleType"))
+        audioSampleType = opts.Get("audioSampleType").As<Napi::Number>().Uint32Value();
+    uint32_t audioChannels = 2;
+    if (opts.Has("audioChannels"))
+        audioChannels = opts.Get("audioChannels").As<Napi::Number>().Uint32Value();
 
     auto worker = new OpenDeviceWorker(env, deviceIndex, displayMode, pixelFormat,
                                         audioSampleRate, audioSampleType, audioChannels);
@@ -312,18 +334,34 @@ public:
             }
         }
 
-        if (!state || !state->output || !state->videoFrame || !state->frameBuffer) {
+        if (!state || !state->output || !state->videoFrame || !state->videoBuffer) {
             SetError("Invalid output handle " + std::to_string(handle_));
             return;
         }
 
-        size_t copySize = videoSize_ < state->frameBufferSize ? videoSize_ : state->frameBufferSize;
-        memcpy(state->frameBuffer, videoData_, copySize);
-        if (copySize < state->frameBufferSize) {
-            memset((uint8_t*)state->frameBuffer + copySize, 0, state->frameBufferSize - copySize);
+        HRESULT hr = state->videoBuffer->StartAccess(bmdBufferAccessWrite);
+        if (hr != S_OK) {
+            SetError("StartAccess failed (HRESULT=" + std::to_string(hr) + ")");
+            return;
         }
 
-        HRESULT hr = state->output->DisplayVideoFrameSync(state->videoFrame);
+        void* frameBuffer = nullptr;
+        hr = state->videoBuffer->GetBytes(&frameBuffer);
+        if (hr != S_OK || !frameBuffer) {
+            state->videoBuffer->EndAccess(bmdBufferAccessWrite);
+            SetError("GetBytes failed during frame display");
+            return;
+        }
+
+        size_t copySize = videoSize_ < state->frameBufferSize ? videoSize_ : state->frameBufferSize;
+        memcpy(frameBuffer, videoData_, copySize);
+        if (copySize < state->frameBufferSize) {
+            memset((uint8_t*)frameBuffer + copySize, 0, state->frameBufferSize - copySize);
+        }
+
+        state->videoBuffer->EndAccess(bmdBufferAccessWrite);
+
+        hr = state->output->DisplayVideoFrameSync(state->videoFrame);
         if (hr != S_OK) {
             SetError("DisplayVideoFrameSync failed (HRESULT=" + std::to_string(hr) + ")");
         }
@@ -481,6 +519,9 @@ Napi::Value CloseDevice(const Napi::CallbackInfo& info) {
             spins++;
         }
 
+        if (state->videoBuffer) {
+            state->videoBuffer->Release();
+        }
         if (state->videoFrame) {
             state->videoFrame->Release();
         }
@@ -517,6 +558,7 @@ static void CleanupOutputs(void*) {
     for (auto& pair : g_outputs) {
         OutputState* state = pair.second;
         if (state) {
+            if (state->videoBuffer) state->videoBuffer->Release();
             if (state->videoFrame) state->videoFrame->Release();
             if (state->output) {
                 if (state->audioEnabled) state->output->DisableAudioOutput();
