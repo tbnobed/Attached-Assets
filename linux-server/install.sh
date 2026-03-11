@@ -12,6 +12,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 echo ""
 echo "============================================"
 echo "  ZoomLink SDI Server — Linux Setup"
+echo "  DeckLink + NDI + Recording"
 echo "============================================"
 echo ""
 
@@ -20,7 +21,7 @@ if [ "$(uname)" != "Linux" ]; then
     exit 1
 fi
 
-echo -e "${CYAN}[1/5] Checking system dependencies...${NC}"
+echo -e "${CYAN}[1/7] Checking system dependencies...${NC}"
 
 if ! command -v node &>/dev/null; then
     echo -e "${YELLOW}  Node.js not found. Installing via NodeSource...${NC}"
@@ -55,12 +56,74 @@ if command -v apt-get &>/dev/null; then
 fi
 
 echo ""
-echo -e "${CYAN}[2/5] Installing npm dependencies...${NC}"
-cd "$SCRIPT_DIR"
-npm install
+echo -e "${CYAN}[2/7] Checking FFmpeg (for recording)...${NC}"
+
+if command -v ffmpeg &>/dev/null; then
+    FFMPEG_VER=$(ffmpeg -version 2>/dev/null | head -1 | awk '{print $3}')
+    echo -e "  FFmpeg found: $FFMPEG_VER"
+else
+    echo -e "${YELLOW}  FFmpeg not found. Installing...${NC}"
+    if command -v apt-get &>/dev/null; then
+        sudo apt-get install -y ffmpeg
+    elif command -v dnf &>/dev/null; then
+        sudo dnf install -y ffmpeg
+    elif command -v pacman &>/dev/null; then
+        sudo pacman -S --noconfirm ffmpeg
+    else
+        echo -e "${YELLOW}  Could not install FFmpeg automatically.${NC}"
+        echo "  Please install FFmpeg manually for recording support."
+        echo "  The server will run without recording if FFmpeg is missing."
+    fi
+
+    if command -v ffmpeg &>/dev/null; then
+        echo -e "  FFmpeg installed: $(ffmpeg -version 2>/dev/null | head -1 | awk '{print $3}')"
+    else
+        echo -e "${YELLOW}  FFmpeg not available — recording will be disabled${NC}"
+    fi
+fi
 
 echo ""
-echo -e "${CYAN}[3/5] Checking DeckLink SDK...${NC}"
+echo -e "${CYAN}[3/7] Checking NDI SDK...${NC}"
+
+NDI_FOUND=0
+NDI_LIB_PATHS=(
+    "/usr/lib/libndi.so"
+    "/usr/local/lib/libndi.so"
+    "/usr/lib/x86_64-linux-gnu/libndi.so"
+    "/opt/ndi/lib/libndi.so"
+)
+
+for p in "${NDI_LIB_PATHS[@]}"; do
+    if [ -f "$p" ]; then
+        NDI_FOUND=1
+        echo -e "  NDI runtime library found: $p"
+        break
+    fi
+done
+
+if [ "$NDI_FOUND" = "0" ]; then
+    echo -e "${YELLOW}  NDI runtime library not found.${NC}"
+    echo ""
+    echo "  To enable NDI output, install the NDI SDK:"
+    echo "    1. Download from: https://ndi.video/tools/download/"
+    echo "    2. Run the installer (e.g., Install_NDI_SDK_v6_Linux.sh)"
+    echo "    3. Copy libndi.so to /usr/lib/ or /usr/local/lib/"
+    echo "    4. Run: sudo ldconfig"
+    echo "    5. Re-run this script"
+    echo ""
+    echo -e "${YELLOW}  Continuing without NDI support (grandiose will use mock mode)...${NC}"
+fi
+
+echo ""
+echo -e "${CYAN}[4/7] Installing npm dependencies...${NC}"
+cd "$SCRIPT_DIR"
+npm install 2>&1 || {
+    echo -e "${YELLOW}  npm install had warnings (grandiose may fail without NDI SDK — this is OK)${NC}"
+    echo "  The server will run with mock NDI if grandiose can't load."
+}
+
+echo ""
+echo -e "${CYAN}[5/7] Checking DeckLink SDK...${NC}"
 
 DECKLINK_HEADER=""
 SEARCH_PATHS=(
@@ -94,7 +157,7 @@ else
 fi
 
 echo ""
-echo -e "${CYAN}[4/5] Building DeckLink addon...${NC}"
+echo -e "${CYAN}[6/7] Building DeckLink addon...${NC}"
 
 if [ "$SKIP_DECKLINK" = "1" ]; then
     echo -e "${YELLOW}  Skipped (DeckLink SDK not found)${NC}"
@@ -127,7 +190,7 @@ else
 fi
 
 echo ""
-echo -e "${CYAN}[5/5] Setting up systemd service...${NC}"
+echo -e "${CYAN}[7/7] Setting up systemd service...${NC}"
 
 SERVICE_FILE="$SCRIPT_DIR/zoomlink-sdi.service"
 INSTALL_DIR="$SCRIPT_DIR"
@@ -147,6 +210,8 @@ RestartSec=5
 Environment=NODE_ENV=production
 Environment=TCP_PORT=9300
 Environment=API_PORT=9301
+Environment=NDI_PREFIX=ZoomLink
+Environment=RECORDING_DIR=$INSTALL_DIR/recordings
 
 [Install]
 WantedBy=multi-user.target
@@ -161,15 +226,34 @@ echo "    sudo systemctl enable zoomlink-sdi"
 echo "    sudo systemctl start zoomlink-sdi"
 echo ""
 
+mkdir -p "$SCRIPT_DIR/recordings"
+
 echo "============================================"
 echo -e "${GREEN}  Setup complete!${NC}"
 echo "============================================"
 echo ""
+echo "  Features available:"
+if [ "$SKIP_DECKLINK" = "0" ]; then
+    echo -e "    ${GREEN}✓${NC} DeckLink SDI output"
+else
+    echo -e "    ${YELLOW}✗${NC} DeckLink SDI output (install Blackmagic drivers)"
+fi
+if [ "$NDI_FOUND" = "1" ]; then
+    echo -e "    ${GREEN}✓${NC} NDI output"
+else
+    echo -e "    ${YELLOW}✗${NC} NDI output (install NDI SDK)"
+fi
+if command -v ffmpeg &>/dev/null; then
+    echo -e "    ${GREEN}✓${NC} MP4 recording"
+else
+    echo -e "    ${YELLOW}✗${NC} MP4 recording (install FFmpeg)"
+fi
+echo ""
 echo "  To start the server:"
 echo "    cd $SCRIPT_DIR && node server.js"
 echo ""
-echo "  Or with custom ports:"
-echo "    TCP_PORT=9300 API_PORT=9301 node server.js"
+echo "  Or with custom settings:"
+echo "    TCP_PORT=9300 API_PORT=9301 NDI_PREFIX=ZoomLink RECORDING_DIR=./recordings node server.js"
 echo ""
 echo "  Dashboard: http://localhost:9301/"
 echo ""
@@ -177,8 +261,5 @@ echo "  Ports to open in firewall:"
 echo "    TCP 9300 — frame stream from Mac app"
 echo "    TCP 9301 — HTTP API / dashboard"
 echo ""
-if [ "$SKIP_DECKLINK" = "1" ]; then
-    echo -e "${YELLOW}  Note: DeckLink support not available. Install Blackmagic"
-    echo -e "  Desktop Video drivers and re-run this script.${NC}"
-    echo ""
-fi
+echo "  Recording output: $SCRIPT_DIR/recordings/"
+echo ""

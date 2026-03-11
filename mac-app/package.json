@@ -4,7 +4,11 @@
   "description": "ZoomLink Remote SDI — captures Zoom ISO feeds and streams to Linux SDI server",
   "main": "main.js",
   "scripts": {
-    "start": "npx electron . --no-sandbox --disable-gpu-sandbox"
+    "start": "npx electron . --no-sandbox --disable-gpu-sandbox",
+    "setup": "bash setup.sh"
   },
-  "dependencies": {}
+  "dependencies": {
+    "electron": "^40.6.1"
+  },
+  "private": true
 }
