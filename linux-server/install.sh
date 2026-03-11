@@ -117,10 +117,35 @@ fi
 echo ""
 echo -e "${CYAN}[4/7] Installing npm dependencies...${NC}"
 cd "$SCRIPT_DIR"
-npm install 2>&1 || {
-    echo -e "${YELLOW}  npm install had warnings (grandiose may fail without NDI SDK — this is OK)${NC}"
-    echo "  The server will run with mock NDI if grandiose can't load."
+
+npm install --ignore-scripts 2>&1 || {
+    echo -e "${YELLOW}  npm install had warnings${NC}"
 }
+
+GRANDIOSE_DIR="$SCRIPT_DIR/node_modules/grandiose"
+if [ -d "$GRANDIOSE_DIR" ]; then
+    echo "  Patching grandiose for Linux compatibility (itoa -> snprintf)..."
+    UTIL_CC="$GRANDIOSE_DIR/src/grandiose_util.cc"
+    if [ -f "$UTIL_CC" ]; then
+        if grep -q 'itoa' "$UTIL_CC"; then
+            sed -i 's/itoa(errorInfo->error_code, errorCode, 10)/snprintf(errorCode, sizeof(errorCode), "%d", errorInfo->error_code)/g' "$UTIL_CC"
+            sed -i 's/itoa(c->status, errorChars, 10)/snprintf(errorChars, sizeof(errorChars), "%d", c->status)/g' "$UTIL_CC"
+            echo "  Patched itoa -> snprintf in grandiose_util.cc"
+        else
+            echo "  grandiose_util.cc already patched or doesn't use itoa"
+        fi
+    fi
+
+    echo "  Building grandiose native addon..."
+    cd "$GRANDIOSE_DIR"
+    npx node-gyp rebuild 2>&1 || {
+        echo -e "${YELLOW}  grandiose build failed — NDI will run in mock mode${NC}"
+        echo "  This is expected if the NDI SDK runtime library is not installed."
+    }
+    cd "$SCRIPT_DIR"
+else
+    echo -e "${YELLOW}  grandiose not downloaded — NDI will run in mock mode${NC}"
+fi
 
 echo ""
 echo -e "${CYAN}[5/7] Checking DeckLink SDK...${NC}"
