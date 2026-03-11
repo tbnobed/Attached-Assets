@@ -181,36 +181,21 @@ echo -e "${CYAN}[5/7] Checking DeckLink SDK...${NC}"
 DECKLINK_SDK_INCLUDE=""
 
 if [ -n "$DECKLINK_SDK_PATH" ]; then
-    if [ -f "$DECKLINK_SDK_PATH/DeckLinkAPI.h" ]; then
+    if [ -f "$DECKLINK_SDK_PATH/LinuxCOM.h" ] && [ -f "$DECKLINK_SDK_PATH/DeckLinkAPI.h" ]; then
         DECKLINK_SDK_INCLUDE="$DECKLINK_SDK_PATH"
-        echo -e "  DeckLink SDK found via DECKLINK_SDK_PATH: $DECKLINK_SDK_INCLUDE"
-    elif [ -d "$DECKLINK_SDK_PATH/Linux/include" ] && [ -f "$DECKLINK_SDK_PATH/Linux/include/DeckLinkAPI.h" ]; then
-        DECKLINK_SDK_INCLUDE="$DECKLINK_SDK_PATH/Linux/include"
-        echo -e "  DeckLink SDK found via DECKLINK_SDK_PATH: $DECKLINK_SDK_INCLUDE"
+        echo -e "  DeckLink SDK (Linux) found: $DECKLINK_SDK_INCLUDE"
     else
-        echo "  Searching inside DECKLINK_SDK_PATH for Linux SDK headers..."
+        echo "  Searching for Linux headers inside DECKLINK_SDK_PATH..."
         while IFS= read -r -d '' found; do
-            FOUND_DIR="$(dirname "$found")"
-            DECKLINK_SDK_INCLUDE="$FOUND_DIR"
-            echo -e "  DeckLink SDK found (Linux): $DECKLINK_SDK_INCLUDE"
+            DECKLINK_SDK_INCLUDE="$(dirname "$found")"
+            echo -e "  DeckLink SDK (Linux) found: $DECKLINK_SDK_INCLUDE"
             break
-        done < <(find "$DECKLINK_SDK_PATH" -path "*/Linux/include/DeckLinkAPI.h" -print0 2>/dev/null)
+        done < <(find "$DECKLINK_SDK_PATH" -path "*/Linux/include/LinuxCOM.h" -print0 2>/dev/null)
 
         if [ -z "$DECKLINK_SDK_INCLUDE" ]; then
-            while IFS= read -r -d '' found; do
-                FOUND_DIR="$(dirname "$found")"
-                if echo "$FOUND_DIR" | grep -qiv "Mac\|Win\|Windows"; then
-                    DECKLINK_SDK_INCLUDE="$FOUND_DIR"
-                    echo -e "  DeckLink SDK found: $DECKLINK_SDK_INCLUDE"
-                    break
-                fi
-            done < <(find "$DECKLINK_SDK_PATH" -name "DeckLinkAPI.h" -print0 2>/dev/null)
-        fi
-
-        if [ -z "$DECKLINK_SDK_INCLUDE" ]; then
-            echo -e "${YELLOW}  DECKLINK_SDK_PATH set but Linux DeckLinkAPI.h not found inside${NC}"
-            echo "  Searched recursively in: $DECKLINK_SDK_PATH"
-            echo "  Make sure the SDK contains a Linux/include/ subfolder"
+            echo -e "${YELLOW}  Could not find Linux/include/ inside DECKLINK_SDK_PATH${NC}"
+            echo "  Path given: $DECKLINK_SDK_PATH"
+            echo "  Expected structure: .../Linux/include/DeckLinkAPI.h + LinuxCOM.h"
         fi
     fi
 fi
@@ -222,16 +207,16 @@ if [ -z "$DECKLINK_SDK_INCLUDE" ]; then
         "/opt/decklink/include"
     )
     for p in "${SYSTEM_PATHS[@]}"; do
-        if [ -f "$p/DeckLinkAPI.h" ]; then
+        if [ -f "$p/DeckLinkAPI.h" ] && [ -f "$p/LinuxCOM.h" ]; then
             DECKLINK_SDK_INCLUDE="$p"
-            echo -e "  DeckLink SDK found: $p/DeckLinkAPI.h"
+            echo -e "  DeckLink SDK (Linux) found: $p"
             break
         fi
     done
 fi
 
 if [ -z "$DECKLINK_SDK_INCLUDE" ]; then
-    echo "  Searching common download locations..."
+    echo "  Searching common download locations for Linux SDK headers..."
     SEARCH_ROOTS=(
         "$HOME/Downloads"
         "$HOME/Desktop"
@@ -242,26 +227,11 @@ if [ -z "$DECKLINK_SDK_INCLUDE" ]; then
         if [ -d "$root" ]; then
             while IFS= read -r -d '' found; do
                 DECKLINK_SDK_INCLUDE="$(dirname "$found")"
-                echo -e "  DeckLink SDK found (Linux): $DECKLINK_SDK_INCLUDE"
+                echo -e "  DeckLink SDK (Linux) found: $DECKLINK_SDK_INCLUDE"
                 break 2
-            done < <(find "$root" -maxdepth 6 -path "*/Linux/include/DeckLinkAPI.h" -print0 2>/dev/null)
+            done < <(find "$root" -maxdepth 6 -path "*/Linux/include/LinuxCOM.h" -print0 2>/dev/null)
         fi
     done
-
-    if [ -z "$DECKLINK_SDK_INCLUDE" ]; then
-        for root in "${SEARCH_ROOTS[@]}"; do
-            if [ -d "$root" ]; then
-                while IFS= read -r -d '' found; do
-                    FOUND_DIR="$(dirname "$found")"
-                    if echo "$FOUND_DIR" | grep -qiv "Mac\|Win\|Windows"; then
-                        DECKLINK_SDK_INCLUDE="$FOUND_DIR"
-                        echo -e "  DeckLink SDK found: $DECKLINK_SDK_INCLUDE"
-                        break 2
-                    fi
-                done < <(find "$root" -maxdepth 6 -name "DeckLinkAPI.h" -print0 2>/dev/null)
-            fi
-        done
-    fi
 fi
 
 if [ -z "$DECKLINK_SDK_INCLUDE" ]; then
