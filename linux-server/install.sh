@@ -135,9 +135,20 @@ if [ -n "$DECKLINK_SDK_PATH" ]; then
         DECKLINK_SDK_INCLUDE="$DECKLINK_SDK_PATH/Linux/include"
         echo -e "  DeckLink SDK found via DECKLINK_SDK_PATH: $DECKLINK_SDK_INCLUDE"
     else
-        echo -e "${YELLOW}  DECKLINK_SDK_PATH set but DeckLinkAPI.h not found there${NC}"
-        echo "  Searched: $DECKLINK_SDK_PATH"
-        echo "            $DECKLINK_SDK_PATH/Linux/include"
+        echo "  Searching inside DECKLINK_SDK_PATH for SDK headers..."
+        while IFS= read -r -d '' found; do
+            FOUND_DIR="$(dirname "$found")"
+            if [ -f "$FOUND_DIR/DeckLinkAPI.h" ]; then
+                DECKLINK_SDK_INCLUDE="$FOUND_DIR"
+                echo -e "  DeckLink SDK found: $DECKLINK_SDK_INCLUDE"
+                break
+            fi
+        done < <(find "$DECKLINK_SDK_PATH" -name "DeckLinkAPI.h" -print0 2>/dev/null)
+
+        if [ -z "$DECKLINK_SDK_INCLUDE" ]; then
+            echo -e "${YELLOW}  DECKLINK_SDK_PATH set but DeckLinkAPI.h not found inside${NC}"
+            echo "  Searched recursively in: $DECKLINK_SDK_PATH"
+        fi
     fi
 fi
 
@@ -158,21 +169,36 @@ fi
 
 if [ -z "$DECKLINK_SDK_INCLUDE" ]; then
     echo "  Searching common download locations..."
-    DOWNLOAD_PATTERNS=(
-        "$HOME/Downloads/Blackmagic_DeckLink_SDK_*/Blackmagic DeckLink SDK */Linux/include"
-        "$HOME/Downloads/Blackmagic_DeckLink_SDK*/Linux/include"
-        "$HOME/Desktop/Blackmagic_DeckLink_SDK_*/Blackmagic DeckLink SDK */Linux/include"
-        "/tmp/Blackmagic_DeckLink_SDK_*/Blackmagic DeckLink SDK */Linux/include"
+    SEARCH_ROOTS=(
+        "$HOME/Downloads"
+        "$HOME/Desktop"
+        "/tmp"
+        "/opt"
     )
-    for pattern in "${DOWNLOAD_PATTERNS[@]}"; do
-        for d in $pattern; do
-            if [ -f "$d/DeckLinkAPI.h" ]; then
-                DECKLINK_SDK_INCLUDE="$d"
-                echo -e "  DeckLink SDK found: $d"
-                break 2
+    for root in "${SEARCH_ROOTS[@]}"; do
+        if [ -d "$root" ]; then
+            while IFS= read -r -d '' found; do
+                FOUND_DIR="$(dirname "$found")"
+                if echo "$FOUND_DIR" | grep -qi "linux"; then
+                    DECKLINK_SDK_INCLUDE="$FOUND_DIR"
+                    echo -e "  DeckLink SDK found: $FOUND_DIR"
+                    break 2
+                fi
+            done < <(find "$root" -maxdepth 5 -name "DeckLinkAPI.h" -path "*/Linux/*" -print0 2>/dev/null)
+        fi
+    done
+
+    if [ -z "$DECKLINK_SDK_INCLUDE" ]; then
+        for root in "${SEARCH_ROOTS[@]}"; do
+            if [ -d "$root" ]; then
+                while IFS= read -r -d '' found; do
+                    DECKLINK_SDK_INCLUDE="$(dirname "$found")"
+                    echo -e "  DeckLink SDK found: $DECKLINK_SDK_INCLUDE"
+                    break 2
+                done < <(find "$root" -maxdepth 5 -name "DeckLinkAPI.h" -print0 2>/dev/null)
             fi
         done
-    done
+    fi
 fi
 
 if [ -z "$DECKLINK_SDK_INCLUDE" ]; then

@@ -8,7 +8,7 @@
     "test": "node -e \"require('./protocol')\""
   },
   "dependencies": {
-    "grandiose": "^0.1.0"
+    "grandiose": "^0.0.4"
   },
   "engines": {
     "node": ">=18.0.0"
