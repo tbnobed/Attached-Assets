@@ -11,7 +11,6 @@ function setupIpcHandlers(ipcMain, context) {
     ndiManager,
     deckLinkManager,
     recorderManager,
-    remoteSDIClient,
     sendStatusUpdate,
     getMainWindow,
   } = context;
@@ -23,7 +22,6 @@ function setupIpcHandlers(ipcMain, context) {
       ndi: ndiManager.getStatus(),
       decklink: deckLinkManager.getStatus(),
       recording: recorderManager.getStatus(),
-      remoteSDI: remoteSDIClient.getStatus(),
     };
   });
 
@@ -273,34 +271,6 @@ function setupIpcHandlers(ipcMain, context) {
 
   ipcMain.handle('remove-favorite-meeting', (_event, meetingId) => {
     return removeFavoriteMeeting(meetingId);
-  });
-
-  ipcMain.handle('remote-sdi-connect', (_event, host, port) => {
-    try {
-      remoteSDIClient.connect(host, port || 9300);
-      return { success: true };
-    } catch (err) {
-      return { success: false, error: err.message };
-    }
-  });
-
-  ipcMain.handle('remote-sdi-disconnect', () => {
-    remoteSDIClient.disconnect();
-    return { success: true };
-  });
-
-  ipcMain.handle('remote-sdi-status', () => {
-    return remoteSDIClient.getStatus();
-  });
-
-  ipcMain.handle('remote-sdi-assign', (_event, userId, deviceIndex) => {
-    remoteSDIClient.sendAssignment(userId, deviceIndex);
-    return { success: true };
-  });
-
-  ipcMain.handle('remote-sdi-unassign', (_event, userId) => {
-    remoteSDIClient.removeAssignment(userId);
-    return { success: true };
   });
 }
 
