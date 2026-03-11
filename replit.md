@@ -52,7 +52,7 @@ linux-server/
 ├── api.js              # REST API: status, devices, assign/unassign, NDI CRUD, recording start/stop
 ├── web/index.html      # Web dashboard with DeckLink + NDI + recording controls
 ├── install.sh          # One-command setup for Ubuntu
-├── decklink-addon/     # Native C++ addon for Linux DeckLink SDK
+├── decklink-addon/     # Native C++ addon for Linux DeckLink SDK (ships own DeckLinkAPIDispatch.cpp for Linux)
 ├── package.json        # Dependencies: grandiose
 └── README.md           # Full setup and API documentation
 ```

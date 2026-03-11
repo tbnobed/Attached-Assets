@@ -1,0 +1,230 @@
+  CXX(target) Release/obj.target/grandiose/src/grandiose.o
+  SOLINK_MODULE(target) Release/obj.target/grandiose.node
+/usr/bin/ld: cannot find Processing.NDI.Lib.x64.lib: No such file or directory
+collect2: error: ld returned 1 exit status
+make: *** [grandiose.target.mk:160: Release/obj.target/grandiose.node] Error 1
+make: Leaving directory '/home/administrator/Attached-Assets/linux-server/node_modules/grandiose/build'
+gyp ERR! build error
+gyp ERR! stack Error: `make` failed with exit code: 2
+gyp ERR! stack at ChildProcess.<anonymous> (/home/administrator/.npm/_npx/c463d28440264a05/node_modules/node-gyp/lib/build.js:219:23)
+gyp ERR! System Linux 6.14.0-27-generic
+gyp ERR! command "/usr/bin/node" "/home/administrator/.npm/_npx/c463d28440264a05/node_modules/.bin/node-gyp" "rebuild"
+gyp ERR! cwd /home/administrator/Attached-Assets/linux-server/node_modules/grandiose
+gyp ERR! node -v v20.20.1
+gyp ERR! node-gyp -v v12.2.0
+gyp ERR! $npm_package_name grandiose
+gyp ERR! $npm_package_version 0.0.4
+gyp ERR! not ok
+  grandiose build failed — NDI will run in mock mode
+  This is expected if the NDI SDK runtime library is not installed.
+
+[5/7] Checking DeckLink SDK...
+  Searching for Linux headers inside DECKLINK_SDK_PATH...
+  DeckLink SDK (Linux) found: /home/administrator/Downloads/Blackmagic_DeckLink_SDK_15.2/Blackmagic DeckLink SDK 15.2/Linux/include
+
+[6/7] Building DeckLink addon...
+  Copying SDK headers from /home/administrator/Downloads/Blackmagic_DeckLink_SDK_15.2/Blackmagic DeckLink SDK 15.2/Linux/include...
+
+> decklink-output-linux@1.0.0 install
+> node-gyp rebuild
+
+gyp info it worked if it ends with ok
+gyp info using node-gyp@10.3.1
+gyp info using node@20.20.1 | linux | x64
+gyp info find Python using Python version 3.12.3 found at "/usr/bin/python3"
+
+gyp info spawn /usr/bin/python3
+gyp info spawn args [
+gyp info spawn args '/home/administrator/Attached-Assets/linux-server/decklink-addon/node_modules/node-gyp/gyp/gyp_main.py',
+gyp info spawn args 'binding.gyp',
+gyp info spawn args '-f',
+gyp info spawn args 'make',
+gyp info spawn args '-I',
+gyp info spawn args '/home/administrator/Attached-Assets/linux-server/decklink-addon/build/config.gypi',
+gyp info spawn args '-I',
+gyp info spawn args '/home/administrator/Attached-Assets/linux-server/decklink-addon/node_modules/node-gyp/addon.gypi',
+gyp info spawn args '-I',
+gyp info spawn args '/home/administrator/.cache/node-gyp/20.20.1/include/node/common.gypi',
+gyp info spawn args '-Dlibrary=shared_library',
+gyp info spawn args '-Dvisibility=default',
+gyp info spawn args '-Dnode_root_dir=/home/administrator/.cache/node-gyp/20.20.1',
+gyp info spawn args '-Dnode_gyp_dir=/home/administrator/Attached-Assets/linux-server/decklink-addon/node_modules/node-gyp',
+gyp info spawn args '-Dnode_lib_file=/home/administrator/.cache/node-gyp/20.20.1/<(target_arch)/node.lib',
+gyp info spawn args '-Dmodule_root_dir=/home/administrator/Attached-Assets/linux-server/decklink-addon',
+gyp info spawn args '-Dnode_engine=v8',
+gyp info spawn args '--depth=.',
+gyp info spawn args '--no-parallel',
+gyp info spawn args '--generator-output',
+gyp info spawn args 'build',
+gyp info spawn args '-Goutput_dir=.'
+gyp info spawn args ]
+gyp info spawn make
+gyp info spawn args [ 'BUILDTYPE=Release', '-C', 'build' ]
+make: Entering directory '/home/administrator/Attached-Assets/linux-server/decklink-addon/build'
+  CXX(target) Release/obj.target/decklink_output/src/decklink_output.o
+  CXX(target) Release/obj.target/decklink_output/src/DeckLinkAPIDispatch.o
+../src/DeckLinkAPIDispatch.cpp:56:9: error: ‘IDeckLinkMetalScreenPreviewHelper’ does not name a type; did you mean ‘IDeckLinkGLScreenPreviewHelper’?
+   56 | typedef IDeckLinkMetalScreenPreviewHelper* (*CreateMetalScreenPreviewHelperFunc)(void);
+      |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      |         IDeckLinkGLScreenPreviewHelper
+../src/DeckLinkAPIDispatch.cpp:57:9: error: ‘IDeckLinkCocoaScreenPreviewCallback’ does not name a type; did you mean ‘IDeckLinkScreenPreviewCallback’?
+   57 | typedef IDeckLinkCocoaScreenPreviewCallback* (*CreateCocoaScreenPreviewFunc)(void*);
+      |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      |         IDeckLinkScreenPreviewCallback
+../src/DeckLinkAPIDispatch.cpp:63:8: error: ‘CFBundleRef’ does not name a type
+   63 | static CFBundleRef                                                      gDeckLinkAPIBundleRef           = NULL;
+      |        ^~~~~~~~~~~
+../src/DeckLinkAPIDispatch.cpp:68:8: error: ‘CreateMetalScreenPreviewHelperFunc’ does not name a type; did you mean ‘CreateOpenGLScreenPreviewHelperFunc’?
+   68 | static CreateMetalScreenPreviewHelperFunc       gCreateMetalPreviewFunc         = NULL;
+      |        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      |        CreateOpenGLScreenPreviewHelperFunc
+../src/DeckLinkAPIDispatch.cpp:69:8: error: ‘CreateCocoaScreenPreviewFunc’ does not name a type; did you mean ‘CreateOpenGLScreenPreviewHelperFunc’?
+   69 | static CreateCocoaScreenPreviewFunc                     gCreateCocoaPreviewFunc         = NULL;
+      |        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      |        CreateOpenGLScreenPreviewHelperFunc
+../src/DeckLinkAPIDispatch.cpp: In function ‘void InitDeckLinkAPI()’:
+../src/DeckLinkAPIDispatch.cpp:77:9: error: ‘CFURLRef’ was not declared in this scope
+   77 |         CFURLRef                bundleURL;
+      |         ^~~~~~~~
+../src/DeckLinkAPIDispatch.cpp:79:9: error: ‘bundleURL’ was not declared in this scope
+   79 |         bundleURL = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, CFSTR(kDeckLinkAPI_BundlePath), kCFURLPOSIXPathStyle, true);
+      |         ^~~~~~~~~
+../src/DeckLinkAPIDispatch.cpp:79:51: error: ‘kCFAllocatorDefault’ was not declared in this scope
+   79 |         bundleURL = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, CFSTR(kDeckLinkAPI_BundlePath), kCFURLPOSIXPathStyle, true);
+      |                                                   ^~~~~~~~~~~~~~~~~~~
+../src/DeckLinkAPIDispatch.cpp:79:72: error: ‘CFSTR’ was not declared in this scope
+   79 |         bundleURL = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, CFSTR(kDeckLinkAPI_BundlePath), kCFURLPOSIXPathStyle, true);
+      |                                                                        ^~~~~
+../src/DeckLinkAPIDispatch.cpp:79:104: error: ‘kCFURLPOSIXPathStyle’ was not declared in this scope
+   79 |         bundleURL = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, CFSTR(kDeckLinkAPI_BundlePath), kCFURLPOSIXPathStyle, true);
+      |                                                                                                        ^~~~~~~~~~~~~~~~~~~~
+../src/DeckLinkAPIDispatch.cpp:79:21: error: ‘CFURLCreateWithFileSystemPath’ was not declared in this scope
+   79 |         bundleURL = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, CFSTR(kDeckLinkAPI_BundlePath), kCFURLPOSIXPathStyle, true);
+      |                     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+../src/DeckLinkAPIDispatch.cpp:82:17: error: ‘gDeckLinkAPIBundleRef’ was not declared in this scope; did you mean ‘kDeckLinkAPI_BundlePath’?
+   82 |                 gDeckLinkAPIBundleRef = CFBundleCreate(kCFAllocatorDefault, bundleURL);
+      |                 ^~~~~~~~~~~~~~~~~~~~~
+      |                 kDeckLinkAPI_BundlePath
+../src/DeckLinkAPIDispatch.cpp:82:41: error: ‘CFBundleCreate’ was not declared in this scope
+   82 |                 gDeckLinkAPIBundleRef = CFBundleCreate(kCFAllocatorDefault, bundleURL);
+      |                                         ^~~~~~~~~~~~~~
+../src/DeckLinkAPIDispatch.cpp:85:67: error: ‘CFBundleGetFunctionPointerForName’ was not declared in this scope
+   85 |                         gCreateIteratorFunc = (CreateIteratorFunc)CFBundleGetFunctionPointerForName(gDeckLinkAPIBundleRef, CFSTR("CreateDeckLinkIteratorInstance_0004"));
+      |                                                                   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+../src/DeckLinkAPIDispatch.cpp:89:25: error: ‘gCreateMetalPreviewFunc’ was not declared in this scope; did you mean ‘gCreateOpenGLPreviewFunc’?
+   89 |                         gCreateMetalPreviewFunc = (CreateMetalScreenPreviewHelperFunc)CFBundleGetFunctionPointerForName(gDeckLinkAPIBundleRef, CFSTR("CreateMetalScreenPreviewHelper_0002"));
+      |                         ^~~~~~~~~~~~~~~~~~~~~~~
+      |                         gCreateOpenGLPreviewFunc
+../src/DeckLinkAPIDispatch.cpp:89:52: error: ‘CreateMetalScreenPreviewHelperFunc’ was not declared in this scope; did you mean ‘CreateOpenGLScreenPreviewHelperFunc’?
+   89 |                         gCreateMetalPreviewFunc = (CreateMetalScreenPreviewHelperFunc)CFBundleGetFunctionPointerForName(gDeckLinkAPIBundleRef, CFSTR("CreateMetalScreenPreviewHelper_0002"));
+      |                                                    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      |                                                    CreateOpenGLScreenPreviewHelperFunc
+../src/DeckLinkAPIDispatch.cpp:90:25: error: ‘gCreateCocoaPreviewFunc’ was not declared in this scope; did you mean ‘gCreateOpenGLPreviewFunc’?
+   90 |                         gCreateCocoaPreviewFunc = (CreateCocoaScreenPreviewFunc)CFBundleGetFunctionPointerForName(gDeckLinkAPIBundleRef, CFSTR("CreateCocoaScreenPreview_0002"));
+      |                         ^~~~~~~~~~~~~~~~~~~~~~~
+      |                         gCreateOpenGLPreviewFunc
+../src/DeckLinkAPIDispatch.cpp:90:52: error: ‘CreateCocoaScreenPreviewFunc’ was not declared in this scope
+   90 |                         gCreateCocoaPreviewFunc = (CreateCocoaScreenPreviewFunc)CFBundleGetFunctionPointerForName(gDeckLinkAPIBundleRef, CFSTR("CreateCocoaScreenPreview_0002"));
+      |                                                    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+../src/DeckLinkAPIDispatch.cpp:95:17: error: ‘CFRelease’ was not declared in this scope
+   95 |                 CFRelease(bundleURL);
+      |                 ^~~~~~~~~
+../src/DeckLinkAPIDispatch.cpp: In function ‘bool IsDeckLinkAPIPresent()’:
+../src/DeckLinkAPIDispatch.cpp:102:13: error: ‘gDeckLinkAPIBundleRef’ was not declared in this scope; did you mean ‘kDeckLinkAPI_BundlePath’?
+  102 |         if (gDeckLinkAPIBundleRef != NULL)
+      |             ^~~~~~~~~~~~~~~~~~~~~
+      |             kDeckLinkAPI_BundlePath
+../src/DeckLinkAPIDispatch.cpp: At global scope:
+../src/DeckLinkAPIDispatch.cpp:148:1: error: ‘IDeckLinkMetalScreenPreviewHelper’ does not name a type; did you mean ‘IDeckLinkGLScreenPreviewHelper’?
+  148 | IDeckLinkMetalScreenPreviewHelper*              CreateMetalScreenPreviewHelper (void)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      | IDeckLinkGLScreenPreviewHelper
+../src/DeckLinkAPIDispatch.cpp:158:1: error: ‘IDeckLinkCocoaScreenPreviewCallback’ does not name a type; did you mean ‘IDeckLinkScreenPreviewCallback’?
+  158 | IDeckLinkCocoaScreenPreviewCallback*    CreateCocoaScreenPreview (void* parentView)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      | IDeckLinkScreenPreviewCallback
+../src/DeckLinkAPIDispatch.cpp:201:9: error: ‘IBMDStreamingDiscovery’ does not name a type
+  201 | typedef IBMDStreamingDiscovery* (*CreateDiscoveryFunc)(void);
+      |         ^~~~~~~~~~~~~~~~~~~~~~
+../src/DeckLinkAPIDispatch.cpp:202:9: error: ‘IBMDStreamingH264NALParser’ does not name a type
+  202 | typedef IBMDStreamingH264NALParser* (*CreateNALParserFunc)(void);
+      |         ^~~~~~~~~~~~~~~~~~~~~~~~~~
+../src/DeckLinkAPIDispatch.cpp:205:8: error: ‘CFBundleRef’ does not name a type
+  205 | static CFBundleRef         gBMDStreamingAPIBundleRef = NULL;
+      |        ^~~~~~~~~~~
+../src/DeckLinkAPIDispatch.cpp:206:8: error: ‘CreateDiscoveryFunc’ does not name a type
+  206 | static CreateDiscoveryFunc gCreateDiscoveryFunc      = NULL;
+      |        ^~~~~~~~~~~~~~~~~~~
+../src/DeckLinkAPIDispatch.cpp:207:8: error: ‘CreateNALParserFunc’ does not name a type
+  207 | static CreateNALParserFunc gCreateNALParserFunc      = NULL;
+      |        ^~~~~~~~~~~~~~~~~~~
+../src/DeckLinkAPIDispatch.cpp: In function ‘void InitBMDStreamingAPI()’:
+../src/DeckLinkAPIDispatch.cpp:211:9: error: ‘CFURLRef’ was not declared in this scope
+  211 |         CFURLRef bundleURL;
+      |         ^~~~~~~~
+../src/DeckLinkAPIDispatch.cpp:213:9: error: ‘bundleURL’ was not declared in this scope
+  213 |         bundleURL = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, CFSTR(kBMDStreamingAPI_BundlePath), kCFURLPOSIXPathStyle, true);
+      |         ^~~~~~~~~
+../src/DeckLinkAPIDispatch.cpp:213:51: error: ‘kCFAllocatorDefault’ was not declared in this scope
+  213 |         bundleURL = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, CFSTR(kBMDStreamingAPI_BundlePath), kCFURLPOSIXPathStyle, true);
+      |                                                   ^~~~~~~~~~~~~~~~~~~
+../src/DeckLinkAPIDispatch.cpp:213:72: error: ‘CFSTR’ was not declared in this scope
+  213 |         bundleURL = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, CFSTR(kBMDStreamingAPI_BundlePath), kCFURLPOSIXPathStyle, true);
+      |                                                                        ^~~~~
+../src/DeckLinkAPIDispatch.cpp:213:108: error: ‘kCFURLPOSIXPathStyle’ was not declared in this scope
+  213 |         bundleURL = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, CFSTR(kBMDStreamingAPI_BundlePath), kCFURLPOSIXPathStyle, true);
+      |                                                                                                            ^~~~~~~~~~~~~~~~~~~~
+../src/DeckLinkAPIDispatch.cpp:213:21: error: ‘CFURLCreateWithFileSystemPath’ was not declared in this scope
+  213 |         bundleURL = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, CFSTR(kBMDStreamingAPI_BundlePath), kCFURLPOSIXPathStyle, true);
+      |                     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+../src/DeckLinkAPIDispatch.cpp:216:17: error: ‘gBMDStreamingAPIBundleRef’ was not declared in this scope; did you mean ‘kBMDStreamingAPI_BundlePath’?
+  216 |                 gBMDStreamingAPIBundleRef = CFBundleCreate(kCFAllocatorDefault, bundleURL);
+      |                 ^~~~~~~~~~~~~~~~~~~~~~~~~
+      |                 kBMDStreamingAPI_BundlePath
+../src/DeckLinkAPIDispatch.cpp:216:45: error: ‘CFBundleCreate’ was not declared in this scope
+  216 |                 gBMDStreamingAPIBundleRef = CFBundleCreate(kCFAllocatorDefault, bundleURL);
+      |                                             ^~~~~~~~~~~~~~
+../src/DeckLinkAPIDispatch.cpp:219:25: error: ‘gCreateDiscoveryFunc’ was not declared in this scope
+  219 |                         gCreateDiscoveryFunc = (CreateDiscoveryFunc)CFBundleGetFunctionPointerForName(gBMDStreamingAPIBundleRef, CFSTR("CreateBMDStreamingDiscoveryInstance_0002"));
+      |                         ^~~~~~~~~~~~~~~~~~~~
+../src/DeckLinkAPIDispatch.cpp:219:49: error: ‘CreateDiscoveryFunc’ was not declared in this scope
+  219 |                         gCreateDiscoveryFunc = (CreateDiscoveryFunc)CFBundleGetFunctionPointerForName(gBMDStreamingAPIBundleRef, CFSTR("CreateBMDStreamingDiscoveryInstance_0002"));
+      |                                                 ^~~~~~~~~~~~~~~~~~~
+../src/DeckLinkAPIDispatch.cpp:220:25: error: ‘gCreateNALParserFunc’ was not declared in this scope
+  220 |                         gCreateNALParserFunc = (CreateNALParserFunc)CFBundleGetFunctionPointerForName(gBMDStreamingAPIBundleRef, CFSTR("CreateBMDStreamingH264NALParser_0001"));
+      |                         ^~~~~~~~~~~~~~~~~~~~
+../src/DeckLinkAPIDispatch.cpp:220:49: error: ‘CreateNALParserFunc’ was not declared in this scope
+  220 |                         gCreateNALParserFunc = (CreateNALParserFunc)CFBundleGetFunctionPointerForName(gBMDStreamingAPIBundleRef, CFSTR("CreateBMDStreamingH264NALParser_0001"));
+      |                                                 ^~~~~~~~~~~~~~~~~~~
+../src/DeckLinkAPIDispatch.cpp:223:17: error: ‘CFRelease’ was not declared in this scope
+  223 |                 CFRelease(bundleURL);
+      |                 ^~~~~~~~~
+../src/DeckLinkAPIDispatch.cpp: At global scope:
+../src/DeckLinkAPIDispatch.cpp:227:1: error: ‘IBMDStreamingDiscovery’ does not name a type
+  227 | IBMDStreamingDiscovery* CreateBMDStreamingDiscoveryInstance()
+      | ^~~~~~~~~~~~~~~~~~~~~~
+../src/DeckLinkAPIDispatch.cpp:237:1: error: ‘IBMDStreamingH264NALParser’ does not name a type
+  237 | IBMDStreamingH264NALParser* CreateBMDStreamingH264NALParser()
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+../src/DeckLinkAPIDispatch.cpp:209:13: warning: ‘void InitBMDStreamingAPI()’ defined but not used [-Wunused-function]
+  209 | static void InitBMDStreamingAPI(void)
+      |             ^~~~~~~~~~~~~~~~~~~
+../src/DeckLinkAPIDispatch.cpp:204:28: warning: ‘gBMDStreamingOnceControl’ defined but not used [-Wunused-variable]
+  204 | static pthread_once_t      gBMDStreamingOnceControl  = PTHREAD_ONCE_INIT;
+      |                            ^~~~~~~~~~~~~~~~~~~~~~~~
+make: *** [decklink_output.target.mk:119: Release/obj.target/decklink_output/src/DeckLinkAPIDispatch.o] Error 1
+make: Leaving directory '/home/administrator/Attached-Assets/linux-server/decklink-addon/build'
+gyp ERR! build error
+gyp ERR! stack Error: `make` failed with exit code: 2
+gyp ERR! stack at ChildProcess.<anonymous> (/home/administrator/Attached-Assets/linux-server/decklink-addon/node_modules/node-gyp/lib/build.js:216:23)
+gyp ERR! System Linux 6.14.0-27-generic
+gyp ERR! command "/usr/bin/node" "/home/administrator/Attached-Assets/linux-server/decklink-addon/node_modules/.bin/node-gyp" "rebuild"
+gyp ERR! cwd /home/administrator/Attached-Assets/linux-server/decklink-addon
+gyp ERR! node -v v20.20.1
+gyp ERR! node-gyp -v v10.3.1
+gyp ERR! not ok
+npm error code 1
+npm error path /home/administrator/Attached-Assets/linux-server/decklink-addon
+npm error command failed
+npm error command sh -c node-gyp rebuild
+npm error A complete log of this run can be found in: /home/administrator/.npm/_logs/2026-03-11T23_20_04_032Z-debug-0.log

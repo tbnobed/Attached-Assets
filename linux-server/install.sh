@@ -291,17 +291,17 @@ else
 
     mkdir -p "$ADDON_INCLUDE"
     echo "  Copying SDK headers from $DECKLINK_SDK_INCLUDE..."
-    cp -f "$DECKLINK_SDK_INCLUDE"/DeckLinkAPI*.h "$ADDON_INCLUDE/" 2>/dev/null || true
+    for hdr in "$DECKLINK_SDK_INCLUDE"/DeckLinkAPI*.h; do
+        [ -f "$hdr" ] && cp -f "$hdr" "$ADDON_INCLUDE/"
+    done
     cp -f "$DECKLINK_SDK_INCLUDE"/LinuxCOM.h "$ADDON_INCLUDE/" 2>/dev/null || true
 
     DISPATCH_CPP="$ADDON_SRC/DeckLinkAPIDispatch.cpp"
     if [ ! -f "$DISPATCH_CPP" ]; then
-        if [ -f "$DECKLINK_SDK_INCLUDE/DeckLinkAPIDispatch.cpp" ]; then
-            cp "$DECKLINK_SDK_INCLUDE/DeckLinkAPIDispatch.cpp" "$DISPATCH_CPP"
-            echo "  Copied DeckLinkAPIDispatch.cpp"
-        else
-            echo -e "${YELLOW}  DeckLinkAPIDispatch.cpp not found in SDK — addon may not build${NC}"
-        fi
+        echo -e "${RED}  DeckLinkAPIDispatch.cpp missing from addon src — build will fail${NC}"
+        echo "  This file ships with the addon and should not need to be copied."
+    else
+        echo "  Using bundled Linux DeckLinkAPIDispatch.cpp"
     fi
 
     cd "$SCRIPT_DIR/decklink-addon"
