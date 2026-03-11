@@ -74,6 +74,7 @@ class RemoteSDIClient extends EventEmitter {
     this._reconnectAttempts = 0;
     this._maxReconnectAttempts = 10;
     this._reconnectDelay = 2000;
+    this._writeQueue = [];
     this._draining = false;
     this._frameDropCount = 0;
     this._framesSent = 0;
@@ -230,12 +231,13 @@ class RemoteSDIClient extends EventEmitter {
   sendVideoFrame(userId, buffer, width, height) {
     if (!this._connected) return;
 
+    const numericId = typeof userId === 'number' ? userId : this._hashUserId(userId);
+
     if (this._draining) {
       this._frameDropCount++;
       return;
     }
 
-    const numericId = typeof userId === 'number' ? userId : this._hashUserId(userId);
     const payload = Buffer.isBuffer(buffer) ? buffer : Buffer.from(buffer);
 
     this._writePacket({
