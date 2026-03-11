@@ -124,6 +124,16 @@ npm install --ignore-scripts 2>&1 || {
 
 GRANDIOSE_DIR="$SCRIPT_DIR/node_modules/grandiose"
 if [ -d "$GRANDIOSE_DIR" ]; then
+    echo "  Cleaning previous grandiose build for fresh patch..."
+    rm -rf "$GRANDIOSE_DIR"
+fi
+
+npm install --ignore-scripts 2>&1 || {
+    echo -e "${YELLOW}  npm install had warnings${NC}"
+}
+
+GRANDIOSE_DIR="$SCRIPT_DIR/node_modules/grandiose"
+if [ -d "$GRANDIOSE_DIR" ]; then
     echo "  Patching grandiose for Linux compatibility (itoa -> snprintf)..."
     UTIL_CC="$GRANDIOSE_DIR/src/grandiose_util.cc"
     if [ -f "$UTIL_CC" ]; then

@@ -9,12 +9,17 @@
 #include <chrono>
 
 #include "DeckLinkAPI.h"
+#include "LinuxCOM.h"
+
+static bool IsEqualIID(REFIID a, REFIID b) {
+    return memcmp(&a, &b, sizeof(IID)) == 0;
+}
 
 class DeckLinkVideoFrame : public IDeckLinkVideoFrame {
 public:
     DeckLinkVideoFrame(long width, long height, long rowBytes, BMDPixelFormat pixelFormat)
-        : refCount_(1), width_(width), height_(height), rowBytes_(rowBytes),
-          pixelFormat_(pixelFormat) {
+        : width_(width), height_(height), rowBytes_(rowBytes),
+          pixelFormat_(pixelFormat), refCount_(1) {
         bufferSize_ = (size_t)height * (size_t)rowBytes;
         buffer_ = (uint8_t*)calloc(1, bufferSize_);
     }
@@ -26,25 +31,25 @@ public:
     uint8_t* RawPtr() { return buffer_; }
     size_t BufferSize() { return bufferSize_; }
 
-    long GetWidth() override { return width_; }
-    long GetHeight() override { return height_; }
-    long GetRowBytes() override { return rowBytes_; }
-    BMDPixelFormat GetPixelFormat() override { return pixelFormat_; }
-    BMDFrameFlags GetFlags() override { return bmdFrameFlagDefault; }
+    long STDMETHODCALLTYPE GetWidth() override { return width_; }
+    long STDMETHODCALLTYPE GetHeight() override { return height_; }
+    long STDMETHODCALLTYPE GetRowBytes() override { return rowBytes_; }
+    BMDPixelFormat STDMETHODCALLTYPE GetPixelFormat() override { return pixelFormat_; }
+    BMDFrameFlags STDMETHODCALLTYPE GetFlags() override { return bmdFrameFlagDefault; }
 
-    HRESULT GetBytes(void** buffer) override {
+    HRESULT STDMETHODCALLTYPE GetBytes(void** buffer) override {
         if (!buffer) return E_FAIL;
         *buffer = buffer_;
         return S_OK;
     }
 
-    HRESULT GetTimecode(BMDTimecodeFormat, IDeckLinkTimecode**) override { return S_FALSE; }
-    HRESULT GetAncillaryData(IDeckLinkVideoFrameAncillary**) override { return S_FALSE; }
+    HRESULT STDMETHODCALLTYPE GetTimecode(BMDTimecodeFormat, IDeckLinkTimecode**) override { return S_FALSE; }
+    HRESULT STDMETHODCALLTYPE GetAncillaryData(IDeckLinkVideoFrameAncillary**) override { return S_FALSE; }
 
-    HRESULT QueryInterface(REFIID iid, LPVOID* ppv) override {
+    HRESULT STDMETHODCALLTYPE QueryInterface(REFIID iid, LPVOID* ppv) override {
         if (!ppv) return E_INVALIDARG;
         *ppv = nullptr;
-        if (iid == IID_IDeckLinkVideoFrame) {
+        if (IsEqualIID(iid, IID_IDeckLinkVideoFrame)) {
             *ppv = static_cast<IDeckLinkVideoFrame*>(this);
             AddRef();
             return S_OK;
@@ -52,8 +57,8 @@ public:
         return E_NOINTERFACE;
     }
 
-    ULONG AddRef() override { return ++refCount_; }
-    ULONG Release() override {
+    ULONG STDMETHODCALLTYPE AddRef() override { return ++refCount_; }
+    ULONG STDMETHODCALLTYPE Release() override {
         ULONG c = --refCount_;
         if (c == 0) delete this;
         return c;
@@ -297,10 +302,10 @@ Napi::Value OpenDevice(const Napi::CallbackInfo& info) {
 
     int deviceIndex = opts.Has("deviceIndex") ? opts.Get("deviceIndex").As<Napi::Number>().Int32Value() : 0;
     BMDDisplayMode displayMode = opts.Has("displayMode")
-        ? (BMDDisplayMode)opts.Get("displayMode").As<Napi::Number>().Uint32Value()
+        ? static_cast<BMDDisplayMode>(opts.Get("displayMode").As<Napi::Number>().Uint32Value())
         : bmdModeHD1080i5994;
     BMDPixelFormat pixelFormat = opts.Has("pixelFormat")
-        ? (BMDPixelFormat)opts.Get("pixelFormat").As<Napi::Number>().Uint32Value()
+        ? static_cast<BMDPixelFormat>(opts.Get("pixelFormat").As<Napi::Number>().Uint32Value())
         : bmdFormat8BitYUV;
     uint32_t audioSampleRate = opts.Has("audioSampleRate")
         ? opts.Get("audioSampleRate").As<Napi::Number>().Uint32Value()
