@@ -1,0 +1,266 @@
+yp info spawn args [ 'BUILDTYPE=Release', '-C', 'build' ]
+make: Entering directory '/home/administrator/Attached-Assets/linux-server/node_modules/grandiose/build'
+  COPY ../build/Release/Processing.NDI.Lib.x64.dll
+  CXX(target) Release/obj.target/grandiose/src/grandiose_util.o
+../src/grandiose_util.cc: In function ‘napi_status checkArgs(napi_env, napi_callback_info, char*, napi_value__**, size_t, napi_valuetype*)’:
+../src/grandiose_util.cc:92:23: warning: comparison of integer expressions of different signedness: ‘int’ and ‘size_t’ {aka ‘long unsigned int’} [-Wsign-compare]
+   92 |   for ( int x = 0 ; x < argc ; x++ ) {
+      |                     ~~^~~~~~
+  CXX(target) Release/obj.target/grandiose/src/grandiose_find.o
+../src/grandiose_find.cc: In function ‘void findComplete(napi_env, napi_status, void*)’:
+../src/grandiose_util.h:84:48: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+   84 | #define REJECT_STATUS if (rejectStatus(env, c, __FILE__, __LINE__) != GRANDIOSE_SUCCESS) return;
+      |                                                ^~~~~~~~
+../src/grandiose_find.cc:55:3: note: in expansion of macro ‘REJECT_STATUS’
+   55 |   REJECT_STATUS;
+      |   ^~~~~~~~~~~~~
+../src/grandiose_util.h:84:48: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+   84 | #define REJECT_STATUS if (rejectStatus(env, c, __FILE__, __LINE__) != GRANDIOSE_SUCCESS) return;
+      |                                                ^~~~~~~~
+../src/grandiose_find.cc:59:3: note: in expansion of macro ‘REJECT_STATUS’
+   59 |   REJECT_STATUS;
+      |   ^~~~~~~~~~~~~
+../src/grandiose_util.h:84:48: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+   84 | #define REJECT_STATUS if (rejectStatus(env, c, __FILE__, __LINE__) != GRANDIOSE_SUCCESS) return;
+      |                                                ^~~~~~~~
+../src/grandiose_find.cc:64:5: note: in expansion of macro ‘REJECT_STATUS’
+   64 |     REJECT_STATUS;
+      |     ^~~~~~~~~~~~~
+../src/grandiose_util.h:84:48: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+   84 | #define REJECT_STATUS if (rejectStatus(env, c, __FILE__, __LINE__) != GRANDIOSE_SUCCESS) return;
+      |                                                ^~~~~~~~
+../src/grandiose_find.cc:66:5: note: in expansion of macro ‘REJECT_STATUS’
+   66 |     REJECT_STATUS;
+      |     ^~~~~~~~~~~~~
+../src/grandiose_util.h:84:48: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+   84 | #define REJECT_STATUS if (rejectStatus(env, c, __FILE__, __LINE__) != GRANDIOSE_SUCCESS) return;
+      |                                                ^~~~~~~~
+../src/grandiose_find.cc:68:5: note: in expansion of macro ‘REJECT_STATUS’
+   68 |     REJECT_STATUS;
+      |     ^~~~~~~~~~~~~
+../src/grandiose_util.h:84:48: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+   84 | #define REJECT_STATUS if (rejectStatus(env, c, __FILE__, __LINE__) != GRANDIOSE_SUCCESS) return;
+      |                                                ^~~~~~~~
+../src/grandiose_find.cc:70:5: note: in expansion of macro ‘REJECT_STATUS’
+   70 |     REJECT_STATUS;
+      |     ^~~~~~~~~~~~~
+../src/grandiose_util.h:84:48: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+   84 | #define REJECT_STATUS if (rejectStatus(env, c, __FILE__, __LINE__) != GRANDIOSE_SUCCESS) return;
+      |                                                ^~~~~~~~
+../src/grandiose_find.cc:72:5: note: in expansion of macro ‘REJECT_STATUS’
+   72 |     REJECT_STATUS;
+      |     ^~~~~~~~~~~~~
+../src/grandiose_util.h:84:48: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+   84 | #define REJECT_STATUS if (rejectStatus(env, c, __FILE__, __LINE__) != GRANDIOSE_SUCCESS) return;
+      |                                                ^~~~~~~~
+../src/grandiose_find.cc:75:5: note: in expansion of macro ‘REJECT_STATUS’
+   75 |     REJECT_STATUS;
+      |     ^~~~~~~~~~~~~
+../src/grandiose_find.cc: In function ‘napi_value__* find(napi_env, napi_callback_info)’:
+../src/grandiose_util.h:85:48: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+   85 | #define REJECT_RETURN if (rejectStatus(env, c, __FILE__, __LINE__) != GRANDIOSE_SUCCESS) return promise;
+      |                                                ^~~~~~~~
+../src/grandiose_find.cc:91:3: note: in expansion of macro ‘REJECT_RETURN’
+   91 |   REJECT_RETURN;
+      |   ^~~~~~~~~~~~~
+../src/grandiose_util.h:85:48: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+   85 | #define REJECT_RETURN if (rejectStatus(env, c, __FILE__, __LINE__) != GRANDIOSE_SUCCESS) return promise;
+      |                                                ^~~~~~~~
+../src/grandiose_find.cc:102:3: note: in expansion of macro ‘REJECT_RETURN’
+  102 |   REJECT_RETURN;
+      |   ^~~~~~~~~~~~~
+../src/grandiose_util.h:85:48: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+   85 | #define REJECT_RETURN if (rejectStatus(env, c, __FILE__, __LINE__) != GRANDIOSE_SUCCESS) return promise;
+      |                                                ^~~~~~~~
+../src/grandiose_find.cc:105:5: note: in expansion of macro ‘REJECT_RETURN’
+  105 |     REJECT_RETURN;
+      |     ^~~~~~~~~~~~~
+../src/grandiose_util.h:85:48: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+   85 | #define REJECT_RETURN if (rejectStatus(env, c, __FILE__, __LINE__) != GRANDIOSE_SUCCESS) return promise;
+      |                                                ^~~~~~~~
+../src/grandiose_find.cc:111:9: note: in expansion of macro ‘REJECT_RETURN’
+  111 |         REJECT_RETURN;
+      |         ^~~~~~~~~~~~~
+../src/grandiose_util.h:85:48: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+   85 | #define REJECT_RETURN if (rejectStatus(env, c, __FILE__, __LINE__) != GRANDIOSE_SUCCESS) return promise;
+      |                                                ^~~~~~~~
+../src/grandiose_find.cc:114:11: note: in expansion of macro ‘REJECT_RETURN’
+  114 |           REJECT_RETURN;
+      |           ^~~~~~~~~~~~~
+../src/grandiose_util.h:85:48: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+   85 | #define REJECT_RETURN if (rejectStatus(env, c, __FILE__, __LINE__) != GRANDIOSE_SUCCESS) return promise;
+      |                                                ^~~~~~~~
+../src/grandiose_find.cc:120:9: note: in expansion of macro ‘REJECT_RETURN’
+  120 |         REJECT_RETURN;
+      |         ^~~~~~~~~~~~~
+../src/grandiose_util.h:85:48: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+   85 | #define REJECT_RETURN if (rejectStatus(env, c, __FILE__, __LINE__) != GRANDIOSE_SUCCESS) return promise;
+      |                                                ^~~~~~~~
+../src/grandiose_find.cc:125:13: note: in expansion of macro ‘REJECT_RETURN’
+  125 |             REJECT_RETURN;
+      |             ^~~~~~~~~~~~~
+../src/grandiose_util.h:85:48: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+   85 | #define REJECT_RETURN if (rejectStatus(env, c, __FILE__, __LINE__) != GRANDIOSE_SUCCESS) return promise;
+      |                                                ^~~~~~~~
+../src/grandiose_find.cc:129:13: note: in expansion of macro ‘REJECT_RETURN’
+  129 |             REJECT_RETURN;
+      |             ^~~~~~~~~~~~~
+../src/grandiose_util.h:85:48: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+   85 | #define REJECT_RETURN if (rejectStatus(env, c, __FILE__, __LINE__) != GRANDIOSE_SUCCESS) return promise;
+      |                                                ^~~~~~~~
+../src/grandiose_find.cc:138:9: note: in expansion of macro ‘REJECT_RETURN’
+  138 |         REJECT_RETURN;
+      |         ^~~~~~~~~~~~~
+../src/grandiose_util.h:85:48: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+   85 | #define REJECT_RETURN if (rejectStatus(env, c, __FILE__, __LINE__) != GRANDIOSE_SUCCESS) return promise;
+      |                                                ^~~~~~~~
+../src/grandiose_find.cc:143:13: note: in expansion of macro ‘REJECT_RETURN’
+  143 |             REJECT_RETURN;
+      |             ^~~~~~~~~~~~~
+../src/grandiose_util.h:85:48: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+   85 | #define REJECT_RETURN if (rejectStatus(env, c, __FILE__, __LINE__) != GRANDIOSE_SUCCESS) return promise;
+      |                                                ^~~~~~~~
+../src/grandiose_find.cc:147:13: note: in expansion of macro ‘REJECT_RETURN’
+  147 |             REJECT_RETURN;
+      |             ^~~~~~~~~~~~~
+../src/grandiose_util.h:85:48: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+   85 | #define REJECT_RETURN if (rejectStatus(env, c, __FILE__, __LINE__) != GRANDIOSE_SUCCESS) return promise;
+      |                                                ^~~~~~~~
+../src/grandiose_find.cc:159:5: note: in expansion of macro ‘REJECT_RETURN’
+  159 |     REJECT_RETURN;
+      |     ^~~~~~~~~~~~~
+../src/grandiose_util.h:85:48: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+   85 | #define REJECT_RETURN if (rejectStatus(env, c, __FILE__, __LINE__) != GRANDIOSE_SUCCESS) return promise;
+      |                                                ^~~~~~~~
+../src/grandiose_find.cc:162:7: note: in expansion of macro ‘REJECT_RETURN’
+  162 |       REJECT_RETURN;
+      |       ^~~~~~~~~~~~~
+../src/grandiose_util.h:85:48: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+   85 | #define REJECT_RETURN if (rejectStatus(env, c, __FILE__, __LINE__) != GRANDIOSE_SUCCESS) return promise;
+      |                                                ^~~~~~~~
+../src/grandiose_util.h:107:3: note: in expansion of macro ‘REJECT_RETURN’
+  107 |   REJECT_RETURN; \
+      |   ^~~~~~~~~~~~~
+../src/grandiose_find.cc:167:17: note: in expansion of macro ‘REJECT_ERROR_RETURN’
+  167 |   if (!c->find) REJECT_ERROR_RETURN("Failed to create NDI find instance.", GRANDIOSE_INVALID_ARGS);
+      |                 ^~~~~~~~~~~~~~~~~~~
+../src/grandiose_util.h:85:48: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+   85 | #define REJECT_RETURN if (rejectStatus(env, c, __FILE__, __LINE__) != GRANDIOSE_SUCCESS) return promise;
+      |                                                ^~~~~~~~
+../src/grandiose_find.cc:171:3: note: in expansion of macro ‘REJECT_RETURN’
+  171 |   REJECT_RETURN;
+      |   ^~~~~~~~~~~~~
+../src/grandiose_util.h:85:48: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+   85 | #define REJECT_RETURN if (rejectStatus(env, c, __FILE__, __LINE__) != GRANDIOSE_SUCCESS) return promise;
+      |                                                ^~~~~~~~
+../src/grandiose_find.cc:174:3: note: in expansion of macro ‘REJECT_RETURN’
+  174 |   REJECT_RETURN;
+      |   ^~~~~~~~~~~~~
+../src/grandiose_util.h:85:48: warning: ISO C++ forbids converting a string constant to ‘char*’ [-Wwrite-strings]
+   85 | #define REJECT_RETURN if (rejectStatus(env, c, __FILE__, __LINE__) != GRANDIOSE_SUCCESS) return promise;
+      |                                                ^~~~~~~~
+../src/grandiose_find.cc:176:3: note: in expansion of macro ‘REJECT_RETURN’
+  176 |   REJECT_RETURN;
+      |   ^~~~~~~~~~~~~
+  CXX(target) Release/obj.target/grandiose/src/grandiose_send.o
+../src/grandiose_send.cc: In function ‘napi_value__* send(napi_env, napi_callback_info)’:
+../src/grandiose_send.cc:52:28: error: ‘sin’ was not declared in this scope
+   52 |     short value = (short) (sin((x / 240.0) * 3.1415 * 2.0) * 28000);
+      |                            ^~~
+make: *** [grandiose.target.mk:123: Release/obj.target/grandiose/src/grandiose_send.o] Error 1
+make: Leaving directory '/home/administrator/Attached-Assets/linux-server/node_modules/grandiose/build'
+gyp ERR! build error
+gyp ERR! stack Error: `make` failed with exit code: 2
+gyp ERR! stack at ChildProcess.<anonymous> (/home/administrator/.npm/_npx/c463d28440264a05/node_modules/node-gyp/lib/build.js:219:23)
+gyp ERR! System Linux 6.14.0-27-generic
+gyp ERR! command "/usr/bin/node" "/home/administrator/.npm/_npx/c463d28440264a05/node_modules/.bin/node-gyp" "rebuild"
+gyp ERR! cwd /home/administrator/Attached-Assets/linux-server/node_modules/grandiose
+gyp ERR! node -v v20.20.1
+gyp ERR! node-gyp -v v12.2.0
+gyp ERR! $npm_package_name grandiose
+gyp ERR! $npm_package_version 0.0.4
+gyp ERR! not ok
+  grandiose build failed — NDI will run in mock mode
+  This is expected if the NDI SDK runtime library is not installed.
+
+[5/7] Checking DeckLink SDK...
+  Searching for Linux headers inside DECKLINK_SDK_PATH...
+  DeckLink SDK (Linux) found: /home/administrator/Downloads/Blackmagic_DeckLink_SDK_15.2/Blackmagic DeckLink SDK 15.2/Linux/include
+
+[6/7] Building DeckLink addon...
+  Copying SDK headers from /home/administrator/Downloads/Blackmagic_DeckLink_SDK_15.2/Blackmagic DeckLink SDK 15.2/Linux/include...
+
+> decklink-output-linux@1.0.0 install
+> node-gyp rebuild
+
+gyp info it worked if it ends with ok
+gyp info using node-gyp@10.3.1
+gyp info using node@20.20.1 | linux | x64
+gyp info find Python using Python version 3.12.3 found at "/usr/bin/python3"
+
+gyp info spawn /usr/bin/python3
+gyp info spawn args [
+gyp info spawn args '/home/administrator/Attached-Assets/linux-server/decklink-addon/node_modules/node-gyp/gyp/gyp_main.py',
+gyp info spawn args 'binding.gyp',
+gyp info spawn args '-f',
+gyp info spawn args 'make',
+gyp info spawn args '-I',
+gyp info spawn args '/home/administrator/Attached-Assets/linux-server/decklink-addon/build/config.gypi',
+gyp info spawn args '-I',
+gyp info spawn args '/home/administrator/Attached-Assets/linux-server/decklink-addon/node_modules/node-gyp/addon.gypi',
+gyp info spawn args '-I',
+gyp info spawn args '/home/administrator/.cache/node-gyp/20.20.1/include/node/common.gypi',
+gyp info spawn args '-Dlibrary=shared_library',
+gyp info spawn args '-Dvisibility=default',
+gyp info spawn args '-Dnode_root_dir=/home/administrator/.cache/node-gyp/20.20.1',
+gyp info spawn args '-Dnode_gyp_dir=/home/administrator/Attached-Assets/linux-server/decklink-addon/node_modules/node-gyp',
+gyp info spawn args '-Dnode_lib_file=/home/administrator/.cache/node-gyp/20.20.1/<(target_arch)/node.lib',
+gyp info spawn args '-Dmodule_root_dir=/home/administrator/Attached-Assets/linux-server/decklink-addon',
+gyp info spawn args '-Dnode_engine=v8',
+gyp info spawn args '--depth=.',
+gyp info spawn args '--no-parallel',
+gyp info spawn args '--generator-output',
+gyp info spawn args 'build',
+gyp info spawn args '-Goutput_dir=.'
+gyp info spawn args ]
+gyp info spawn make
+gyp info spawn args [ 'BUILDTYPE=Release', '-C', 'build' ]
+make: Entering directory '/home/administrator/Attached-Assets/linux-server/decklink-addon/build'
+  CXX(target) Release/obj.target/decklink_output/src/decklink_output.o
+../src/decklink_output.cpp: In member function ‘virtual void OpenDeviceWorker::Execute()’:
+../src/decklink_output.cpp:181:26: error: ‘class IDeckLinkMutableVideoFrame’ has no member named ‘GetBytes’; did you mean ‘GetRowBytes’?
+  181 |         hr = videoFrame->GetBytes(&frameBuffer);
+      |                          ^~~~~~~~
+      |                          GetRowBytes
+../src/decklink_output.cpp: In function ‘Napi::Value OpenDevice(const Napi::CallbackInfo&)’:
+../src/decklink_output.cpp:258:9: warning: enumerated and non-enumerated type in conditional expression [-Wextra]
+  257 |     uint32_t dmVal = opts.Has("displayMode")
+      |                      ~~~~~~~~~~~~~~~~~~~~~~~
+  258 |         ? opts.Get("displayMode").As<Napi::Number>().Uint32Value()
+      |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  259 |         : bmdModeHD1080i5994;
+      |         ~~~~~~~~~~~~~~~~~~~~
+../src/decklink_output.cpp:263:9: warning: enumerated and non-enumerated type in conditional expression [-Wextra]
+  262 |     uint32_t pfVal = opts.Has("pixelFormat")
+      |                      ~~~~~~~~~~~~~~~~~~~~~~~
+  263 |         ? opts.Get("pixelFormat").As<Napi::Number>().Uint32Value()
+      |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  264 |         : bmdFormat8BitYUV;
+      |         ~~~~~~~~~~~~~~~~~~
+make: *** [decklink_output.target.mk:119: Release/obj.target/decklink_output/src/decklink_output.o] Error 1
+make: Leaving directory '/home/administrator/Attached-Assets/linux-server/decklink-addon/build'
+gyp ERR! build error
+gyp ERR! stack Error: `make` failed with exit code: 2
+gyp ERR! stack at ChildProcess.<anonymous> (/home/administrator/Attached-Assets/linux-server/decklink-addon/node_modules/node-gyp/lib/build.js:216:23)
+gyp ERR! System Linux 6.14.0-27-generic
+gyp ERR! command "/usr/bin/node" "/home/administrator/Attached-Assets/linux-server/decklink-addon/node_modules/.bin/node-gyp" "rebuild"
+gyp ERR! cwd /home/administrator/Attached-Assets/linux-server/decklink-addon
+gyp ERR! node -v v20.20.1
+gyp ERR! node-gyp -v v10.3.1
+gyp ERR! not ok
+npm error code 1
+npm error path /home/administrator/Attached-Assets/linux-server/decklink-addon
+npm error command failed
+npm error command sh -c node-gyp rebuild
+npm error A complete log of this run can be found in: /home/administrator/.npm/_logs/2026-03-11T22_31_53_570Z-debug-0.log
+administrator@zoom-linux-1:~/Attached-Assets/linux-server$

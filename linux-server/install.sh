@@ -179,6 +179,14 @@ PYEOF
         fi
     fi
 
+    SEND_CC="$GRANDIOSE_DIR/src/grandiose_send.cc"
+    if [ -f "$SEND_CC" ]; then
+        if ! grep -q '<cmath>' "$SEND_CC"; then
+            sed -i '1s/^/#include <cmath>\n/' "$SEND_CC"
+            echo "  Patched grandiose_send.cc: added #include <cmath>"
+        fi
+    fi
+
     echo "  Building grandiose native addon..."
     cd "$GRANDIOSE_DIR"
     npx node-gyp rebuild 2>&1 || {

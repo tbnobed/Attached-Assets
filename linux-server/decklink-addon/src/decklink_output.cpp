@@ -178,14 +178,19 @@ public:
         }
 
         void* frameBuffer = nullptr;
-        hr = videoFrame->GetBytes(&frameBuffer);
-        if (hr != S_OK || !frameBuffer) {
+        IDeckLinkVideoFrame* readableFrame = nullptr;
+        hr = videoFrame->QueryInterface(IID_IDeckLinkVideoFrame, (void**)&readableFrame);
+        if (hr == S_OK && readableFrame) {
+            readableFrame->GetBytes(&frameBuffer);
+            readableFrame->Release();
+        }
+        if (!frameBuffer) {
             videoFrame->Release();
             output->DisableAudioOutput();
             output->DisableVideoOutput();
             output->Release();
             deckLink->Release();
-            SetError("GetBytes failed on created frame");
+            SetError("Cannot get frame buffer pointer from created video frame");
             return;
         }
 
@@ -254,15 +259,13 @@ Napi::Value OpenDevice(const Napi::CallbackInfo& info) {
 
     int deviceIndex = opts.Has("deviceIndex") ? opts.Get("deviceIndex").As<Napi::Number>().Int32Value() : 0;
 
-    uint32_t dmVal = opts.Has("displayMode")
-        ? opts.Get("displayMode").As<Napi::Number>().Uint32Value()
-        : bmdModeHD1080i5994;
-    BMDDisplayMode displayMode = (BMDDisplayMode)dmVal;
+    BMDDisplayMode displayMode = bmdModeHD1080i5994;
+    if (opts.Has("displayMode"))
+        displayMode = (BMDDisplayMode)opts.Get("displayMode").As<Napi::Number>().Uint32Value();
 
-    uint32_t pfVal = opts.Has("pixelFormat")
-        ? opts.Get("pixelFormat").As<Napi::Number>().Uint32Value()
-        : bmdFormat8BitYUV;
-    BMDPixelFormat pixelFormat = (BMDPixelFormat)pfVal;
+    BMDPixelFormat pixelFormat = bmdFormat8BitYUV;
+    if (opts.Has("pixelFormat"))
+        pixelFormat = (BMDPixelFormat)opts.Get("pixelFormat").As<Napi::Number>().Uint32Value();
 
     uint32_t audioSampleRate = opts.Has("audioSampleRate")
         ? opts.Get("audioSampleRate").As<Napi::Number>().Uint32Value()
