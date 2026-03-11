@@ -143,22 +143,27 @@ import re, sys
 with open(sys.argv[1], 'r') as f:
     code = f.read()
 
-# Fix line ~48: napi_throw_error(env, itoa(..., errorCode, 10), ...)
-# Original: napi_throw_error(env, itoa(errorInfo->error_code, errorCode, 10), errorInfo->error_message);
-# Need: snprintf(errorCode, sizeof(errorCode), "%d", errorInfo->error_code);
-#       napi_throw_error(env, errorCode, errorInfo->error_message);
+# Fix 1: Original source has (across two lines):
+#   throwStatus = napi_throw_error(env,
+#     itoa(errorInfo->error_code, errorCode, 10), errorInfo->error_message);
+# Replace with:
+#   snprintf(errorCode, sizeof(errorCode), "%d", errorInfo->error_code);
+#   throwStatus = napi_throw_error(env, errorCode, errorInfo->error_message);
 code = re.sub(
-    r'napi_throw_error\(env,\s*itoa\(errorInfo->error_code,\s*errorCode,\s*10\),\s*errorInfo->error_message\)',
-    'snprintf(errorCode, sizeof(errorCode), "%d", errorInfo->error_code);\n    napi_throw_error(env, errorCode, errorInfo->error_message)',
+    r'throwStatus\s*=\s*napi_throw_error\(env,\s*\n\s*itoa\(errorInfo->error_code,\s*errorCode,\s*10\),\s*errorInfo->error_message\)',
+    'snprintf(errorCode, sizeof(errorCode), "%d", errorInfo->error_code);\n  throwStatus = napi_throw_error(env, errorCode, errorInfo->error_message)',
     code
 )
 
-# Fix line ~134: napi_create_string_utf8(env, itoa(c->status, errorChars, 10), ...)
-# Original: status = napi_create_string_utf8(env, itoa(c->status, errorChars, 10), ...
-# Need: snprintf(errorChars, sizeof(errorChars), "%d", c->status);
-#       status = napi_create_string_utf8(env, errorChars, ...
+# Fix 2: Original source has (across two lines):
+#   status = napi_create_string_utf8(env, itoa(c->status, errorChars, 10),
+#     NAPI_AUTO_LENGTH, &errorCode);
+# Replace with:
+#   snprintf(errorChars, sizeof(errorChars), "%d", c->status);
+#   status = napi_create_string_utf8(env, errorChars,
+#     NAPI_AUTO_LENGTH, &errorCode);
 code = re.sub(
-    r'napi_create_string_utf8\(env,\s*itoa\(c->status,\s*errorChars,\s*10\)',
+    r'status\s*=\s*napi_create_string_utf8\(env,\s*itoa\(c->status,\s*errorChars,\s*10\)',
     'snprintf(errorChars, sizeof(errorChars), "%d", c->status);\n    status = napi_create_string_utf8(env, errorChars',
     code
 )

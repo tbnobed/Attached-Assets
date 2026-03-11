@@ -9,75 +9,12 @@
 #include <chrono>
 
 #include "DeckLinkAPI.h"
-#include "LinuxCOM.h"
-
-static bool IsEqualIID(REFIID a, REFIID b) {
-    return memcmp(&a, &b, sizeof(IID)) == 0;
-}
-
-class DeckLinkVideoFrame : public IDeckLinkVideoFrame {
-public:
-    DeckLinkVideoFrame(long width, long height, long rowBytes, BMDPixelFormat pixelFormat)
-        : width_(width), height_(height), rowBytes_(rowBytes),
-          pixelFormat_(pixelFormat), refCount_(1) {
-        bufferSize_ = (size_t)height * (size_t)rowBytes;
-        buffer_ = (uint8_t*)calloc(1, bufferSize_);
-    }
-
-    ~DeckLinkVideoFrame() {
-        if (buffer_) free(buffer_);
-    }
-
-    uint8_t* RawPtr() { return buffer_; }
-    size_t BufferSize() { return bufferSize_; }
-
-    long STDMETHODCALLTYPE GetWidth() override { return width_; }
-    long STDMETHODCALLTYPE GetHeight() override { return height_; }
-    long STDMETHODCALLTYPE GetRowBytes() override { return rowBytes_; }
-    BMDPixelFormat STDMETHODCALLTYPE GetPixelFormat() override { return pixelFormat_; }
-    BMDFrameFlags STDMETHODCALLTYPE GetFlags() override { return bmdFrameFlagDefault; }
-
-    HRESULT STDMETHODCALLTYPE GetBytes(void** buffer) override {
-        if (!buffer) return E_FAIL;
-        *buffer = buffer_;
-        return S_OK;
-    }
-
-    HRESULT STDMETHODCALLTYPE GetTimecode(BMDTimecodeFormat, IDeckLinkTimecode**) override { return S_FALSE; }
-    HRESULT STDMETHODCALLTYPE GetAncillaryData(IDeckLinkVideoFrameAncillary**) override { return S_FALSE; }
-
-    HRESULT STDMETHODCALLTYPE QueryInterface(REFIID iid, LPVOID* ppv) override {
-        if (!ppv) return E_INVALIDARG;
-        *ppv = nullptr;
-        if (IsEqualIID(iid, IID_IDeckLinkVideoFrame)) {
-            *ppv = static_cast<IDeckLinkVideoFrame*>(this);
-            AddRef();
-            return S_OK;
-        }
-        return E_NOINTERFACE;
-    }
-
-    ULONG STDMETHODCALLTYPE AddRef() override { return ++refCount_; }
-    ULONG STDMETHODCALLTYPE Release() override {
-        ULONG c = --refCount_;
-        if (c == 0) delete this;
-        return c;
-    }
-
-private:
-    uint8_t* buffer_;
-    size_t bufferSize_;
-    long width_;
-    long height_;
-    long rowBytes_;
-    BMDPixelFormat pixelFormat_;
-    std::atomic<ULONG> refCount_;
-};
 
 struct OutputState {
     IDeckLink* device = nullptr;
     IDeckLinkOutput* output = nullptr;
-    DeckLinkVideoFrame* videoFrame = nullptr;
+    IDeckLinkMutableVideoFrame* videoFrame = nullptr;
+    void* frameBuffer = nullptr;
     int width = 0;
     int height = 0;
     int rowBytes = 0;
@@ -217,37 +154,52 @@ public:
         }
 
         int rowBytes = 0;
-        int bytesPerPixel = 2;
-        if (pixelFormat_ == bmdFormat8BitBGRA) bytesPerPixel = 4;
-        else if (pixelFormat_ == bmdFormat10BitYUV) bytesPerPixel = 0;
-
-        if (pixelFormat_ == bmdFormat10BitYUV) {
-            rowBytes = ((frameWidth + 47) / 48) * 128;
-        } else {
-            rowBytes = frameWidth * bytesPerPixel;
+        hr = output->RowBytesForPixelFormat(pixelFormat_, frameWidth, &rowBytes);
+        if (hr != S_OK) {
+            int bytesPerPixel = 2;
+            if (pixelFormat_ == bmdFormat8BitBGRA || pixelFormat_ == bmdFormat8BitARGB) bytesPerPixel = 4;
+            if (pixelFormat_ == bmdFormat10BitYUV) {
+                rowBytes = ((frameWidth + 47) / 48) * 128;
+            } else {
+                rowBytes = frameWidth * bytesPerPixel;
+            }
         }
 
-        DeckLinkVideoFrame* videoFrame = new DeckLinkVideoFrame(
-            frameWidth, frameHeight, rowBytes, pixelFormat_);
+        IDeckLinkMutableVideoFrame* videoFrame = nullptr;
+        hr = output->CreateVideoFrame(frameWidth, frameHeight, rowBytes, pixelFormat_,
+                                       bmdFrameFlagDefault, &videoFrame);
+        if (hr != S_OK || !videoFrame) {
+            output->DisableAudioOutput();
+            output->DisableVideoOutput();
+            output->Release();
+            deckLink->Release();
+            SetError("CreateVideoFrame failed (HRESULT=" + std::to_string(hr) + ")");
+            return;
+        }
 
-        if (!videoFrame->RawPtr()) {
+        void* frameBuffer = nullptr;
+        hr = videoFrame->GetBytes(&frameBuffer);
+        if (hr != S_OK || !frameBuffer) {
             videoFrame->Release();
             output->DisableAudioOutput();
             output->DisableVideoOutput();
             output->Release();
             deckLink->Release();
-            SetError("Failed to allocate video buffer");
+            SetError("GetBytes failed on created frame");
             return;
         }
+
+        memset(frameBuffer, 0, (size_t)frameHeight * (size_t)rowBytes);
 
         OutputState* state = new OutputState();
         state->device = deckLink;
         state->output = output;
         state->videoFrame = videoFrame;
+        state->frameBuffer = frameBuffer;
         state->width = frameWidth;
         state->height = frameHeight;
         state->rowBytes = rowBytes;
-        state->frameBufferSize = videoFrame->BufferSize();
+        state->frameBufferSize = (size_t)frameHeight * (size_t)rowBytes;
         state->videoEnabled = true;
         state->audioEnabled = true;
 
@@ -301,12 +253,17 @@ Napi::Value OpenDevice(const Napi::CallbackInfo& info) {
     Napi::Object opts = info[0].As<Napi::Object>();
 
     int deviceIndex = opts.Has("deviceIndex") ? opts.Get("deviceIndex").As<Napi::Number>().Int32Value() : 0;
-    BMDDisplayMode displayMode = opts.Has("displayMode")
-        ? static_cast<BMDDisplayMode>(opts.Get("displayMode").As<Napi::Number>().Uint32Value())
+
+    uint32_t dmVal = opts.Has("displayMode")
+        ? opts.Get("displayMode").As<Napi::Number>().Uint32Value()
         : bmdModeHD1080i5994;
-    BMDPixelFormat pixelFormat = opts.Has("pixelFormat")
-        ? static_cast<BMDPixelFormat>(opts.Get("pixelFormat").As<Napi::Number>().Uint32Value())
+    BMDDisplayMode displayMode = (BMDDisplayMode)dmVal;
+
+    uint32_t pfVal = opts.Has("pixelFormat")
+        ? opts.Get("pixelFormat").As<Napi::Number>().Uint32Value()
         : bmdFormat8BitYUV;
+    BMDPixelFormat pixelFormat = (BMDPixelFormat)pfVal;
+
     uint32_t audioSampleRate = opts.Has("audioSampleRate")
         ? opts.Get("audioSampleRate").As<Napi::Number>().Uint32Value()
         : 48000;
@@ -352,16 +309,15 @@ public:
             }
         }
 
-        if (!state || !state->output || !state->videoFrame) {
+        if (!state || !state->output || !state->videoFrame || !state->frameBuffer) {
             SetError("Invalid output handle " + std::to_string(handle_));
             return;
         }
 
-        uint8_t* framePtr = state->videoFrame->RawPtr();
         size_t copySize = videoSize_ < state->frameBufferSize ? videoSize_ : state->frameBufferSize;
-        memcpy(framePtr, videoData_, copySize);
+        memcpy(state->frameBuffer, videoData_, copySize);
         if (copySize < state->frameBufferSize) {
-            memset(framePtr + copySize, 0, state->frameBufferSize - copySize);
+            memset((uint8_t*)state->frameBuffer + copySize, 0, state->frameBufferSize - copySize);
         }
 
         HRESULT hr = state->output->DisplayVideoFrameSync(state->videoFrame);
