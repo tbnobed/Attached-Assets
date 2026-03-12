@@ -133,10 +133,14 @@ export PYTHON="$PYTHON_PATH"
 # ===========================================================
 step "Root project dependencies (shared src/ modules)"
 # ===========================================================
-echo "  Installing root project npm packages..."
-cd "$PROJECT_DIR"
-npm install
-echo -e "  ${GREEN}Done${NC}"
+if [ -f "$PROJECT_DIR/package.json" ]; then
+    echo "  Installing root project npm packages..."
+    cd "$PROJECT_DIR"
+    npm install
+    echo -e "  ${GREEN}Done${NC}"
+else
+    echo -e "  ${CYAN}No root package.json found — skipping (mac-app is self-contained)${NC}"
+fi
 
 # ===========================================================
 step "Zoom Meeting SDK native addon"
