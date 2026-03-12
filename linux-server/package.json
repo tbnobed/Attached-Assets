@@ -7,7 +7,9 @@
     "start": "node server.js",
     "test": "node -e \"require('./protocol')\""
   },
-  "dependencies": {},
+  "dependencies": {
+    "sharp": "^0.33.5"
+  },
   "optionalDependencies": {
     "grandiose": "^0.0.4"
   },

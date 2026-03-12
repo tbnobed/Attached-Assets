@@ -187,11 +187,25 @@ function initManagers() {
     });
   }
 
+  const { compressFrame, setCompressedCallback } = require('./network/frame-compressor');
+  let _compressedCount = 0;
+  let _compressStartTime = Date.now();
+
+  setCompressedCallback((userId, jpegBuf, width, height) => {
+    remoteSDIClient.sendVideoFrame(userId, jpegBuf, width, height);
+    _compressedCount++;
+    if (_compressedCount <= 5 || _compressedCount % 300 === 0) {
+      const elapsed = ((Date.now() - _compressStartTime) / 1000).toFixed(1);
+      const ratio = jpegBuf.length < 1000 ? jpegBuf.length + 'B' : Math.round(jpegBuf.length / 1024) + 'KB';
+      console.log(`[Compress] JPEG #${_compressedCount} t=${elapsed}s ${width}x${height} → ${ratio}`);
+    }
+  });
+
   const previewThrottle = new Map();
   const PREVIEW_INTERVAL_MS = 200;
 
   streamHandler.on('video-frame', ({ userId, frameData }) => {
-    remoteSDIClient.sendVideoFrame(userId, frameData.buffer, frameData.width, frameData.height);
+    compressFrame(userId, frameData.buffer, frameData.width, frameData.height);
 
     const now = Date.now();
     const lastSent = previewThrottle.get(userId) || 0;

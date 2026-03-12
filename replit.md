@@ -29,12 +29,15 @@ mac-app/
 ├── ipc-handlers.js           # Meeting + remote SDI IPC handlers (NO NDI/DeckLink/recorder)
 ├── preload.js                # Context bridge: meeting + remote SDI methods (NO NDI/DeckLink/recorder)
 ├── network/stream-client.js  # TCP client — binary protocol to linux-server
+├── network/frame-compressor.js # JPEG compress via nativeImage (zero deps)
+
 └── renderer/
     ├── index.html            # Simplified UI: participant feeds + Remote SDI connection + SDI assignments
     └── assets/logo.png       # App logo
 ```
 
 - **Stripped of**: NDIManager, DeckLinkManager, RecorderManager — these are all on the Linux server now
+- **Frame Compression**: JPEG compression via Electron's `nativeImage.createFromBitmap().toJPEG(92)` — reduces ~900KB/frame (360p BGRA) to ~30-60KB JPEG. No extra dependencies needed on Mac side.
 - **RemoteSDIClient**: TCP binary protocol (magic `0x5A4C4B31`, 23-byte header), unlimited auto-reconnect with capped backoff, heartbeat, TCP keepalive, back-pressure aware
 - **Device Discovery**: On connect, queries Linux server HTTP API (`/api/devices`) at TCP port + 1 to get actual DeckLink device count and names
 - **UI shows**: Participant video previews, Remote SDI connection bar, dynamic SDI assignment grid (shows actual server outputs), activity log
@@ -54,7 +57,8 @@ linux-server/
 ├── web/index.html      # Web dashboard with DeckLink + NDI + recording controls
 ├── install.sh          # One-command setup for Ubuntu
 ├── decklink-addon/     # Native C++ addon for Linux DeckLink SDK (ships own DeckLinkAPIDispatch.cpp for Linux)
-├── package.json        # Dependencies: grandiose
+├── frame-decoder.js    # JPEG auto-detect + sharp decode → BGRA for DeckLink
+├── package.json        # Dependencies: sharp, grandiose (optional)
 └── README.md           # Full setup and API documentation
 ```
 
@@ -83,11 +87,13 @@ linux-server/
 
 ### Linux Server Data Flow
 1. Mac app connects via TCP port 9300
-2. Sends binary packets: VIDEO_FRAME(0x01), AUDIO_DATA(0x02), PARTICIPANT_JOIN(0x10), PARTICIPANT_LEAVE(0x11), ASSIGNMENT_UPDATE(0x20), HEARTBEAT(0xFF)
-3. Server routes every video-frame to: DeckLinkManager + NDIManager + RecorderManager
-4. Server routes every audio-data to: DeckLinkManager + NDIManager + RecorderManager
-5. NDI auto-creates source on participant-join, destroys on participant-leave
-6. Web dashboard on port 9301 provides full control
+2. Mac app JPEG-compresses BGRA frames via `nativeImage.toJPEG(92)` before sending (~30-60KB vs ~900KB raw)
+3. Sends binary packets: VIDEO_FRAME(0x01), AUDIO_DATA(0x02), PARTICIPANT_JOIN(0x10), PARTICIPANT_LEAVE(0x11), ASSIGNMENT_UPDATE(0x20), HEARTBEAT(0xFF)
+4. Server auto-detects JPEG (magic bytes 0xFF 0xD8) and decodes via `sharp` back to BGRA
+5. Server routes every video-frame to: DeckLinkManager + NDIManager + RecorderManager
+6. Server routes every audio-data to: DeckLinkManager + NDIManager + RecorderManager
+7. NDI auto-creates source on participant-join, destroys on participant-leave
+8. Web dashboard on port 9301 provides full control
 
 ## Key Files (Original — DO NOT MODIFY)
 - `src/main/main.js` - Electron main entry point

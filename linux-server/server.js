@@ -5,6 +5,7 @@ const { NDIManager } = require('./ndi-manager');
 const { RecorderManager } = require('./recorder-manager');
 const { FrameReceiver } = require('./receiver');
 const { createApi } = require('./api');
+const { decodeFrame, isJpeg, isAvailable: jpegAvailable } = require('./frame-decoder');
 
 const TCP_PORT = parseInt(process.env.TCP_PORT || '9300', 10);
 const API_PORT = parseInt(process.env.API_PORT || '9301', 10);
@@ -26,10 +27,43 @@ const api = createApi({ port: API_PORT, deckLinkManager, ndiManager, recorderMan
 
 let _ndiAutoCreate = true;
 
+let _videoDecodeCount = 0;
+const _decoding = new Map();
+const _pendingDecode = new Map();
+
+function _routeFrame(userId, buf, w, h) {
+  deckLinkManager.sendVideoFrame(userId, buf, w, h);
+  ndiManager.sendVideoFrame(userId, buf, w, h);
+  recorderManager.writeVideoFrame(userId, buf, w, h);
+}
+
+async function _processDecodeQueue(userId) {
+  while (_pendingDecode.has(userId)) {
+    const frame = _pendingDecode.get(userId);
+    _pendingDecode.delete(userId);
+
+    const decoded = await decodeFrame(frame.buffer, frame.width, frame.height);
+    if (!decoded) continue;
+    _videoDecodeCount++;
+    if (_videoDecodeCount <= 5 || _videoDecodeCount % 300 === 0) {
+      console.log(`[Server] Decoded JPEG #${_videoDecodeCount}: ${decoded.width}x${decoded.height} (${Math.round(frame.buffer.length / 1024)}KB → ${Math.round(decoded.buffer.length / 1024)}KB)`);
+    }
+    _routeFrame(userId, decoded.buffer, decoded.width, decoded.height);
+  }
+  _decoding.delete(userId);
+}
+
 receiver.on('video-frame', ({ userId, width, height, buffer }) => {
-  deckLinkManager.sendVideoFrame(userId, buffer, width, height);
-  ndiManager.sendVideoFrame(userId, buffer, width, height);
-  recorderManager.writeVideoFrame(userId, buffer, width, height);
+  if (isJpeg(buffer)) {
+    _pendingDecode.set(userId, { buffer, width, height });
+
+    if (!_decoding.get(userId)) {
+      _decoding.set(userId, true);
+      _processDecodeQueue(userId);
+    }
+  } else {
+    _routeFrame(userId, buffer, width, height);
+  }
 });
 
 receiver.on('audio-data', ({ userId, buffer, sampleRate, channels }) => {
@@ -83,6 +117,7 @@ async function main() {
     console.log(`    DeckLink:        ${deckLinkManager.isAvailable() ? `${deckLinkManager.devices.length} device(s)` : 'not available'}`);
     console.log(`    NDI:             ${ndiManager.isAvailable() ? 'available' : 'not available'}`);
     console.log(`    Recording:       ${recorderManager.ffmpegAvailable ? 'available' : 'FFmpeg not found'}`);
+    console.log(`    JPEG decode:     ${jpegAvailable() ? 'available (sharp)' : 'NOT available — install sharp for compressed frames'}`);
     console.log(`    NDI Prefix:      ${NDI_PREFIX}`);
     console.log(`    Recording Dir:   ${RECORDING_DIR}`);
     console.log('');
