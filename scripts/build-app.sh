@@ -124,6 +124,20 @@ if [ -d "$PROJECT_DIR/zoom-meeting-sdk-addon" ]; then
     cp -R "$PROJECT_DIR/zoom-meeting-sdk-addon" "$APP_CODE/"
 fi
 
+SDK_LIB="$APP_CODE/zoom-meeting-sdk-addon/sdk/lib"
+if [ -d "$SDK_LIB" ]; then
+    BUNDLE_FRAMEWORKS="$CONTENTS/Frameworks"
+    mkdir -p "$BUNDLE_FRAMEWORKS"
+
+    for item in "$SDK_LIB"/*; do
+        bname="$(basename "$item")"
+        [ "$bname" = "*" ] && continue
+        rm -rf "$BUNDLE_FRAMEWORKS/$bname" 2>/dev/null
+        cp -RH "$item" "$BUNDLE_FRAMEWORKS/$bname" 2>/dev/null || true
+    done
+    echo -e "  ${GREEN}Copied Zoom SDK frameworks into Contents/Frameworks${NC}"
+fi
+
 if [ -d "$PROJECT_DIR/decklink-output-addon" ]; then
     cp -R "$PROJECT_DIR/decklink-output-addon" "$APP_CODE/"
 fi
