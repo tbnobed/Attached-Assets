@@ -1545,9 +1545,15 @@
           log('Connected to Remote SDI server ' + info.host + ':' + info.port, 'success');
           const queryHost = info.host || state.rsdiServerHost;
           if (queryHost) {
+            await new Promise(r => setTimeout(r, 500));
             const devResult = await window.zoomISO.remoteSDIQueryDevices(queryHost, state.rsdiApiPort || 9301);
             if (devResult && devResult.success && devResult.devices) {
               state.rsdiDevices = devResult.devices;
+              if (devResult.devices.length > 0) {
+                log('Server reports ' + devResult.devices.length + ' DeckLink device(s)', 'success');
+              }
+            } else if (devResult && devResult.error) {
+              log('Device query failed: ' + devResult.error, 'warn');
             }
             renderRsdiAssignments();
           }

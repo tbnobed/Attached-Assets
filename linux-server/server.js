@@ -1,5 +1,10 @@
 'use strict';
 
+if (!process.env.UV_THREADPOOL_SIZE) {
+  process.env.UV_THREADPOOL_SIZE = '16';
+}
+const UV_POOL = process.env.UV_THREADPOOL_SIZE;
+
 const { DeckLinkManager } = require('./decklink-manager');
 const { NDIManager } = require('./ndi-manager');
 const { RecorderManager } = require('./recorder-manager');
@@ -114,6 +119,7 @@ async function main() {
     console.log('  Configuration:');
     console.log(`    TCP stream port: ${TCP_PORT}`);
     console.log(`    HTTP API port:   ${API_PORT}`);
+    console.log(`    UV thread pool:  ${UV_POOL}`);
     console.log(`    DeckLink:        ${deckLinkManager.isAvailable() ? `${deckLinkManager.devices.length} device(s)` : 'not available'}`);
     console.log(`    NDI:             ${ndiManager.isAvailable() ? 'available' : 'not available'}`);
     console.log(`    Recording:       ${recorderManager.ffmpegAvailable ? 'available' : 'FFmpeg not found'}`);
@@ -138,24 +144,31 @@ async function main() {
   }
 }
 
-process.on('SIGINT', () => {
-  console.log('\n[Server] Shutting down...');
-  recorderManager.destroy();
-  ndiManager.destroy();
-  deckLinkManager.destroy();
-  receiver.stop();
-  api.stop();
-  process.exit(0);
-});
+let _shuttingDown = false;
+function shutdown() {
+  if (_shuttingDown) return;
+  _shuttingDown = true;
 
-process.on('SIGTERM', () => {
   console.log('\n[Server] Shutting down...');
-  recorderManager.destroy();
-  ndiManager.destroy();
-  deckLinkManager.destroy();
-  receiver.stop();
-  api.stop();
-  process.exit(0);
-});
+
+  const forceTimer = setTimeout(() => {
+    console.log('[Server] Force exit (cleanup exceeded 3s)');
+    process.exit(1);
+  }, 3000);
+  forceTimer.unref();
+
+  setImmediate(() => {
+    try { deckLinkManager.destroy(); } catch (e) {}
+    try { recorderManager.destroy(); } catch (e) {}
+    try { ndiManager.destroy(); } catch (e) {}
+    try { receiver.stop(); } catch (e) {}
+    try { api.stop(); } catch (e) {}
+    console.log('[Server] Cleanup done, exiting.');
+    process.exit(0);
+  });
+}
+
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);
 
 main();

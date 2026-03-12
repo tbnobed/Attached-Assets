@@ -171,31 +171,59 @@ function setupIpcHandlers(ipcMain, context) {
   ipcMain.handle('remote-sdi-query-devices', async (_event, host, apiPort) => {
     const http = require('http');
     const p = apiPort || 9301;
-    return new Promise((resolve) => {
-      const req = http.get(`http://${host}:${p}/api/devices`, { timeout: 5000 }, (res) => {
-        let body = '';
-        res.on('data', (chunk) => { body += chunk; });
-        res.on('end', () => {
-          if (res.statusCode < 200 || res.statusCode >= 300) {
-            resolve({ success: false, error: `Server returned HTTP ${res.statusCode}`, devices: [] });
-            return;
-          }
-          try {
-            const data = JSON.parse(body);
-            resolve({ success: true, devices: data.devices || [], displayModes: data.displayModes || {} });
-          } catch (e) {
-            resolve({ success: false, error: 'Invalid response from server', devices: [] });
-          }
+    const maxRetries = 3;
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const result = await new Promise((resolve) => {
+          const url = `http://${host}:${p}/api/devices`;
+          console.log(`[DeviceQuery] Attempt ${attempt}/${maxRetries}: ${url}`);
+          const req = http.get(url, { timeout: 5000 }, (res) => {
+            let body = '';
+            res.on('data', (chunk) => { body += chunk; });
+            res.on('end', () => {
+              if (res.statusCode < 200 || res.statusCode >= 300) {
+                console.log(`[DeviceQuery] HTTP ${res.statusCode}`);
+                resolve({ success: false, error: `Server returned HTTP ${res.statusCode}`, devices: [] });
+                return;
+              }
+              try {
+                const data = JSON.parse(body);
+                console.log(`[DeviceQuery] Success: ${(data.devices || []).length} device(s)`);
+                resolve({ success: true, devices: data.devices || [], displayModes: data.displayModes || {} });
+              } catch (e) {
+                console.log(`[DeviceQuery] Invalid JSON response`);
+                resolve({ success: false, error: 'Invalid response from server', devices: [] });
+              }
+            });
+          });
+          req.on('error', (err) => {
+            console.log(`[DeviceQuery] Error: ${err.message}`);
+            resolve({ success: false, error: err.message, devices: [] });
+          });
+          req.on('timeout', () => {
+            req.destroy();
+            console.log(`[DeviceQuery] Timeout`);
+            resolve({ success: false, error: 'Connection timed out', devices: [] });
+          });
         });
-      });
-      req.on('error', (err) => {
-        resolve({ success: false, error: err.message, devices: [] });
-      });
-      req.on('timeout', () => {
-        req.destroy();
-        resolve({ success: false, error: 'Connection timed out', devices: [] });
-      });
-    });
+
+        if (result.success) return result;
+
+        if (attempt < maxRetries) {
+          await new Promise(r => setTimeout(r, 1000));
+        } else {
+          return result;
+        }
+      } catch (err) {
+        console.log(`[DeviceQuery] Unexpected error: ${err.message}`);
+        if (attempt === maxRetries) {
+          return { success: false, error: err.message, devices: [] };
+        }
+        await new Promise(r => setTimeout(r, 1000));
+      }
+    }
+    return { success: false, error: 'All retries failed', devices: [] };
   });
 
   ipcMain.handle('remote-sdi-disconnect', () => {

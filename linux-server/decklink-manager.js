@@ -309,10 +309,21 @@ class DeckLinkManager extends EventEmitter {
 
   async _pumpFrameLoop(deviceIndex, output) {
     const maxSamplesPerWrite = Math.round(48000 / output._exactFps) * 2;
+    const frameIntervalMs = 1000 / output._exactFps;
+    let lastFrameTime = Date.now();
 
     while (output._pumpRunning && output.active && output.handle !== undefined) {
+      const now = Date.now();
+      const elapsed = now - lastFrameTime;
+
+      if (elapsed < frameIntervalMs - 1) {
+        await new Promise(r => setTimeout(r, Math.max(1, frameIntervalMs - elapsed - 1)));
+        continue;
+      }
+
+      lastFrameTime = now;
+
       if (!output._uyvyBuf || !output._hasFrame) {
-        await new Promise(r => setTimeout(r, 5));
         continue;
       }
 
@@ -348,8 +359,8 @@ class DeckLinkManager extends EventEmitter {
         }
 
         output.framesSent++;
-        if (output.framesSent <= 5 || output.framesSent % 300 === 0) {
-          console.log(`[DeckLink] Frame #${output.framesSent} dev=${deviceIndex}`);
+        if (output.framesSent <= 3 || output.framesSent % 900 === 0) {
+          console.log(`[DeckLink] Frame #${output.framesSent} dev=${deviceIndex} (${Math.round(1000 / (elapsed || 1))}fps)`);
         }
       } catch (err) {
         if (!output._errorLogged) {
