@@ -1,5 +1,5 @@
 process.env.UV_THREADPOOL_SIZE = '64';
-const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, systemPreferences } = require('electron');
 const path = require('path');
 const { settings, ensureOutputDir, getOutputDir } = require('../config/settings');
 const { applyUserConfigToSettings, needsConfiguration } = require('../config/user-config');
@@ -221,7 +221,18 @@ function sendStatusUpdate() {
   sendToRenderer('status-update', status);
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+  if (process.platform === 'darwin') {
+    try {
+      const micAccess = await systemPreferences.askForMediaAccess('microphone');
+      console.log(`[Main] Microphone access: ${micAccess ? 'granted' : 'denied'}`);
+      const camAccess = await systemPreferences.askForMediaAccess('camera');
+      console.log(`[Main] Camera access: ${camAccess ? 'granted' : 'denied'}`);
+    } catch (err) {
+      console.warn('[Main] Could not request media permissions:', err.message);
+    }
+  }
+
   applyUserConfigToSettings(settings);
   initManagers();
   setupIpcHandlers(ipcMain, {

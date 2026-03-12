@@ -229,6 +229,17 @@ find "$OUTPUT_APP" -type l | while read lnk; do
     fi
 done
 
+echo "  Re-signing app bundle (required for macOS permission prompts)..."
+if command -v codesign &>/dev/null; then
+    find "$OUTPUT_APP" -name "*.framework" -o -name "*.dylib" -o -name "*.node" -o -name "*.app" | while read item; do
+        codesign --deep --force --sign - "$item" 2>/dev/null || true
+    done
+    codesign --deep --force --sign - "$OUTPUT_APP" 2>/dev/null || true
+    echo -e "  ${GREEN}Ad-hoc code signature applied${NC}"
+else
+    echo -e "${YELLOW}  codesign not available — app may not show permission prompts on macOS${NC}"
+fi
+
 echo "[6/6] Verifying..."
 CHECKS_OK=true
 

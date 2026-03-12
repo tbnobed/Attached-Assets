@@ -488,8 +488,8 @@ bool ZoomAddon::JoinMeeting(const std::string& meetingId, const std::string& pas
         joinParams.meetingNumber = std::stoll(meetingId);
         joinParams.displayName = [NSString stringWithUTF8String:displayName.c_str()];
         joinParams.password = [NSString stringWithUTF8String:password.c_str()];
-        joinParams.isNoVideo = YES;
-        joinParams.isNoAudio = YES;
+        joinParams.isNoVideo = NO;
+        joinParams.isNoAudio = NO;
         joinParams.isMyVoiceInMix = NO;
         joinParams.isAudioRawDataStereo = NO;
         joinParams.audioRawdataSamplingRate = ZoomSDKAudioRawdataSamplingRate_48K;
