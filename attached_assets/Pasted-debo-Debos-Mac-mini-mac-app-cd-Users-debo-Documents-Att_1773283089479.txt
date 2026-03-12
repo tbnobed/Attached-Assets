@@ -1,0 +1,75 @@
+debo@Debos-Mac-mini mac-app % cd /Users/debo/Documents/Attached-Assets
+npx electron mac-app --no-sandbox --disable-gpu-sandbox
+[MacApp] Loaded local .env from /Users/debo/Documents/Attached-Assets/mac-app/.env
+[Config] Loaded user config from /Users/debo/Library/Application Support/zoomlink-remote-sdi/config.json
+[ZoomNative] publicAppKey NOT available on ZoomSDKInitParams: [<ZoomSDKInitParams 0x1240130f500> setValue:forUndefinedKey:]: this class is not key value coding-compliant for the key publicAppKey.
+[ZoomNative] Initializing macOS SDK (customUI=NO/defaultUI, logging=YES)
+getServiceHub
+2026-03-11 19:37:16.778 Electron[81970:4046531] NSWindow does not support nonactivating panel styleMask 0x80
+2026-03-11 19:37:16.796 Electron[81970:4046531] _ptUILoader.retainCount 3
+[ZoomNative] InitSDK result=0
+[ZoomNative] Raw data modes set (heap, no intermediate)
+[ZoomNative] SDK version: 6.7.6 (75900)
+[SessionManager] SDK initialized, authenticating...
+[ZoomNative] JWT token length: 269
+[ZoomNative] Bundle ID: com.github.Electron
+[ZoomNative] JWT first 40 chars: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ
+[ZoomNative] isAuthorized before auth: NO
+[ZoomNative] Attempting auth with JWT (immediate)...
+[ZoomNative] Immediate SDKAuth result=0 (0=Success, 1=Failed)
+[ZoomNative] Immediate auth call accepted, waiting for delegate callback
+[SessionManager] Zoom Meeting SDK bridge initialized, available: true
+objc[81970]: Class NSTaskLauncher is implemented in both /Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/nydus.framework/Versions/A/nydus (0x14758a9e8) and /Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/aomagent.bundle/Contents/MacOS/aomagent (0x14a7788c8). One of the two will be used. Which one is undefined.
+objc[81980]: Class NSTaskLauncher is implemented in both /Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/capHost.app/Contents/MacOS/caphost (0x1003808a8) and /Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/nydus.framework/Versions/A/nydus (0x107f469e8). One of the two will be used. Which one is undefined.
+2026-03-11 19:37:19.749 Electron[81970:4046531] NSWindow warning: adding an unknown subview: <ZMMTWindowFadebar: 0x12408ac6400>. Break on NSLog to debug.
+2026-03-11 19:37:19.750 Electron[81970:4046531] Call stack:
+(
+	0   AppKit                              0x0000000195bc7df4 -[NSThemeFrame addSubview:] + 116
+	1   AppKit                              0x0000000195bc7954 -[NSView addSubview:positioned:relativeTo:] + 360
+	2   AppKit                              0x0000000195bc7768 -[NSThemeFrame addSubview:positioned:relativeTo:] + 52
+	3   zVideoUIBridge                      0x0000000143fc9cdc ZMMTCCGetCurrentConfSession + 24916
+	4   ZoomSDKVideoUI                      0x00000001615a6b20 TermConfUIWithCustomizedUIMode + 1632884
+	5   ZoomSDKVideoUI                      0x0000000161b4deb0 TermConfUIWithCustomizedUIMode + 7560708
+	6   ZoomSDKVideoUI                      0x00000001615927b4 TermConfUIWithCustomizedUIMode + 1550088
+	7   ZoomSDKVideoUI                      0x0000000161465474 TermConfUIWithCustomizedUIMode + 316360
+	8   zPTApp                              0x0000000149a33e90 TermModule + 477704
+	9   zPTApp                              0x0000000149a33990 TermModule + 476424
+	10  zPTApp                              0x00000001499b38b0 _ZN27CmmSharingMessageSimpleType39ComposeClientDirectAudioChangeToZoomMsgERKN2us4zoom7sharing5proto21ClientDirectShareInfoERNS3_11ZoomMessageE + 1728968
+	11  zPTApp                              0x00000001499af918 _ZN27CmmSharingMessageSimpleType39ComposeClientDirectAudioChangeToZoomMsgERKN2us4zoom7sharing5proto21ClientDirectShareInfoERNS3_11ZoomMessageE + 1712688
+	12  cmmlib                              0x000000010d045f7c _ZN3Cmm11CSBAppProxy11FindHandlerEPNS_14ISBIdleHandlerE + 72
+	13  cmmlib                              0x000000010d045db8 _ZN3Cmm11CSBAppProxy19DispatchIdleMessageEv + 44
+	14  libdispatch.dylib                   0x0000000191d955b4 _dispatch_client_callout + 20
+	15  libdispatch.dylib                   0x0000000191d98a68 _dispatch_continuation_pop + 596
+	16  libdispatch.dylib                   0x0000000191dace84 _dispatch_source_latch_and_call + 420
+	17  libdispatch.dylib                   0x0000000191daba4c _dispatch_source_invoke + 836
+	18  libdispatch.dylib                   0x0000000191da3f54 _dispatch_main_queue_drain + 748
+	19  libdispatch.dylib                   0x0000000191da3c58 _dispatch_main_queue_callback_4CF + 44
+	20  CoreFoundation                      0x000000019206f9d0 __CFRUNLOOP_IS_SERVICING_THE_MAIN_DISPATCH_QUEUE__ + 16
+	21  CoreFoundation                      0x000000019202f5bc __CFRunLoopRun + 1996
+	22  CoreFoundation                      0x000000019202e734 CFRunLoopRunSpecific + 588
+	23  HIToolbox                           0x000000019d59d530 RunCurrentEventLoopInMode + 292
+	24  HIToolbox                           0x000000019d5a3348 ReceiveNextEventCommon + 676
+	25  HIToolbox                           0x000000019d5a3508 _BlockUntilNextEventMatchingListInModeWithFilter + 76
+	26  AppKit                              0x0000000195ba6848 _DPSNextEvent + 660
+	27  AppKit                              0x000000019650cc24 -[NSApplication(NSEventRouting) _nextEventMatchingEventMask:untilDate:inMode:dequeue:] + 688
+	28  AppKit                              0x0000000195b99874 -[NSApplication run] + 480
+	29  Electron Framework                  0x000000010ef18a30 _ZN2v82V816SetEntropySourceEPFbPhmE + 83508
+	30  Electron Framework                  0x000000010ef18848 _ZN2v82V816SetEntropySourceEPFbPhmE + 83020
+	31  Electron Framework                  0x000000010e96c378 _ZN2v88internal8compiler23CompilationDependencies29DependOnEmptyContextExtensionENS1_12ScopeInfoRefE + 6960
+	32  Electron Framework                  0x000000010e9d2408 uv_get_constrained_memory + 3900
+	33  Electron Framework                  0x000000010f162324 _ZNK2v87Message13GetLineNumberENS_5LocalINS_7ContextEEE + 69292
+	34  Electron Framework                  0x000000010f162274 _ZNK2v87Message13GetLineNumberENS_5LocalINS_7ContextEEE + 69116
+	35  Electron Framework                  0x000000010f203d00 _ZN2v87Isolate16RequestInterruptEPFvPS0_PvES2_ + 31948
+	36  Electron Framework                  0x000000010f203c04 _ZN2v87Isolate16RequestInterruptEPFvPS0_PvES2_ + 31696
+	37  Electron Framework                  0x000000010f6013fc _ZNK2v88TryCatch9ExceptionEv + 3132
+	38  Electron Framework                  0x000000010ed972ec _ZNK4node3sea11SeaResource14use_code_cacheEv + 8972
+	39  Electron Framework                  0x000000010f04af18 _ZN2v814ObjectTemplate10SetHandlerERKNS_33NamedPropertyHandlerConfigurationE + 42992
+	40  Electron Framework                  0x000000010f04a8ec _ZN2v814ObjectTemplate10SetHandlerERKNS_33NamedPropertyHandlerConfigurationE + 41412
+	41  Electron Framework                  0x000000010fb4b8a0 ElectronMain + 120
+	42  dyld                                0x0000000191bc8274 start + 2840
+)
+objc[81970]: Class ZMAlertButtonInfo is implemented in both /Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomUnit.framework/Versions/A/ZoomUnit (0x10c53b380) and /Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/zAppUI.bundle/Contents/MacOS/zAppUI (0x166f6c750). One of the two will be used. Which one is undefined.
+[ZoomNative] Auth SUCCESS
+[ZoomBridge] Event: meeting-status AUTH_SUCCESS  
+[SessionManager] SDK authentication successful
+
