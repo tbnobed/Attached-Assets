@@ -149,6 +149,18 @@ done
 if [ -d "$PROJECT_DIR/zoom-meeting-sdk-addon" ]; then
     cp -R "$PROJECT_DIR/zoom-meeting-sdk-addon" "$APP_CODE/"
     echo -e "  ${GREEN}Included Zoom SDK addon${NC}"
+
+    SDK_LIB="$APP_CODE/zoom-meeting-sdk-addon/sdk/lib"
+    if [ -d "$SDK_LIB" ]; then
+        BUNDLE_FRAMEWORKS="$CONTENTS/Frameworks"
+        mkdir -p "$BUNDLE_FRAMEWORKS"
+        for item in "$SDK_LIB"/*; do
+            bname="$(basename "$item")"
+            rm -rf "$BUNDLE_FRAMEWORKS/$bname" 2>/dev/null
+            cp -R "$item" "$BUNDLE_FRAMEWORKS/$bname" 2>/dev/null || true
+        done
+        echo -e "  ${GREEN}Copied Zoom SDK frameworks into app bundle${NC}"
+    fi
 fi
 
 echo "[5/6] Creating launcher wrapper..."
