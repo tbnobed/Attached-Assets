@@ -7,8 +7,34 @@
 #include <cstdlib>
 #include <thread>
 #include <chrono>
+#include <unistd.h>
+#include <fcntl.h>
 
 #include "DeckLinkAPI.h"
+
+static int g_devnull_fd = -1;
+static int g_real_stdout_fd = -1;
+
+static void initStdoutRedirect() {
+    if (g_real_stdout_fd < 0) {
+        g_real_stdout_fd = dup(STDOUT_FILENO);
+    }
+    if (g_devnull_fd < 0) {
+        g_devnull_fd = open("/dev/null", O_WRONLY);
+    }
+}
+
+static void suppressStdout() {
+    if (g_devnull_fd >= 0) {
+        dup2(g_devnull_fd, STDOUT_FILENO);
+    }
+}
+
+static void restoreStdout() {
+    if (g_real_stdout_fd >= 0) {
+        dup2(g_real_stdout_fd, STDOUT_FILENO);
+    }
+}
 
 struct OutputState {
     IDeckLink* device = nullptr;
@@ -34,7 +60,9 @@ Napi::Value EnumerateDevices(const Napi::CallbackInfo& info) {
     Napi::Env env = info.Env();
     Napi::Array result = Napi::Array::New(env);
 
+    suppressStdout();
     IDeckLinkIterator* iterator = CreateDeckLinkIteratorInstance();
+    restoreStdout();
     if (!iterator) {
         return result;
     }
@@ -118,7 +146,9 @@ public:
             return;
         }
 
+        suppressStdout();
         hr = output->EnableVideoOutput(displayMode_, bmdVideoOutputFlagDefault);
+        restoreStdout();
         if (hr != S_OK) {
             output->Release();
             deckLink->Release();
@@ -128,8 +158,10 @@ public:
 
         BMDAudioSampleRate sampleRate = (BMDAudioSampleRate)audioSampleRate_;
         BMDAudioSampleType sampleType = (BMDAudioSampleType)audioSampleType_;
+        suppressStdout();
         hr = output->EnableAudioOutput(sampleRate, sampleType, audioChannels_,
                                         bmdAudioOutputStreamContinuous);
+        restoreStdout();
         if (hr != S_OK) {
             output->DisableVideoOutput();
             output->Release();
@@ -361,7 +393,9 @@ public:
 
         state->videoBuffer->EndAccess(bmdBufferAccessWrite);
 
+        suppressStdout();
         hr = state->output->DisplayVideoFrameSync(state->videoFrame);
+        restoreStdout();
         if (hr != S_OK) {
             SetError("DisplayVideoFrameSync failed (HRESULT=" + std::to_string(hr) + ")");
         }
@@ -444,8 +478,10 @@ public:
         uint32_t bytesPerSample = 4;
         uint32_t sampleCount = (uint32_t)(audioSize_ / bytesPerSample);
         if (sampleCount > 0) {
+            suppressStdout();
             HRESULT hr = state->output->WriteAudioSamplesSync(
                 audioData_, sampleCount, &samplesWritten_);
+            restoreStdout();
             if (hr != S_OK) {
                 SetError("WriteAudioSamplesSync failed (HRESULT=" + std::to_string(hr) + ")");
             }
@@ -519,6 +555,7 @@ Napi::Value CloseDevice(const Napi::CallbackInfo& info) {
             spins++;
         }
 
+        suppressStdout();
         if (state->videoBuffer) {
             state->videoBuffer->Release();
         }
@@ -533,6 +570,7 @@ Napi::Value CloseDevice(const Napi::CallbackInfo& info) {
         if (state->device) {
             state->device->Release();
         }
+        restoreStdout();
         delete state;
     }
 
@@ -540,7 +578,9 @@ Napi::Value CloseDevice(const Napi::CallbackInfo& info) {
 }
 
 Napi::Value IsAvailable(const Napi::CallbackInfo& info) {
+    suppressStdout();
     IDeckLinkIterator* iterator = CreateDeckLinkIteratorInstance();
+    restoreStdout();
     if (iterator) {
         iterator->Release();
         return Napi::Boolean::New(info.Env(), true);
@@ -555,6 +595,7 @@ static uint32_t fourcc(const char* s) {
 
 static void CleanupOutputs(void*) {
     std::lock_guard<std::mutex> lock(g_mutex);
+    suppressStdout();
     for (auto& pair : g_outputs) {
         OutputState* state = pair.second;
         if (state) {
@@ -569,10 +610,12 @@ static void CleanupOutputs(void*) {
             delete state;
         }
     }
+    restoreStdout();
     g_outputs.clear();
 }
 
 Napi::Object Init(Napi::Env env, Napi::Object exports) {
+    initStdoutRedirect();
     napi_add_env_cleanup_hook(env, CleanupOutputs, nullptr);
 
     exports.Set("enumerateDevices", Napi::Function::New(env, EnumerateDevices));
