@@ -614,6 +614,17 @@ static void CleanupOutputs(void*) {
     g_outputs.clear();
 }
 
+Napi::Value RedirectStdoutToDevNull(const Napi::CallbackInfo& info) {
+    initStdoutRedirect();
+    suppressStdout();
+    return Napi::Boolean::New(info.Env(), true);
+}
+
+Napi::Value RestoreStdout(const Napi::CallbackInfo& info) {
+    restoreStdout();
+    return Napi::Boolean::New(info.Env(), true);
+}
+
 Napi::Object Init(Napi::Env env, Napi::Object exports) {
     initStdoutRedirect();
     napi_add_env_cleanup_hook(env, CleanupOutputs, nullptr);
@@ -624,6 +635,8 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
     exports.Set("writeAudio", Napi::Function::New(env, WriteAudio));
     exports.Set("closeDevice", Napi::Function::New(env, CloseDevice));
     exports.Set("isAvailable", Napi::Function::New(env, IsAvailable));
+    exports.Set("redirectStdoutToDevNull", Napi::Function::New(env, RedirectStdoutToDevNull));
+    exports.Set("restoreStdout", Napi::Function::New(env, RestoreStdout));
 
     exports.Set("bmdModeNTSC",           Napi::Number::New(env, fourcc("ntsc")));
     exports.Set("bmdModeNTSC2398",       Napi::Number::New(env, fourcc("nt23")));

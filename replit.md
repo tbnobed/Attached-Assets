@@ -95,6 +95,14 @@ linux-server/
 7. NDI auto-creates source on participant-join, destroys on participant-leave
 8. Web dashboard on port 9301 provides full control
 
+### Native SDK stdout suppression
+- Native SDKs (DeckLink driver, NDI/libndi.so via grandiose) print debug messages directly to stdout via `printf()` (e.g. "Frame number X sent.") — these cannot be intercepted from JavaScript
+- At startup, `server.js` overrides `console.log/warn/error` to write to **stderr** (so our logs are still visible)
+- Then calls `decklink-addon`'s `redirectStdoutToDevNull()` which does `dup2(/dev/null, STDOUT_FILENO)` at the C level, permanently silencing fd 1
+- This happens BEFORE `grandiose` (NDI) is loaded, so all native SDK output from both DeckLink and NDI is suppressed
+- The decklink addon also wraps individual SDK calls with suppress/restore as a safety net
+- **After rebuild**: `cd linux-server/decklink-addon && npm run build` is required whenever the C++ addon changes
+
 ## Key Files (Original — DO NOT MODIFY)
 - `src/main/main.js` - Electron main entry point
 - `src/main/preload.js` - Context bridge for secure IPC

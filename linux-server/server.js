@@ -5,7 +5,27 @@ if (!process.env.UV_THREADPOOL_SIZE) {
 }
 const UV_POOL = process.env.UV_THREADPOOL_SIZE;
 
+const { Console } = require('console');
+const _stderr = new Console({ stdout: process.stderr, stderr: process.stderr });
+console.log = _stderr.log.bind(_stderr);
+console.warn = _stderr.warn.bind(_stderr);
+console.error = _stderr.error.bind(_stderr);
+console.info = _stderr.info.bind(_stderr);
+console.debug = _stderr.debug.bind(_stderr);
+
 const { DeckLinkManager } = require('./decklink-manager');
+
+try {
+  const path = require('path');
+  const decklinkAddon = require(path.join(__dirname, 'decklink-addon'));
+  if (decklinkAddon.available && typeof decklinkAddon.redirectStdoutToDevNull === 'function') {
+    decklinkAddon.redirectStdoutToDevNull();
+    console.log('[Server] Native stdout redirected to /dev/null (suppresses SDK debug output)');
+  }
+} catch (e) {
+  console.warn('[Server] Could not redirect native stdout:', e.message);
+}
+
 const { NDIManager } = require('./ndi-manager');
 const { RecorderManager } = require('./recorder-manager');
 const { FrameReceiver } = require('./receiver');

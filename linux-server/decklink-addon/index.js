@@ -62,6 +62,16 @@ module.exports = {
     return addon.closeDevice(handle);
   },
 
+  redirectStdoutToDevNull() {
+    if (!addon || typeof addon.redirectStdoutToDevNull !== 'function') return false;
+    return addon.redirectStdoutToDevNull();
+  },
+
+  restoreStdout() {
+    if (!addon || typeof addon.restoreStdout !== 'function') return false;
+    return addon.restoreStdout();
+  },
+
   bmdModeNTSC:           addon ? addon.bmdModeNTSC : 0,
   bmdModeNTSC2398:       addon ? addon.bmdModeNTSC2398 : 0,
   bmdModePAL:            addon ? addon.bmdModePAL : 0,
