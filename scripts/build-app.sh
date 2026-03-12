@@ -195,6 +195,26 @@ exec "$DIR/ZoomLink_electron" "$APP_DIR" --no-sandbox --disable-gpu-sandbox "$@"
 LAUNCHEOF
 chmod +x "$LAUNCHER"
 
+echo "  Embedding rpaths into binaries (bypasses DYLD stripping)..."
+NODE_BINARY="$APP_CODE/zoom-meeting-sdk-addon/build/Release/zoom_meeting_sdk.node"
+if [ -f "$NODE_BINARY" ] && command -v install_name_tool &>/dev/null; then
+    install_name_tool -add_rpath "@executable_path/../Frameworks" "$NODE_BINARY" 2>/dev/null || true
+    install_name_tool -add_rpath "@loader_path/../../../../../Frameworks" "$NODE_BINARY" 2>/dev/null || true
+    install_name_tool -add_rpath "@loader_path/../../sdk/lib" "$NODE_BINARY" 2>/dev/null || true
+    echo -e "  ${GREEN}Added rpaths to zoom_meeting_sdk.node${NC}"
+fi
+
+if [ -f "$REAL_ELECTRON" ] && command -v install_name_tool &>/dev/null; then
+    install_name_tool -add_rpath "@executable_path/../Frameworks" "$REAL_ELECTRON" 2>/dev/null || true
+    echo -e "  ${GREEN}Added rpath to Electron binary${NC}"
+fi
+
+ELECTRON_FW="$CONTENTS/Frameworks/Electron Framework.framework/Versions/A/Electron Framework"
+if [ -f "$ELECTRON_FW" ] && command -v install_name_tool &>/dev/null; then
+    install_name_tool -add_rpath "@executable_path/../Frameworks" "$ELECTRON_FW" 2>/dev/null || true
+    echo -e "  ${GREEN}Added rpath to Electron Framework${NC}"
+fi
+
 echo "  Resolving any remaining symlinks in bundle..."
 find "$OUTPUT_APP" -type l | while read lnk; do
     target="$(readlink "$lnk")"
