@@ -209,40 +209,37 @@ PYEOF
 
     BINDING_GYP="$GRANDIOSE_DIR/binding.gyp"
     if [ -f "$BINDING_GYP" ]; then
-        if grep -q 'Processing.NDI.Lib.x64' "$BINDING_GYP"; then
-            echo "  Patching grandiose binding.gyp for Linux (NDI library name)..."
+        echo "  Patching grandiose binding.gyp for Linux..."
 
-            if [ -n "$NDI_LIB_DIR" ]; then
-                NDI_SO_ACTUAL=$(find "$NDI_LIB_DIR" -maxdepth 1 -name 'libndi.so*' \( -type f -o -type l \) 2>/dev/null | head -1)
-            fi
-
-            if [ -n "$NDI_SO_ACTUAL" ]; then
-                NDI_LINK_LIB="$NDI_SO_ACTUAL"
-            else
-                NDI_LINK_LIB="-lndi"
-            fi
-
-            python3 - "$BINDING_GYP" "$NDI_LINK_LIB" << 'PYEOF'
-import json, sys
-path = sys.argv[1]
-ndi_lib = sys.argv[2]
-with open(path) as f:
-    gyp = json.load(f)
-for target in gyp.get("targets", []):
-    target["link_settings"] = {
-        "libraries": [ndi_lib]
-    }
-    if "copies" in target:
-        del target["copies"]
-with open(path, "w") as f:
-    json.dump(gyp, f, indent=2)
-print("  Patched binding.gyp: libraries=[" + ndi_lib + "]")
-PYEOF
+        NDI_LINK_FLAG="-lndi"
+        if [ -n "$NDI_LIB_DIR" ]; then
+            NDI_LINK_FLAG="-L${NDI_LIB_DIR} -lndi"
+            sudo ldconfig 2>/dev/null || true
         fi
-    fi
 
-    if [ -n "$NDI_LIB_DIR" ]; then
-        sudo ldconfig 2>/dev/null || true
+        cat > "$BINDING_GYP" << GYEOF
+{
+  "targets": [
+    {
+      "target_name": "grandiose",
+      "sources": [
+        "src/grandiose_util.cc",
+        "src/grandiose_find.cc",
+        "src/grandiose_send.cc",
+        "src/grandiose_receive.cc",
+        "src/grandiose.cc"
+      ],
+      "include_dirs": ["include"],
+      "cflags!": ["-fno-exceptions"],
+      "cflags_cc!": ["-fno-exceptions"],
+      "cflags_cc": ["-Wno-implicit-fallthrough", "-Wno-write-strings"],
+      "ldflags": ["${NDI_LINK_FLAG}"],
+      "libraries": ["${NDI_LINK_FLAG}"]
+    }
+  ]
+}
+GYEOF
+        echo "  Wrote binding.gyp with NDI link flags: ${NDI_LINK_FLAG}"
     fi
 
     echo "  Building grandiose native addon..."
