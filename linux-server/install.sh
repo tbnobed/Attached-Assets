@@ -187,6 +187,33 @@ PYEOF
         fi
     fi
 
+    BINDING_GYP="$GRANDIOSE_DIR/binding.gyp"
+    if [ -f "$BINDING_GYP" ]; then
+        if grep -q 'Processing.NDI.Lib.x64' "$BINDING_GYP"; then
+            echo "  Patching grandiose binding.gyp for Linux (NDI library name)..."
+            python3 - "$BINDING_GYP" << 'PYEOF'
+import json, sys
+path = sys.argv[1]
+with open(path) as f:
+    gyp = json.load(f)
+for target in gyp.get("targets", []):
+    target["link_settings"] = {
+        "libraries": ["-lndi"],
+        "library_dirs": [
+            "/usr/lib",
+            "/usr/local/lib",
+            "/usr/lib/x86_64-linux-gnu"
+        ]
+    }
+    if "copies" in target:
+        del target["copies"]
+with open(path, "w") as f:
+    json.dump(gyp, f, indent=2)
+print("  Patched binding.gyp: replaced Windows NDI lib with -lndi for Linux")
+PYEOF
+        fi
+    fi
+
     echo "  Building grandiose native addon..."
     cd "$GRANDIOSE_DIR"
     npx node-gyp rebuild 2>&1 || {
