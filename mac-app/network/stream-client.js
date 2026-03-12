@@ -123,6 +123,7 @@ class RemoteSDIClient extends EventEmitter {
       this._connected = true;
       this._reconnecting = false;
       this._reconnectAttempts = 0;
+      this._draining = false;
       this._framesSent = 0;
       this._bytesSent = 0;
       this._frameDropCount = 0;

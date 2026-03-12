@@ -1466,7 +1466,6 @@
 
       let html = '';
       for (const dev of devices) {
-        if (!dev.supportsOutput) continue;
         const i = dev.index;
         const currentAssignments = state.rsdiAssignments || {};
         let assignedUserId = null;
@@ -1486,10 +1485,6 @@
           '<span class="rsdi-label">' + label + '</span>' +
           '<select onchange="remoteSDIAssign(this.value, ' + i + ')">' + optionsHtml + '</select>' +
           '</div>';
-      }
-      if (!html) {
-        list.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:8px 0;">No output-capable DeckLink devices on server</div>';
-        return;
       }
       list.innerHTML = html;
     }
@@ -1548,12 +1543,13 @@
         updateRemoteSDIUI(info);
         if (info.state === 'connected') {
           log('Connected to Remote SDI server ' + info.host + ':' + info.port, 'success');
-          if (state.rsdiDevices.length === 0 && info.host) {
-            const devResult = await window.zoomISO.remoteSDIQueryDevices(info.host, state.rsdiApiPort || 9301);
+          const queryHost = info.host || state.rsdiServerHost;
+          if (queryHost) {
+            const devResult = await window.zoomISO.remoteSDIQueryDevices(queryHost, state.rsdiApiPort || 9301);
             if (devResult && devResult.success && devResult.devices) {
               state.rsdiDevices = devResult.devices;
-              renderRsdiAssignments();
             }
+            renderRsdiAssignments();
           }
         }
       });
