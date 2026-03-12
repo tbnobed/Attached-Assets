@@ -149,8 +149,12 @@ class FrameReceiver extends EventEmitter {
       case PacketType.ASSIGNMENT_UPDATE: {
         let assignment = {};
         try {
-          assignment = JSON.parse(packet.payload.toString('utf8'));
-        } catch (e) {}
+          const raw = packet.payload.toString('utf8');
+          assignment = JSON.parse(raw);
+          console.log(`[Receiver] Assignment update: userId=${assignment.userId} deviceIndex=${assignment.deviceIndex}`);
+        } catch (e) {
+          console.error(`[Receiver] Failed to parse assignment payload (${packet.payload.length} bytes):`, e.message);
+        }
         this.emit('assignment-update', assignment);
         break;
       }
