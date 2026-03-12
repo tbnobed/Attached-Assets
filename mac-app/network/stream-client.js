@@ -74,7 +74,9 @@ class RemoteSDIClient extends EventEmitter {
     this._reconnectAttempts = 0;
     this._maxReconnectAttempts = Infinity;
     this._reconnectDelay = 2000;
-    this._draining = false;
+    this._writing = false;
+    this._pendingVideo = new Map();
+    this._pendingAudio = new Map();
     this._frameDropCount = 0;
     this._framesSent = 0;
     this._bytesSent = 0;
@@ -123,7 +125,9 @@ class RemoteSDIClient extends EventEmitter {
       this._connected = true;
       this._reconnecting = false;
       this._reconnectAttempts = 0;
-      this._draining = false;
+      this._writing = false;
+      this._pendingVideo.clear();
+      this._pendingAudio.clear();
       this._framesSent = 0;
       this._bytesSent = 0;
       this._frameDropCount = 0;
@@ -152,7 +156,8 @@ class RemoteSDIClient extends EventEmitter {
     });
 
     this._socket.on('drain', () => {
-      this._draining = false;
+      this._writing = false;
+      this._flushPending();
     });
   }
 
@@ -181,6 +186,8 @@ class RemoteSDIClient extends EventEmitter {
     this._teardownSocket();
     this._host = null;
     this._assignments.clear();
+    this._pendingVideo.clear();
+    this._pendingAudio.clear();
     this.emit('status', { state: 'disconnected' });
   }
 
@@ -194,10 +201,10 @@ class RemoteSDIClient extends EventEmitter {
     this._stopHeartbeat();
     this._heartbeatTimer = setInterval(() => {
       if (this._connected) {
-        this._writePacket({
+        this._writeRaw(encodePacket({
           type: PacketType.HEARTBEAT,
           payload: Buffer.alloc(0),
-        });
+        }));
       }
     }, 5000);
   }
@@ -209,30 +216,69 @@ class RemoteSDIClient extends EventEmitter {
     }
   }
 
-  _writePacket(packet) {
+  _writeRaw(buf) {
     if (!this._connected || !this._socket || this._socket.destroyed) return false;
-
-    const buf = encodePacket(packet);
     const ok = this._socket.write(buf);
     this._bytesSent += buf.length;
+    if (!ok) {
+      this._writing = true;
+    }
+    return ok;
+  }
+
+  _writePacket(packet) {
+    return this._writeRaw(encodePacket(packet));
+  }
+
+  _flushPending() {
+    if (!this._connected || !this._socket || this._socket.destroyed) return;
+
+    const videoBufs = [];
+    for (const [userId, frame] of this._pendingVideo) {
+      videoBufs.push(encodePacket({
+        type: PacketType.VIDEO_FRAME,
+        userId,
+        width: frame.width,
+        height: frame.height,
+        payload: frame.payload,
+      }));
+      this._framesSent++;
+    }
+    this._pendingVideo.clear();
+
+    for (const [userId, audio] of this._pendingAudio) {
+      videoBufs.push(encodePacket({
+        type: PacketType.AUDIO_DATA,
+        userId,
+        width: audio.sampleRate,
+        height: audio.channels,
+        payload: audio.payload,
+      }));
+    }
+    this._pendingAudio.clear();
+
+    if (videoBufs.length === 0) return;
+
+    const combined = Buffer.concat(videoBufs);
+    const ok = this._socket.write(combined);
+    this._bytesSent += combined.length;
 
     if (!ok) {
-      this._draining = true;
+      this._writing = true;
     }
-
-    return ok;
   }
 
   sendVideoFrame(userId, buffer, width, height) {
     if (!this._connected) return;
 
-    if (this._draining) {
+    const numericId = typeof userId === 'number' ? userId : this._hashUserId(userId);
+    const payload = Buffer.isBuffer(buffer) ? buffer : Buffer.from(buffer);
+
+    if (this._writing) {
+      this._pendingVideo.set(numericId, { width, height, payload });
       this._frameDropCount++;
       return;
     }
-
-    const numericId = typeof userId === 'number' ? userId : this._hashUserId(userId);
-    const payload = Buffer.isBuffer(buffer) ? buffer : Buffer.from(buffer);
 
     this._writePacket({
       type: PacketType.VIDEO_FRAME,
@@ -247,10 +293,14 @@ class RemoteSDIClient extends EventEmitter {
 
   sendAudioData(userId, buffer, sampleRate, channels) {
     if (!this._connected) return;
-    if (this._draining) return;
 
     const numericId = typeof userId === 'number' ? userId : this._hashUserId(userId);
     const payload = Buffer.isBuffer(buffer) ? buffer : Buffer.from(buffer);
+
+    if (this._writing) {
+      this._pendingAudio.set(numericId, { sampleRate: sampleRate || 48000, channels: channels || 1, payload });
+      return;
+    }
 
     this._writePacket({
       type: PacketType.AUDIO_DATA,
