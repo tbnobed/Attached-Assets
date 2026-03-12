@@ -163,6 +163,24 @@ function initManagers() {
     sendToRenderer('reconnecting', { attempt: info.attempt, maxAttempts: sessionManager.maxReconnectAttempts });
   });
 
+  if (sessionManager.zoomBridge) {
+    sessionManager.zoomBridge.on('meeting-status-detail', (status) => {
+      const statusMessages = {
+        'MEETING_STATUS_CONNECTING': 'Zoom SDK: Connecting to meeting servers...',
+        'MEETING_STATUS_WAITINGFORHOST': 'Zoom SDK: Waiting for host to start the meeting...',
+        'MEETING_STATUS_INMEETING': 'Zoom SDK: Successfully joined meeting',
+        'MEETING_STATUS_DISCONNECTING': 'Zoom SDK: Disconnecting from meeting...',
+        'MEETING_STATUS_RECONNECTING': 'Zoom SDK: Reconnecting to meeting...',
+        'MEETING_STATUS_ENDED': 'Zoom SDK: Meeting has ended',
+        'MEETING_STATUS_FAILED': 'Zoom SDK: Failed to join meeting — check meeting ID and password',
+        'MEETING_STATUS_IDLE': 'Zoom SDK: Idle',
+      };
+      const msg = statusMessages[status] || `Zoom SDK status: ${status}`;
+      console.log(`[Main] ${msg}`);
+      sendToRenderer('status-message', { message: msg });
+    });
+  }
+
   const previewThrottle = new Map();
   const PREVIEW_INTERVAL_MS = 200;
 

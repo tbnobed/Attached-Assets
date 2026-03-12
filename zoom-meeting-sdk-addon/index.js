@@ -335,6 +335,8 @@ class ZoomMeetingBridge extends EventEmitter {
   }
 
   _handleMeetingStatus(status, data) {
+    console.log(`[ZoomBridge] Meeting status change: ${status}`);
+    this.emit('meeting-status-detail', status, data);
     switch (status) {
       case 'MEETING_STATUS_INMEETING':
         this.inMeeting = true;
