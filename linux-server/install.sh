@@ -89,13 +89,19 @@ NDI_FOUND=0
 NDI_LIB_DIR=""
 NDI_LIB_PATHS=(
     "/usr/lib/libndi.so"
-    "/usr/local/lib/libndi.so"
     "/usr/lib/x86_64-linux-gnu/libndi.so"
+    "/usr/local/lib/libndi.so"
+    "/usr/lib/libndi.so.5"
+    "/usr/lib/libndi.so.6"
+    "/usr/lib/x86_64-linux-gnu/libndi.so.5"
+    "/usr/lib/x86_64-linux-gnu/libndi.so.6"
+    "/usr/local/lib/libndi.so.5"
+    "/usr/local/lib/libndi.so.6"
     "/opt/ndi/lib/libndi.so"
 )
 
 for p in "${NDI_LIB_PATHS[@]}"; do
-    if [ -f "$p" ]; then
+    if [ -e "$p" ]; then
         NDI_FOUND=1
         NDI_LIB_DIR="$(dirname "$p")"
         echo -e "  NDI runtime library found: $p"
@@ -104,20 +110,11 @@ for p in "${NDI_LIB_PATHS[@]}"; do
 done
 
 if [ "$NDI_FOUND" = "0" ]; then
-    NDI_SEARCH=$(find /usr /opt /home -name 'libndi.so*' -type f -o -name 'libndi.so*' -type l 2>/dev/null | head -1)
-    if [ -n "$NDI_SEARCH" ]; then
+    NDI_SEARCH=$(ldconfig -p 2>/dev/null | grep 'libndi\.so' | head -1 | sed 's/.*=> //')
+    if [ -n "$NDI_SEARCH" ] && [ -e "$NDI_SEARCH" ]; then
         NDI_FOUND=1
         NDI_LIB_DIR="$(dirname "$NDI_SEARCH")"
-        echo -e "  NDI runtime library found: $NDI_SEARCH"
-    fi
-fi
-
-if [ "$NDI_FOUND" = "0" ] && [ -n "$NDI_RUNTIME_DIR_V6" ]; then
-    NDI_SEARCH=$(find "$NDI_RUNTIME_DIR_V6" -name 'libndi.so*' 2>/dev/null | head -1)
-    if [ -n "$NDI_SEARCH" ]; then
-        NDI_FOUND=1
-        NDI_LIB_DIR="$(dirname "$NDI_SEARCH")"
-        echo -e "  NDI runtime library found: $NDI_SEARCH"
+        echo -e "  NDI runtime library found (via ldconfig): $NDI_SEARCH"
     fi
 fi
 
@@ -211,18 +208,15 @@ PYEOF
     if [ -f "$BINDING_GYP" ]; then
         echo "  Patching grandiose binding.gyp for Linux..."
 
-        SAFE_NDI_LIB=""
         if [ -n "$NDI_LIB_DIR" ]; then
-            REAL_SO=$(find "$NDI_LIB_DIR" -maxdepth 1 -name 'libndi.so*' \( -type f -o -type l \) 2>/dev/null | head -1)
-            if [ -n "$REAL_SO" ]; then
-                SAFE_NDI_DIR="/usr/local/lib"
-                sudo mkdir -p "$SAFE_NDI_DIR" 2>/dev/null || true
-                if [ ! -e "$SAFE_NDI_DIR/libndi.so" ]; then
-                    echo "  Creating symlink: $SAFE_NDI_DIR/libndi.so -> $REAL_SO"
-                    sudo ln -sf "$REAL_SO" "$SAFE_NDI_DIR/libndi.so" 2>/dev/null || \
-                        ln -sf "$REAL_SO" "$SAFE_NDI_DIR/libndi.so" 2>/dev/null || true
+            HAS_UNVERSIONED=$(find "$NDI_LIB_DIR" -maxdepth 1 -name 'libndi.so' \( -type f -o -type l \) 2>/dev/null | head -1)
+            if [ -z "$HAS_UNVERSIONED" ]; then
+                VERSIONED_SO=$(find "$NDI_LIB_DIR" -maxdepth 1 -name 'libndi.so.*' \( -type f -o -type l \) 2>/dev/null | head -1)
+                if [ -n "$VERSIONED_SO" ]; then
+                    echo "  Creating libndi.so symlink -> $(basename "$VERSIONED_SO")"
+                    sudo ln -sf "$VERSIONED_SO" "$NDI_LIB_DIR/libndi.so" 2>/dev/null || true
+                    sudo ldconfig 2>/dev/null || true
                 fi
-                sudo ldconfig 2>/dev/null || true
             fi
         fi
 
