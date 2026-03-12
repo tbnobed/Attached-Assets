@@ -134,7 +134,6 @@ class RemoteSDIClient extends EventEmitter {
       this._lastStatTime = Date.now();
 
       this._startHeartbeat();
-      this._flushAssignments();
 
       this.emit('status', { state: 'connected', host: this._host, port: this._port });
     });

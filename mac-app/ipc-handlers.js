@@ -168,6 +168,62 @@ function setupIpcHandlers(ipcMain, context) {
     }
   });
 
+  ipcMain.handle('remote-sdi-start-output', async (_event, host, apiPort, deviceIndex, mode) => {
+    const http = require('http');
+    const p = apiPort || 9301;
+    try {
+      const result = await new Promise((resolve) => {
+        const postData = JSON.stringify({ deviceIndex, mode: mode || '1080p2997' });
+        const req = http.request({
+          hostname: host, port: p, path: '/api/output/start',
+          method: 'POST', timeout: 5000,
+          headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(postData) }
+        }, (res) => {
+          let body = '';
+          res.on('data', (chunk) => { body += chunk; });
+          res.on('end', () => {
+            try { resolve(JSON.parse(body)); } catch { resolve({ success: false, error: 'Invalid response' }); }
+          });
+        });
+        req.on('error', (err) => resolve({ success: false, error: err.message }));
+        req.on('timeout', () => { req.destroy(); resolve({ success: false, error: 'Timeout' }); });
+        req.write(postData);
+        req.end();
+      });
+      return result;
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  });
+
+  ipcMain.handle('remote-sdi-stop-output', async (_event, host, apiPort, deviceIndex) => {
+    const http = require('http');
+    const p = apiPort || 9301;
+    try {
+      const result = await new Promise((resolve) => {
+        const postData = JSON.stringify({ deviceIndex });
+        const req = http.request({
+          hostname: host, port: p, path: '/api/output/stop',
+          method: 'POST', timeout: 5000,
+          headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(postData) }
+        }, (res) => {
+          let body = '';
+          res.on('data', (chunk) => { body += chunk; });
+          res.on('end', () => {
+            try { resolve(JSON.parse(body)); } catch { resolve({ success: false, error: 'Invalid response' }); }
+          });
+        });
+        req.on('error', (err) => resolve({ success: false, error: err.message }));
+        req.on('timeout', () => { req.destroy(); resolve({ success: false, error: 'Timeout' }); });
+        req.write(postData);
+        req.end();
+      });
+      return result;
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  });
+
   ipcMain.handle('remote-sdi-query-devices', async (_event, host, apiPort) => {
     const http = require('http');
     const p = apiPort || 9301;
@@ -190,7 +246,7 @@ function setupIpcHandlers(ipcMain, context) {
               try {
                 const data = JSON.parse(body);
                 console.log(`[DeviceQuery] Success: ${(data.devices || []).length} device(s)`);
-                resolve({ success: true, devices: data.devices || [], displayModes: data.displayModes || {} });
+                resolve({ success: true, devices: data.devices || [], displayModes: data.displayModes || {}, outputStatus: data.outputStatus || {} });
               } catch (e) {
                 console.log(`[DeviceQuery] Invalid JSON response`);
                 resolve({ success: false, error: 'Invalid response from server', devices: [] });

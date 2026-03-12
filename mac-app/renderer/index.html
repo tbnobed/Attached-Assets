@@ -759,6 +759,93 @@
       border-radius: 4px;
       font-size: 12px;
     }
+
+    .rsdi-device-card {
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 10px;
+      margin-bottom: 6px;
+    }
+
+    .rsdi-device-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .rsdi-device-header .rsdi-label {
+      flex: 1;
+    }
+
+    .rsdi-output-status {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-weight: 600;
+    }
+
+    .rsdi-output-status.active {
+      background: rgba(52, 199, 89, 0.15);
+      color: #34c759;
+    }
+
+    .rsdi-output-status.stopped {
+      background: rgba(255, 69, 58, 0.15);
+      color: #ff453a;
+    }
+
+    .rsdi-device-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+
+    .rsdi-device-controls select {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      padding: 3px 6px;
+      border-radius: 4px;
+      font-size: 11px;
+    }
+
+    .rsdi-device-controls button {
+      padding: 3px 10px;
+      font-size: 11px;
+      border-radius: 4px;
+      cursor: pointer;
+      border: none;
+      font-weight: 600;
+    }
+
+    .rsdi-btn-start {
+      background: #34c759;
+      color: #fff;
+    }
+
+    .rsdi-btn-stop {
+      background: #ff453a;
+      color: #fff;
+    }
+
+    .rsdi-assign-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .rsdi-assign-row select {
+      flex: 1;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      padding: 3px 6px;
+      border-radius: 4px;
+      font-size: 11px;
+    }
   </style>
 </head>
 <body>
@@ -1459,34 +1546,103 @@
         return;
       }
 
-      if (participants.length === 0) {
-        list.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:8px 0;">No participants to assign</div>';
-        return;
-      }
-
       let html = '';
       for (const dev of devices) {
         const i = dev.index;
+        const isActive = !!(state.rsdiOutputActive && state.rsdiOutputActive[i]);
         const currentAssignments = state.rsdiAssignments || {};
         let assignedUserId = null;
         for (const [uid, devIdx] of Object.entries(currentAssignments)) {
           if (devIdx === i) assignedUserId = uid;
         }
 
-        const optionsHtml = '<option value="">-- none --</option>' +
+        const label = dev.displayName || dev.name || ('SDI Out ' + (i + 1));
+        const statusClass = isActive ? 'active' : 'stopped';
+        const statusText = isActive ? 'Active' : 'Stopped';
+
+        const displayModes = state.rsdiDisplayModes || { '1080p2997': '1080p 29.97' };
+        const selectedMode = (state.rsdiOutputMode && state.rsdiOutputMode[i]) || '1080p2997';
+        const modeOptionsHtml = Object.entries(displayModes).map(([key, label]) =>
+          '<option value="' + key + '"' + (key === selectedMode ? ' selected' : '') + '>' + label + '</option>'
+        ).join('');
+
+        const participantOptionsHtml = '<option value="">-- none --</option>' +
           participants.map(([uid, p]) => {
             const selected = String(assignedUserId) === String(uid) ? 'selected' : '';
             return '<option value="' + uid + '" ' + selected + '>' + p.displayName + '</option>';
           }).join('');
 
-        const label = dev.displayName || dev.name || ('SDI Out ' + (i + 1));
-
-        html += '<div class="rsdi-assign-item">' +
-          '<span class="rsdi-label">' + label + '</span>' +
-          '<select onchange="remoteSDIAssign(this.value, ' + i + ')">' + optionsHtml + '</select>' +
+        html += '<div class="rsdi-device-card">' +
+          '<div class="rsdi-device-header">' +
+            '<span class="rsdi-label">' + label + '</span>' +
+            '<span class="rsdi-output-status ' + statusClass + '">' + statusText + '</span>' +
+          '</div>' +
+          '<div class="rsdi-device-controls">' +
+            '<select id="rsdiMode_' + i + '" onchange="remoteSDIModeChanged(' + i + ', this.value)"' + (isActive ? ' disabled' : '') + '>' + modeOptionsHtml + '</select>' +
+            (isActive
+              ? '<button class="rsdi-btn-stop" onclick="remoteSDIStopOutput(' + i + ')">Stop Output</button>'
+              : '<button class="rsdi-btn-start" onclick="remoteSDIStartOutput(' + i + ')">Start Output</button>') +
+          '</div>' +
+          (isActive
+            ? '<div class="rsdi-assign-row">' +
+                '<span style="font-size:11px;color:var(--text-secondary);min-width:50px;">Assign:</span>' +
+                '<select onchange="remoteSDIAssign(this.value, ' + i + ')">' + participantOptionsHtml + '</select>' +
+              '</div>'
+            : '<div style="font-size:11px;color:var(--text-muted);padding-top:2px;">Start output to assign participants</div>') +
           '</div>';
       }
       list.innerHTML = html;
+    }
+
+    if (!state.rsdiOutputActive) state.rsdiOutputActive = {};
+    if (!state.rsdiOutputMode) state.rsdiOutputMode = {};
+
+    function remoteSDIModeChanged(deviceIndex, mode) {
+      state.rsdiOutputMode[deviceIndex] = mode;
+    }
+
+    async function remoteSDIStartOutput(deviceIndex) {
+      const host = state.rsdiServerHost;
+      const apiPort = state.rsdiApiPort || 9301;
+      const mode = (state.rsdiOutputMode && state.rsdiOutputMode[deviceIndex]) || '1080p2997';
+      if (!host) {
+        log('Not connected to server', 'error');
+        return;
+      }
+      log('Starting SDI output ' + (deviceIndex + 1) + ' (' + mode + ')...', 'info');
+      const result = await window.zoomISO.remoteSDIStartOutput(host, apiPort, deviceIndex, mode);
+      if (result && result.success) {
+        state.rsdiOutputActive[deviceIndex] = true;
+        log('SDI output ' + (deviceIndex + 1) + ' started', 'success');
+      } else {
+        log('Failed to start SDI output: ' + (result ? result.error : 'unknown'), 'error');
+      }
+      renderRsdiAssignments();
+    }
+
+    async function remoteSDIStopOutput(deviceIndex) {
+      const host = state.rsdiServerHost;
+      const apiPort = state.rsdiApiPort || 9301;
+      if (!host) {
+        log('Not connected to server', 'error');
+        return;
+      }
+      log('Stopping SDI output ' + (deviceIndex + 1) + '...', 'info');
+      const result = await window.zoomISO.remoteSDIStopOutput(host, apiPort, deviceIndex);
+      if (result && result.success) {
+        state.rsdiOutputActive[deviceIndex] = false;
+        const currentAssignments = state.rsdiAssignments || {};
+        for (const [uid, devIdx] of Object.entries(currentAssignments)) {
+          if (devIdx === deviceIndex) {
+            await window.zoomISO.remoteSDIUnassign(isNaN(uid) ? uid : Number(uid));
+            delete state.rsdiAssignments[uid];
+          }
+        }
+        log('SDI output ' + (deviceIndex + 1) + ' stopped', 'warn');
+      } else {
+        log('Failed to stop SDI output: ' + (result ? result.error : 'unknown'), 'error');
+      }
+      renderRsdiAssignments();
     }
 
     async function remoteSDIAssign(userId, deviceIndex) {
@@ -1521,6 +1677,15 @@
       const devResult = await window.zoomISO.remoteSDIQueryDevices(host, state.rsdiApiPort);
       if (devResult && devResult.success && devResult.devices) {
         state.rsdiDevices = devResult.devices;
+        if (devResult.displayModes) state.rsdiDisplayModes = devResult.displayModes;
+        if (devResult.outputStatus) {
+          state.rsdiOutputActive = {};
+          state.rsdiOutputMode = state.rsdiOutputMode || {};
+          for (const [idx, s] of Object.entries(devResult.outputStatus)) {
+            state.rsdiOutputActive[parseInt(idx)] = s.active;
+            if (s.mode) state.rsdiOutputMode[parseInt(idx)] = s.mode;
+          }
+        }
         log('Server reports ' + devResult.devices.length + ' DeckLink device(s)', 'success');
       } else {
         state.rsdiDevices = [];
@@ -1534,6 +1699,9 @@
       state.rsdiDevices = [];
       state.rsdiServerHost = null;
       state.rsdiAssignments = {};
+      state.rsdiOutputActive = {};
+      state.rsdiOutputMode = {};
+      state.rsdiDisplayModes = null;
       renderRsdiAssignments();
       log('Disconnected from Remote SDI server', 'warn');
     });
@@ -1549,6 +1717,15 @@
             const devResult = await window.zoomISO.remoteSDIQueryDevices(queryHost, state.rsdiApiPort || 9301);
             if (devResult && devResult.success && devResult.devices) {
               state.rsdiDevices = devResult.devices;
+              if (devResult.displayModes) state.rsdiDisplayModes = devResult.displayModes;
+              if (devResult.outputStatus) {
+                state.rsdiOutputActive = {};
+                state.rsdiOutputMode = state.rsdiOutputMode || {};
+                for (const [idx, s] of Object.entries(devResult.outputStatus)) {
+                  state.rsdiOutputActive[parseInt(idx)] = s.active;
+                  if (s.mode) state.rsdiOutputMode[parseInt(idx)] = s.mode;
+                }
+              }
               if (devResult.devices.length > 0) {
                 log('Server reports ' + devResult.devices.length + ' DeckLink device(s)', 'success');
               }

@@ -25,6 +25,7 @@ const DISPLAY_MODES = {
   '1080p25':   { label: '1080p 25',     mode: 'bmdModeHD1080p25',   width: 1920, height: 1080, fps: 25 },
   '1080p2997': { label: '1080p 29.97',  mode: 'bmdModeHD1080p2997', width: 1920, height: 1080, fps: 29.97 },
   '1080p30':   { label: '1080p 30',     mode: 'bmdModeHD1080p30',   width: 1920, height: 1080, fps: 30 },
+  '1080p5994': { label: '1080p 59.94',  mode: 'bmdModeHD1080p5994', width: 1920, height: 1080, fps: 59.94 },
   '720p50':    { label: '720p 50',      mode: 'bmdModeHD720p50',    width: 1280, height: 720,  fps: 50 },
   '720p5994':  { label: '720p 59.94',   mode: 'bmdModeHD720p5994',  width: 1280, height: 720,  fps: 59.94 },
   '720p60':    { label: '720p 60',      mode: 'bmdModeHD720p60',    width: 1280, height: 720,  fps: 60 },
@@ -113,7 +114,10 @@ class DeckLinkManager extends EventEmitter {
       return { success: false, error: `Device ${deviceIndex} already has an active output` };
     }
 
-    const modeInfo = DISPLAY_MODES[modeKey] || DISPLAY_MODES[DEFAULT_MODE];
+    const modeInfo = DISPLAY_MODES[modeKey];
+    if (!modeInfo) {
+      return { success: false, error: `Unknown display mode: ${modeKey}. Valid modes: ${Object.keys(DISPLAY_MODES).join(', ')}` };
+    }
     const modeConst = decklink[modeInfo.mode];
 
     if (modeConst === undefined || modeConst === 0) {
@@ -188,20 +192,8 @@ class DeckLinkManager extends EventEmitter {
   async assignParticipant(userId, deviceIndex) {
     deviceIndex = typeof deviceIndex === 'string' ? parseInt(deviceIndex, 10) : deviceIndex;
     let output = this.outputs.get(deviceIndex);
-    if (!output) {
-      const device = this.devices.find(d => d.index === deviceIndex);
-      if (!device || !device.supportsOutput) {
-        return { success: false, error: `Device ${deviceIndex} not found or does not support output` };
-      }
-      console.log(`[DeckLink] Auto-starting output on device ${deviceIndex} for assignment`);
-      const startResult = await this.startOutput(deviceIndex);
-      if (!startResult.success) {
-        return { success: false, error: `Failed to auto-start output: ${startResult.error}` };
-      }
-      output = this.outputs.get(deviceIndex);
-      if (!output) {
-        return { success: false, error: `Output state missing after start on device ${deviceIndex}` };
-      }
+    if (!output || !output.active) {
+      return { success: false, error: `Output on device ${deviceIndex} is not running. Start the output first.` };
     }
 
     const prevDevice = this.assignments.get(userId);

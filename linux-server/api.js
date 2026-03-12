@@ -58,7 +58,13 @@ function createApi(options = {}) {
       for (const [key, val] of Object.entries(DISPLAY_MODES)) {
         modes[key] = val.label;
       }
-      json(res, { devices, displayModes: modes });
+      const outputStatus = {};
+      if (deckLinkManager) {
+        for (const [idx, out] of deckLinkManager.outputs) {
+          outputStatus[idx] = { active: !!out.active, mode: out.modeKey || null };
+        }
+      }
+      json(res, { devices, displayModes: modes, outputStatus });
       return;
     }
 
