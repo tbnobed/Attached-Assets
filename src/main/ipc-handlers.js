@@ -51,6 +51,30 @@ function setupIpcHandlers(ipcMain, context) {
   ipcMain.handle('join-meeting', async (_event, meetingId, password, displayName) => {
     try {
       const ok = await sessionManager.joinMeeting(meetingId, password, displayName);
+      if (ok) {
+        const JOIN_TIMEOUT_MS = 45000;
+        const joinTimer = setTimeout(() => {
+          if (!sessionManager.connected) {
+            const sdkState = sessionManager.zoomBridge ? sessionManager.zoomBridge.getState() : 'unknown';
+            const msg = `Meeting join timed out after ${JOIN_TIMEOUT_MS / 1000}s (SDK state: ${sdkState}). The meeting may have a waiting room, wrong passcode, or the host hasn't started it yet.`;
+            console.warn('[Main]', msg);
+            sendStatusUpdate();
+            const win = getMainWindow();
+            if (win && !win.isDestroyed()) {
+              win.webContents.send('status-message', { message: msg });
+              win.webContents.send('connection-error', { message: msg });
+            }
+          }
+        }, JOIN_TIMEOUT_MS);
+
+        const clearTimer = () => clearTimeout(joinTimer);
+        sessionManager.once('connection-status', clearTimer);
+        sessionManager.once('connection-error', clearTimer);
+        if (sessionManager.zoomBridge) {
+          sessionManager.zoomBridge.once('meeting-joined', clearTimer);
+          sessionManager.zoomBridge.once('meeting-ended', clearTimer);
+        }
+      }
       return {
         success: ok,
         meetingId,
