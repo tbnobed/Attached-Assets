@@ -26,7 +26,8 @@ try {
   console.warn('[Server] Could not redirect native stdout:', e.message);
 }
 
-const { NDIManager } = require('./ndi-manager');
+const NDI_DISABLED = true;
+const NDIManager = NDI_DISABLED ? null : require('./ndi-manager').NDIManager;
 const { RecorderManager } = require('./recorder-manager');
 const { FrameReceiver } = require('./receiver');
 const { createApi } = require('./api');
@@ -45,12 +46,12 @@ console.log('============================================');
 console.log('');
 
 const deckLinkManager = new DeckLinkManager();
-const ndiManager = new NDIManager({ prefix: NDI_PREFIX });
+const ndiManager = NDI_DISABLED ? { isAvailable: () => false, sendVideoFrame() {}, sendAudioData() {}, createSource() {}, destroySource() {}, destroyAll() {}, destroy() {}, getStatus: () => ({ available: false, disabled: true, sourceCount: 0, sources: {} }) } : new NDIManager({ prefix: NDI_PREFIX });
 const recorderManager = new RecorderManager({ outputDir: RECORDING_DIR });
 const receiver = new FrameReceiver({ port: TCP_PORT, host: HOST });
 const api = createApi({ port: API_PORT, deckLinkManager, ndiManager, recorderManager, receiver });
 
-let _ndiAutoCreate = true;
+let _ndiAutoCreate = !NDI_DISABLED;
 
 let _videoDecodeCount = 0;
 const _decoding = new Map();
@@ -58,7 +59,7 @@ const _pendingDecode = new Map();
 
 function _routeFrame(userId, buf, w, h) {
   deckLinkManager.sendVideoFrame(userId, buf, w, h);
-  ndiManager.sendVideoFrame(userId, buf, w, h);
+  if (!NDI_DISABLED) ndiManager.sendVideoFrame(userId, buf, w, h);
   recorderManager.writeVideoFrame(userId, buf, w, h);
 }
 
@@ -93,7 +94,7 @@ receiver.on('video-frame', ({ userId, width, height, buffer }) => {
 
 receiver.on('audio-data', ({ userId, buffer, sampleRate, channels }) => {
   deckLinkManager.sendAudioData(userId, buffer, sampleRate, channels);
-  ndiManager.sendAudioData(userId, buffer, sampleRate, channels);
+  if (!NDI_DISABLED) ndiManager.sendAudioData(userId, buffer, sampleRate, channels);
   recorderManager.writeAudioData(userId, buffer);
 });
 
@@ -107,7 +108,7 @@ receiver.on('participant-join', async (participant) => {
 
 receiver.on('participant-leave', ({ userId }) => {
   deckLinkManager.unassignParticipant(userId);
-  ndiManager.destroySource(userId);
+  if (!NDI_DISABLED) ndiManager.destroySource(userId);
   recorderManager.stopRecording(userId);
   console.log(`[Server] Participant left: id=${userId}`);
 });
@@ -141,7 +142,7 @@ async function main() {
     console.log(`    HTTP API port:   ${API_PORT}`);
     console.log(`    UV thread pool:  ${UV_POOL}`);
     console.log(`    DeckLink:        ${deckLinkManager.isAvailable() ? `${deckLinkManager.devices.length} device(s)` : 'not available'}`);
-    console.log(`    NDI:             ${ndiManager.isAvailable() ? 'available' : 'not available'}`);
+    console.log(`    NDI:             ${NDI_DISABLED ? 'DISABLED' : (ndiManager.isAvailable() ? 'available' : 'not available')}`);
     console.log(`    Recording:       ${recorderManager.ffmpegAvailable ? 'available' : 'FFmpeg not found'}`);
     console.log(`    JPEG decode:     ${jpegAvailable() ? 'available (sharp)' : 'NOT available — install sharp for compressed frames'}`);
     console.log(`    NDI Prefix:      ${NDI_PREFIX}`);
