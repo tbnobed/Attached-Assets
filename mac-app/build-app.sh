@@ -147,17 +147,38 @@ for dep in $(ls "$MODULES_SRC/" 2>/dev/null); do
 done
 
 if [ -d "$PROJECT_DIR/zoom-meeting-sdk-addon" ]; then
-    cp -R "$PROJECT_DIR/zoom-meeting-sdk-addon" "$APP_CODE/"
+    echo "  Copying Zoom SDK addon..."
+    mkdir -p "$APP_CODE/zoom-meeting-sdk-addon"
+    cp -R "$PROJECT_DIR/zoom-meeting-sdk-addon/index.js" "$APP_CODE/zoom-meeting-sdk-addon/"
+    cp -R "$PROJECT_DIR/zoom-meeting-sdk-addon/package.json" "$APP_CODE/zoom-meeting-sdk-addon/" 2>/dev/null || true
+    if [ -d "$PROJECT_DIR/zoom-meeting-sdk-addon/build" ]; then
+        cp -R "$PROJECT_DIR/zoom-meeting-sdk-addon/build" "$APP_CODE/zoom-meeting-sdk-addon/"
+    fi
+    if [ -d "$PROJECT_DIR/zoom-meeting-sdk-addon/sdk" ]; then
+        cp -RH "$PROJECT_DIR/zoom-meeting-sdk-addon/sdk" "$APP_CODE/zoom-meeting-sdk-addon/"
+    fi
+    if [ -d "$PROJECT_DIR/zoom-meeting-sdk-addon/node_modules" ]; then
+        cp -R "$PROJECT_DIR/zoom-meeting-sdk-addon/node_modules" "$APP_CODE/zoom-meeting-sdk-addon/"
+    fi
     echo -e "  ${GREEN}Included Zoom SDK addon${NC}"
 
     SDK_LIB="$APP_CODE/zoom-meeting-sdk-addon/sdk/lib"
     if [ -d "$SDK_LIB" ]; then
         BUNDLE_FRAMEWORKS="$CONTENTS/Frameworks"
         mkdir -p "$BUNDLE_FRAMEWORKS"
+
+        find "$SDK_LIB" -type l | while read lnk; do
+            real="$(readlink "$lnk")"
+            if [ -e "$real" ] || [ -e "$(dirname "$lnk")/$real" ]; then
+                rm "$lnk"
+                cp -R "$(dirname "$lnk")/$real" "$lnk" 2>/dev/null || true
+            fi
+        done
+
         for item in "$SDK_LIB"/*; do
             bname="$(basename "$item")"
             rm -rf "$BUNDLE_FRAMEWORKS/$bname" 2>/dev/null
-            cp -R "$item" "$BUNDLE_FRAMEWORKS/$bname" 2>/dev/null || true
+            cp -RH "$item" "$BUNDLE_FRAMEWORKS/$bname" 2>/dev/null || true
         done
         echo -e "  ${GREEN}Copied Zoom SDK frameworks into app bundle${NC}"
     fi
@@ -179,7 +200,8 @@ RESOURCES="$CONTENTS/Resources"
 APP_DIR="$RESOURCES/app"
 FRAMEWORKS="$CONTENTS/Frameworks"
 
-export DYLD_FRAMEWORK_PATH="$FRAMEWORKS:$DYLD_FRAMEWORK_PATH"
+export DYLD_FRAMEWORK_PATH="$FRAMEWORKS:${DYLD_FRAMEWORK_PATH:-}"
+export DYLD_LIBRARY_PATH="$APP_DIR/zoom-meeting-sdk-addon/build/Release:$APP_DIR/node_modules/grandiose/build/Release:${DYLD_LIBRARY_PATH:-}"
 
 for p in /opt/homebrew/bin /usr/local/bin /opt/homebrew/sbin /usr/local/sbin; do
     [ -d "$p" ] && export PATH="$p:$PATH"
@@ -188,6 +210,20 @@ done
 exec "$DIR/ZoomLink_electron" "$APP_DIR" --no-sandbox --disable-gpu-sandbox "$@"
 LAUNCHEOF
 chmod +x "$LAUNCHER"
+
+echo "  Resolving any remaining symlinks in bundle..."
+find "$OUTPUT_APP" -type l | while read lnk; do
+    target="$(readlink "$lnk")"
+    if [ ! -e "$lnk" ]; then
+        echo -e "${YELLOW}  Removing broken symlink: $lnk${NC}"
+        rm -f "$lnk"
+    elif [[ "$target" = /* ]] && [[ "$target" != "$OUTPUT_APP"* ]]; then
+        echo "  Resolving external symlink: $(basename "$lnk")"
+        real_target="$target"
+        rm "$lnk"
+        cp -RH "$real_target" "$lnk" 2>/dev/null || true
+    fi
+done
 
 echo "[6/6] Verifying..."
 CHECKS_OK=true
@@ -214,6 +250,21 @@ if [ -d "$APP_CODE/zoom-meeting-sdk-addon/build/Release" ]; then
     echo -e "${GREEN}  ✓ Zoom SDK addon${NC}"
 else
     echo -e "${YELLOW}  ~ Zoom SDK addon (not built — stub mode)${NC}"
+fi
+
+if [ -d "$CONTENTS/Frameworks" ]; then
+    FW_COUNT=$(ls -d "$CONTENTS/Frameworks"/*.framework 2>/dev/null | wc -l | tr -d ' ')
+    if [ "$FW_COUNT" -gt 0 ]; then
+        echo -e "${GREEN}  ✓ Zoom SDK frameworks ($FW_COUNT frameworks in bundle)${NC}"
+    else
+        echo -e "${YELLOW}  ~ No Zoom SDK frameworks found in bundle${NC}"
+    fi
+fi
+
+BROKEN_LINKS=$(find "$OUTPUT_APP" -type l ! -exec test -e {} \; -print 2>/dev/null | wc -l | tr -d ' ')
+if [ "$BROKEN_LINKS" -gt 0 ]; then
+    echo -e "${YELLOW}  ⚠ $BROKEN_LINKS broken symlinks found in bundle${NC}"
+    find "$OUTPUT_APP" -type l ! -exec test -e {} \; -print 2>/dev/null | head -5
 fi
 
 echo ""
