@@ -337,7 +337,8 @@ else
     NDI_SRC="$NDI_EXPANDED/NDI SDK for Apple"
     NDI_PKG="/tmp/ndi_sdk_plexiso.pkg"
 
-    if [ ! -d "$NDI_SRC/include" ]; then
+    NDI_DYLIB_CHECK=$(find "$NDI_SRC" "$NDI_EXPANDED" -name "libndi.dylib" -type f 2>/dev/null | head -1)
+    if [ ! -d "$NDI_SRC/include" ] || [ -z "$NDI_DYLIB_CHECK" ]; then
         echo "  Downloading NDI SDK v6..."
         rm -rf "$NDI_EXPANDED"
         rm -f "$NDI_PKG"
