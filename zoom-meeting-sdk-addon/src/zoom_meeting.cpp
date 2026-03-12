@@ -302,19 +302,9 @@ bool ZoomAddon::LeaveMeeting() {
         case ZoomSDKMeetingStatus_Ended: statusStr = "MEETING_STATUS_ENDED"; break;
         default: statusStr = "MEETING_STATUS_UNKNOWN"; break;
     }
-    printf("[ZoomNative] Meeting status: %s (error=%d, endReason=%d)\n", statusStr.c_str(), (int)error, (int)reason);
+    printf("[ZoomNative] Meeting status: %s (error=%d)\n", statusStr.c_str(), (int)error);
     fflush(stdout);
-
-    if (state == ZoomSDKMeetingStatus_Failed) {
-        std::string errorDetail = "error code " + std::to_string((int)error);
-        printf("[ZoomNative] Meeting FAILED detail: %s\n", errorDetail.c_str());
-        fflush(stdout);
-
-        std::string failStatus = "MEETING_STATUS_FAILED:" + errorDetail;
-        ZoomAddon::Instance().OnMeetingStatusChanged(failStatus);
-    } else {
-        ZoomAddon::Instance().OnMeetingStatusChanged(statusStr);
-    }
+    ZoomAddon::Instance().OnMeetingStatusChanged(statusStr);
 
     if (state == ZoomSDKMeetingStatus_InMeeting) {
         @autoreleasepool {

@@ -335,16 +335,6 @@ class ZoomMeetingBridge extends EventEmitter {
   }
 
   _handleMeetingStatus(status, data) {
-    console.log(`[ZoomBridge] Meeting status change: ${status}`);
-    this.emit('meeting-status-detail', status, data);
-    if (status.startsWith('MEETING_STATUS_FAILED:')) {
-      const detail = status.substring('MEETING_STATUS_FAILED:'.length);
-      console.log(`[ZoomBridge] Meeting FAILED: ${detail}`);
-      this.inMeeting = false;
-      if (this._retryInterval) { clearInterval(this._retryInterval); this._retryInterval = null; }
-      this.emit('meeting-ended', { status: 'MEETING_STATUS_FAILED', detail });
-      return;
-    }
     switch (status) {
       case 'MEETING_STATUS_INMEETING':
         this.inMeeting = true;
@@ -377,10 +367,6 @@ class ZoomMeetingBridge extends EventEmitter {
         this._retryInterval = null;
         break;
       case 'MEETING_STATUS_ENDED':
-        this.inMeeting = false;
-        if (this._retryInterval) { clearInterval(this._retryInterval); this._retryInterval = null; }
-        this.emit('meeting-ended', { status });
-        break;
       case 'MEETING_STATUS_FAILED':
         this.inMeeting = false;
         if (this._retryInterval) { clearInterval(this._retryInterval); this._retryInterval = null; }
