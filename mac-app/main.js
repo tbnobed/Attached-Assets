@@ -175,7 +175,13 @@ function initManagers() {
         'MEETING_STATUS_FAILED': 'Zoom SDK: Failed to join meeting — check meeting ID and password',
         'MEETING_STATUS_IDLE': 'Zoom SDK: Idle',
       };
-      const msg = statusMessages[status] || `Zoom SDK status: ${status}`;
+      let msg;
+      if (status.startsWith('MEETING_STATUS_FAILED:')) {
+        const detail = status.substring('MEETING_STATUS_FAILED:'.length);
+        msg = `Zoom SDK: Failed to join meeting — ${detail}`;
+      } else {
+        msg = statusMessages[status] || `Zoom SDK status: ${status}`;
+      }
       console.log(`[Main] ${msg}`);
       sendToRenderer('status-message', { message: msg });
     });

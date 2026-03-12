@@ -302,9 +302,30 @@ bool ZoomAddon::LeaveMeeting() {
         case ZoomSDKMeetingStatus_Ended: statusStr = "MEETING_STATUS_ENDED"; break;
         default: statusStr = "MEETING_STATUS_UNKNOWN"; break;
     }
-    printf("[ZoomNative] Meeting status: %s (error=%d)\n", statusStr.c_str(), (int)error);
+    printf("[ZoomNative] Meeting status: %s (error=%d, endReason=%d)\n", statusStr.c_str(), (int)error, (int)reason);
     fflush(stdout);
-    ZoomAddon::Instance().OnMeetingStatusChanged(statusStr);
+
+    if (state == ZoomSDKMeetingStatus_Failed) {
+        std::string errorDetail;
+        switch (error) {
+            case ZoomSDKMeetingError_IncorrectMeetingNumber: errorDetail = "incorrect meeting number"; break;
+            case ZoomSDKMeetingError_MeetingNotExist: errorDetail = "meeting does not exist"; break;
+            case ZoomSDKMeetingError_MeetingLocked: errorDetail = "meeting is locked"; break;
+            case ZoomSDKMeetingError_MeetingRestricted: errorDetail = "meeting is restricted"; break;
+            case ZoomSDKMeetingError_MMRError: errorDetail = "MMR error (server issue)"; break;
+            case ZoomSDKMeetingError_NetworkUnavailable: errorDetail = "network unavailable"; break;
+            case ZoomSDKMeetingError_SessionError: errorDetail = "session error"; break;
+            case ZoomSDKMeetingError_PasswordError: errorDetail = "incorrect password"; break;
+            default: errorDetail = "unknown error code " + std::to_string((int)error); break;
+        }
+        printf("[ZoomNative] Meeting FAILED detail: %s\n", errorDetail.c_str());
+        fflush(stdout);
+
+        std::string failStatus = "MEETING_STATUS_FAILED:" + errorDetail;
+        ZoomAddon::Instance().OnMeetingStatusChanged(failStatus);
+    } else {
+        ZoomAddon::Instance().OnMeetingStatusChanged(statusStr);
+    }
 
     if (state == ZoomSDKMeetingStatus_InMeeting) {
         @autoreleasepool {
@@ -467,8 +488,8 @@ bool ZoomAddon::JoinMeeting(const std::string& meetingId, const std::string& pas
         joinParams.meetingNumber = std::stoll(meetingId);
         joinParams.displayName = [NSString stringWithUTF8String:displayName.c_str()];
         joinParams.password = [NSString stringWithUTF8String:password.c_str()];
-        joinParams.isNoVideo = NO;
-        joinParams.isNoAudio = NO;
+        joinParams.isNoVideo = YES;
+        joinParams.isNoAudio = YES;
         joinParams.isMyVoiceInMix = NO;
         joinParams.isAudioRawDataStereo = NO;
         joinParams.audioRawdataSamplingRate = ZoomSDKAudioRawdataSamplingRate_48K;
