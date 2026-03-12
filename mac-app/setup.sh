@@ -165,11 +165,27 @@ else
             echo "  The app will run in stub mode without actual Zoom connectivity."
         }
 
-        echo "  Linking Electron frameworks..."
+        echo "  Linking Electron frameworks (root Electron)..."
         cd "$PROJECT_DIR"
         npm run link-frameworks || {
-            echo -e "${YELLOW}  Framework linking failed (non-fatal)${NC}"
+            echo -e "${YELLOW}  Root framework linking failed (non-fatal)${NC}"
         }
+
+        echo "  Linking Electron frameworks (mac-app Electron)..."
+        MAC_ELECTRON="$SCRIPT_DIR/node_modules/electron/dist/Electron.app"
+        SDK_LIB="$PROJECT_DIR/zoom-meeting-sdk-addon/sdk/lib"
+        if [ -d "$MAC_ELECTRON" ] && [ -d "$SDK_LIB" ]; then
+            MAC_FRAMEWORKS="$MAC_ELECTRON/Contents/Frameworks"
+            mkdir -p "$MAC_FRAMEWORKS"
+            for item in "$SDK_LIB"/*; do
+                bname="$(basename "$item")"
+                rm -rf "$MAC_FRAMEWORKS/$bname" 2>/dev/null
+                ln -sf "$item" "$MAC_FRAMEWORKS/$bname"
+            done
+            echo -e "  ${GREEN}Linked SDK frameworks into mac-app Electron${NC}"
+        else
+            echo -e "${YELLOW}  mac-app Electron or SDK lib not found — skipping${NC}"
+        fi
     else
         echo -e "${YELLOW}  Zoom SDK not found at: $ZOOM_SDK_PATH${NC}"
         echo ""
