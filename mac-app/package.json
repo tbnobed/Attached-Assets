@@ -4,7 +4,9 @@
   "description": "ZoomLink Remote SDI — captures Zoom ISO feeds and streams to Linux SDI server",
   "main": "main.js",
   "scripts": {
+    "prestart": "node link-frameworks.js",
     "start": "npx electron . --no-sandbox --disable-gpu-sandbox",
+    "postinstall": "node link-frameworks.js",
     "setup": "bash setup.sh",
     "build": "bash build-app.sh",
     "create-dmg": "bash create-dmg.sh"

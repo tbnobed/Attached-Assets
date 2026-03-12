@@ -3,6 +3,28 @@ const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
+if (process.platform === 'darwin') {
+  const electronFrameworks = path.join(__dirname, 'node_modules', 'electron', 'dist', 'Electron.app', 'Contents', 'Frameworks');
+  const sdkLib = path.join(__dirname, '..', 'zoom-meeting-sdk-addon', 'sdk', 'lib');
+  if (fs.existsSync(sdkLib) && fs.existsSync(electronFrameworks)) {
+    for (const item of fs.readdirSync(sdkLib)) {
+      const src = path.join(sdkLib, item);
+      const dest = path.join(electronFrameworks, item);
+      try {
+        const srcReal = fs.realpathSync(src);
+        if (fs.existsSync(dest)) {
+          const stat = fs.lstatSync(dest);
+          if (stat.isSymbolicLink() && fs.readlinkSync(dest) === srcReal) continue;
+          if (!stat.isSymbolicLink()) continue;
+          fs.unlinkSync(dest);
+        }
+        fs.symlinkSync(srcReal, dest);
+        console.log(`[MacApp] Linked SDK framework: ${item}`);
+      } catch (e) {}
+    }
+  }
+}
+
 const localEnvPath = path.join(__dirname, '.env');
 if (fs.existsSync(localEnvPath)) {
   const content = fs.readFileSync(localEnvPath, 'utf8');
