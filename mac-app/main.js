@@ -1,8 +1,34 @@
 process.env.UV_THREADPOOL_SIZE = '64';
 const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
+const fs = require('fs');
+
+const localEnvPath = path.join(__dirname, '.env');
+if (fs.existsSync(localEnvPath)) {
+  const content = fs.readFileSync(localEnvPath, 'utf8');
+  content.split('\n').forEach(line => {
+    const trimmed = line.trim();
+    if (trimmed && !trimmed.startsWith('#')) {
+      const [key, ...valueParts] = trimmed.split('=');
+      if (key && valueParts.length > 0) {
+        process.env[key.trim()] = valueParts.join('=').trim();
+      }
+    }
+  });
+  console.log(`[MacApp] Loaded local .env from ${localEnvPath}`);
+}
+
 const { settings, ensureOutputDir, getOutputDir } = require('../src/config/settings');
 const { applyUserConfigToSettings, needsConfiguration } = require('../src/config/user-config');
+
+if (fs.existsSync(localEnvPath)) {
+  if (process.env.ZOOM_SDK_KEY) settings.zoomSdkKey = process.env.ZOOM_SDK_KEY;
+  if (process.env.ZOOM_SDK_SECRET) settings.zoomSdkSecret = process.env.ZOOM_SDK_SECRET;
+  if (process.env.ZOOM_ACCOUNT_ID) settings.zoomAccountId = process.env.ZOOM_ACCOUNT_ID;
+  if (process.env.ZOOM_CLIENT_ID) settings.zoomClientId = process.env.ZOOM_CLIENT_ID;
+  if (process.env.ZOOM_CLIENT_SECRET) settings.zoomClientSecret = process.env.ZOOM_CLIENT_SECRET;
+  if (process.env.ZOOM_MEETING_BOT_NAME) settings.botName = process.env.ZOOM_MEETING_BOT_NAME;
+}
 const { SessionManager } = require('../src/zoom/session-manager');
 const { StreamHandler } = require('../src/zoom/stream-handler');
 const { RemoteSDIClient } = require('./network/stream-client');
