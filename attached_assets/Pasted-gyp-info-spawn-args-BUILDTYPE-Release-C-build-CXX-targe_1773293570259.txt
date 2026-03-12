@@ -1,0 +1,33 @@
+gyp info spawn args [ 'BUILDTYPE=Release', '-C', 'build' ]
+  CXX(target) Release/obj.target/zoom_meeting_sdk/src/zoom_addon.o
+clang++: warning: '-x objective-c++' after last input file has no effect [-Wunused-command-line-argument]
+  CXX(target) Release/obj.target/zoom_meeting_sdk/src/zoom_auth.o
+clang++: warning: '-x objective-c++' after last input file has no effect [-Wunused-command-line-argument]
+  CXX(target) Release/obj.target/zoom_meeting_sdk/src/zoom_meeting.o
+clang++: warning: '-x objective-c++' after last input file has no effect [-Wunused-command-line-argument]
+../src/zoom_meeting.cpp:311:18: error: use of undeclared identifier 'ZoomSDKMeetingError_IncorrectMeetingNumber'; did you mean 'ZoomSDKMeetingError_MeetingOver'?
+  311 |             case ZoomSDKMeetingError_IncorrectMeetingNumber: errorDetail = "incorrect meeting number"; break;
+      |                  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      |                  ZoomSDKMeetingError_MeetingOver
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKErrors.h:345:5: note: 'ZoomSDKMeetingError_MeetingOver' declared here
+  345 |     ZoomSDKMeetingError_MeetingOver                     = 6,
+      |     ^
+../src/zoom_meeting.cpp:316:18: error: use of undeclared identifier 'ZoomSDKMeetingError_NetworkUnavailable'; did you mean 'ZoomSDKMeetingError_ReconnectFailed'?
+  316 |             case ZoomSDKMeetingError_NetworkUnavailable: errorDetail = "network unavailable"; break;
+      |                  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      |                  ZoomSDKMeetingError_ReconnectFailed
+/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/sdk/lib/ZoomSDK.framework/Headers/ZoomSDKErrors.h:337:5: note: 'ZoomSDKMeetingError_ReconnectFailed' declared here
+  337 |     ZoomSDKMeetingError_ReconnectFailed                 = 2,
+      |     ^
+2 errors generated.
+make: *** [Release/obj.target/zoom_meeting_sdk/src/zoom_meeting.o] Error 1
+gyp ERR! build error 
+gyp ERR! stack Error: `make` failed with exit code: 2
+gyp ERR! stack at ChildProcess.<anonymous> (/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/node_modules/node-gyp/lib/build.js:216:23)
+gyp ERR! System Darwin 24.3.0
+gyp ERR! command "/opt/homebrew/Cellar/node@20/20.20.1/bin/node" "/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/node_modules/.bin/node-gyp" "rebuild"
+gyp ERR! cwd /Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon
+gyp ERR! node -v v20.20.1
+gyp ERR! node-gyp -v v10.3.1
+gyp ERR! not ok 
+ERROR: Zoom addon build failed

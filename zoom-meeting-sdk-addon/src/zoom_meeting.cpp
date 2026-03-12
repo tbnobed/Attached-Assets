@@ -306,18 +306,7 @@ bool ZoomAddon::LeaveMeeting() {
     fflush(stdout);
 
     if (state == ZoomSDKMeetingStatus_Failed) {
-        std::string errorDetail;
-        switch (error) {
-            case ZoomSDKMeetingError_IncorrectMeetingNumber: errorDetail = "incorrect meeting number"; break;
-            case ZoomSDKMeetingError_MeetingNotExist: errorDetail = "meeting does not exist"; break;
-            case ZoomSDKMeetingError_MeetingLocked: errorDetail = "meeting is locked"; break;
-            case ZoomSDKMeetingError_MeetingRestricted: errorDetail = "meeting is restricted"; break;
-            case ZoomSDKMeetingError_MMRError: errorDetail = "MMR error (server issue)"; break;
-            case ZoomSDKMeetingError_NetworkUnavailable: errorDetail = "network unavailable"; break;
-            case ZoomSDKMeetingError_SessionError: errorDetail = "session error"; break;
-            case ZoomSDKMeetingError_PasswordError: errorDetail = "incorrect password"; break;
-            default: errorDetail = "unknown error code " + std::to_string((int)error); break;
-        }
+        std::string errorDetail = "error code " + std::to_string((int)error);
         printf("[ZoomNative] Meeting FAILED detail: %s\n", errorDetail.c_str());
         fflush(stdout);
 
