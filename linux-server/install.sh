@@ -86,6 +86,7 @@ echo ""
 echo -e "${CYAN}[3/7] Checking NDI SDK...${NC}"
 
 NDI_FOUND=0
+NDI_LIB_DIR=""
 NDI_LIB_PATHS=(
     "/usr/lib/libndi.so"
     "/usr/local/lib/libndi.so"
@@ -96,10 +97,29 @@ NDI_LIB_PATHS=(
 for p in "${NDI_LIB_PATHS[@]}"; do
     if [ -f "$p" ]; then
         NDI_FOUND=1
+        NDI_LIB_DIR="$(dirname "$p")"
         echo -e "  NDI runtime library found: $p"
         break
     fi
 done
+
+if [ "$NDI_FOUND" = "0" ]; then
+    NDI_SEARCH=$(find /usr /opt /home -name 'libndi.so*' -type f -o -name 'libndi.so*' -type l 2>/dev/null | head -1)
+    if [ -n "$NDI_SEARCH" ]; then
+        NDI_FOUND=1
+        NDI_LIB_DIR="$(dirname "$NDI_SEARCH")"
+        echo -e "  NDI runtime library found: $NDI_SEARCH"
+    fi
+fi
+
+if [ "$NDI_FOUND" = "0" ] && [ -n "$NDI_RUNTIME_DIR_V6" ]; then
+    NDI_SEARCH=$(find "$NDI_RUNTIME_DIR_V6" -name 'libndi.so*' 2>/dev/null | head -1)
+    if [ -n "$NDI_SEARCH" ]; then
+        NDI_FOUND=1
+        NDI_LIB_DIR="$(dirname "$NDI_SEARCH")"
+        echo -e "  NDI runtime library found: $NDI_SEARCH"
+    fi
+fi
 
 if [ "$NDI_FOUND" = "0" ]; then
     echo -e "${YELLOW}  NDI runtime library not found.${NC}"
@@ -191,27 +211,39 @@ PYEOF
     if [ -f "$BINDING_GYP" ]; then
         if grep -q 'Processing.NDI.Lib.x64' "$BINDING_GYP"; then
             echo "  Patching grandiose binding.gyp for Linux (NDI library name)..."
-            python3 - "$BINDING_GYP" << 'PYEOF'
+            NDI_LIB_DIRS_JSON="[\"/usr/lib\", \"/usr/local/lib\", \"/usr/lib/x86_64-linux-gnu\"]"
+            if [ -n "$NDI_LIB_DIR" ]; then
+                NDI_LIB_DIRS_JSON="[\"$NDI_LIB_DIR\", \"/usr/lib\", \"/usr/local/lib\", \"/usr/lib/x86_64-linux-gnu\"]"
+            fi
+            python3 - "$BINDING_GYP" "$NDI_LIB_DIRS_JSON" << 'PYEOF'
 import json, sys
 path = sys.argv[1]
+lib_dirs = json.loads(sys.argv[2])
 with open(path) as f:
     gyp = json.load(f)
 for target in gyp.get("targets", []):
     target["link_settings"] = {
         "libraries": ["-lndi"],
-        "library_dirs": [
-            "/usr/lib",
-            "/usr/local/lib",
-            "/usr/lib/x86_64-linux-gnu"
-        ]
+        "library_dirs": lib_dirs
     }
     if "copies" in target:
         del target["copies"]
 with open(path, "w") as f:
     json.dump(gyp, f, indent=2)
-print("  Patched binding.gyp: replaced Windows NDI lib with -lndi for Linux")
+print("  Patched binding.gyp: using -lndi with library_dirs=" + str(lib_dirs))
 PYEOF
         fi
+    fi
+
+    if [ -n "$NDI_LIB_DIR" ]; then
+        NDI_SO=$(find "$NDI_LIB_DIR" -maxdepth 1 -name 'libndi.so*' -type f 2>/dev/null | head -1)
+        if [ -n "$NDI_SO" ] && [ ! -e "$NDI_LIB_DIR/libndi.so" ]; then
+            echo "  Creating libndi.so symlink: $NDI_LIB_DIR/libndi.so -> $(basename "$NDI_SO")"
+            sudo ln -sf "$NDI_SO" "$NDI_LIB_DIR/libndi.so" 2>/dev/null || \
+                ln -sf "$NDI_SO" "$NDI_LIB_DIR/libndi.so" 2>/dev/null || \
+                echo -e "${YELLOW}  Could not create libndi.so symlink (try: sudo ln -sf $NDI_SO $NDI_LIB_DIR/libndi.so)${NC}"
+        fi
+        sudo ldconfig 2>/dev/null || true
     fi
 
     echo "  Building grandiose native addon..."
