@@ -1,0 +1,230 @@
+NDI SDK for Linux exists.  Overwrite? y
+NDI SDK for Linux/
+NDI SDK for Linux/documentation/
+NDI SDK for Linux/documentation/Introduction to the NDI SDK.pdf
+NDI SDK for Linux/documentation/NDI Brand Guidelines.pdf
+NDI SDK for Linux/documentation/NDI SDK Documentation.pdf
+NDI SDK for Linux/documentation/brand-assets/
+NDI SDK for Linux/documentation/brand-assets/2. NDI High Bandwidth/
+NDI SDK for Linux/documentation/brand-assets/2. NDI High Bandwidth/2.1 NDI High Bandwidth Logo/
+NDI SDK for Linux/documentation/brand-assets/2. NDI High Bandwidth/2.1 NDI High Bandwidth Logo/Light/
+NDI SDK for Linux/documentation/brand-assets/2. NDI High Bandwidth/2.1 NDI High Bandwidth Logo/Light/NDI High Bandwidth Logo Light.png
+NDI SDK for Linux/documentation/brand-assets/2. NDI High Bandwidth/2.1 NDI High Bandwidth Logo/Light/NDI High Bandwidth Logo Light.svg
+NDI SDK for Linux/documentation/brand-assets/2. NDI High Bandwidth/2.1 NDI High Bandwidth Logo/Light/NDI High Bandwidth Logo Light@5x.png
+NDI SDK for Linux/documentation/brand-assets/2. NDI High Bandwidth/2.1 NDI High Bandwidth Logo/Dark/
+NDI SDK for Linux/documentation/brand-assets/2. NDI High Bandwidth/2.1 NDI High Bandwidth Logo/Dark/NDI High Bandwidth Logo Dark.svg
+NDI SDK for Linux/documentation/brand-assets/2. NDI High Bandwidth/2.1 NDI High Bandwidth Logo/Dark/NDI High Bandwidth Logo Dark@5x.png
+NDI SDK for Linux/documentation/brand-assets/2. NDI High Bandwidth/2.1 NDI High Bandwidth Logo/Dark/NDI High Bandwidth Logo Dark.png
+NDI SDK for Linux/documentation/brand-assets/1. NDI/
+NDI SDK for Linux/documentation/brand-assets/1. NDI/1.1 NDI Logo/
+NDI SDK for Linux/documentation/brand-assets/1. NDI/1.1 NDI Logo/Light/
+NDI SDK for Linux/documentation/brand-assets/1. NDI/1.1 NDI Logo/Light/NDI Logo Master - Light.png
+NDI SDK for Linux/documentation/brand-assets/1. NDI/1.1 NDI Logo/Light/NDI Logo Master - Light.svg
+NDI SDK for Linux/documentation/brand-assets/1. NDI/1.1 NDI Logo/Light/NDI Logo Master - Light@5x.png
+NDI SDK for Linux/documentation/brand-assets/1. NDI/1.1 NDI Logo/Dark/
+NDI SDK for Linux/documentation/brand-assets/1. NDI/1.1 NDI Logo/Dark/NDI Logo Master.png
+NDI SDK for Linux/documentation/brand-assets/1. NDI/1.1 NDI Logo/Dark/NDI Logo Master@5x.png
+NDI SDK for Linux/documentation/brand-assets/1. NDI/1.1 NDI Logo/Dark/NDI Logo Master.svg
+NDI SDK for Linux/documentation/brand-assets/1. NDI/1.2 NDI Logo with Tagline/
+NDI SDK for Linux/documentation/brand-assets/1. NDI/1.2 NDI Logo with Tagline/Light/
+NDI SDK for Linux/documentation/brand-assets/1. NDI/1.2 NDI Logo with Tagline/Light/NDI Logo with Tagline Light@5x.png
+NDI SDK for Linux/documentation/brand-assets/1. NDI/1.2 NDI Logo with Tagline/Light/NDI Logo with Tagline Light.png
+NDI SDK for Linux/documentation/brand-assets/1. NDI/1.2 NDI Logo with Tagline/Light/NDI Logo with Tagline Light.svg
+NDI SDK for Linux/documentation/brand-assets/1. NDI/1.2 NDI Logo with Tagline/Dark/
+NDI SDK for Linux/documentation/brand-assets/1. NDI/1.2 NDI Logo with Tagline/Dark/NDI Logo with Tagline Dark.png
+NDI SDK for Linux/documentation/brand-assets/1. NDI/1.2 NDI Logo with Tagline/Dark/NDI Logo with Tagline Dark.svg
+NDI SDK for Linux/documentation/brand-assets/1. NDI/1.2 NDI Logo with Tagline/Dark/NDI Logo with Tagline Dark@5x.png
+NDI SDK for Linux/documentation/NDI Changes.pdf
+NDI SDK for Linux/NDI SDK License Agreement.txt
+NDI SDK for Linux/include/
+NDI SDK for Linux/include/Processing.NDI.Recv.ex.h
+NDI SDK for Linux/include/Processing.NDI.SendAdvertiser.h
+NDI SDK for Linux/include/Processing.NDI.Routing.h
+NDI SDK for Linux/include/Processing.NDI.Lib.h
+NDI SDK for Linux/include/Processing.NDI.Lib.cplusplus.h
+NDI SDK for Linux/include/Processing.NDI.structs.h
+NDI SDK for Linux/include/Processing.NDI.DynamicLoad.h
+NDI SDK for Linux/include/Processing.NDI.RecvAdvertiser.h
+NDI SDK for Linux/include/Processing.NDI.RecvListener.h
+NDI SDK for Linux/include/Processing.NDI.utilities.h
+NDI SDK for Linux/include/Processing.NDI.FrameSync.h
+NDI SDK for Linux/include/Processing.NDI.Send.h
+NDI SDK for Linux/include/Processing.NDI.Recv.h
+NDI SDK for Linux/include/Processing.NDI.SendListener.h
+NDI SDK for Linux/include/Processing.NDI.Find.h
+NDI SDK for Linux/include/Processing.NDI.compat.h
+NDI SDK for Linux/include/Processing.NDI.deprecated.h
+NDI SDK for Linux/NDI SDK License Agreement.pdf
+NDI SDK for Linux/bin/
+NDI SDK for Linux/bin/i686-linux-gnu/
+NDI SDK for Linux/bin/i686-linux-gnu/ndi-discovery-server
+NDI SDK for Linux/bin/i686-linux-gnu/ndi-free-audio
+NDI SDK for Linux/bin/i686-linux-gnu/ndi-record
+NDI SDK for Linux/bin/i686-linux-gnu/ndi-benchmark
+NDI SDK for Linux/bin/arm-rpi1-linux-gnueabihf/
+NDI SDK for Linux/bin/arm-rpi1-linux-gnueabihf/ndi-discovery-server
+NDI SDK for Linux/bin/arm-rpi1-linux-gnueabihf/ndi-free-audio
+NDI SDK for Linux/bin/arm-rpi1-linux-gnueabihf/ndi-record
+NDI SDK for Linux/bin/arm-rpi1-linux-gnueabihf/ndi-benchmark
+NDI SDK for Linux/bin/x86_64-linux-gnu/
+NDI SDK for Linux/bin/x86_64-linux-gnu/ndi-discovery-server
+NDI SDK for Linux/bin/x86_64-linux-gnu/ndi-free-audio
+NDI SDK for Linux/bin/x86_64-linux-gnu/ndi-record
+NDI SDK for Linux/bin/x86_64-linux-gnu/ndi-benchmark
+NDI SDK for Linux/bin/aarch64-rpi4-linux-gnueabi/
+NDI SDK for Linux/bin/aarch64-rpi4-linux-gnueabi/ndi-discovery-server
+NDI SDK for Linux/bin/aarch64-rpi4-linux-gnueabi/ndi-free-audio
+NDI SDK for Linux/bin/aarch64-rpi4-linux-gnueabi/ndi-record
+NDI SDK for Linux/bin/aarch64-rpi4-linux-gnueabi/ndi-benchmark
+NDI SDK for Linux/bin/arm-rpi3-linux-gnueabihf/
+NDI SDK for Linux/bin/arm-rpi3-linux-gnueabihf/ndi-discovery-server
+NDI SDK for Linux/bin/arm-rpi3-linux-gnueabihf/ndi-free-audio
+NDI SDK for Linux/bin/arm-rpi3-linux-gnueabihf/ndi-record
+NDI SDK for Linux/bin/arm-rpi3-linux-gnueabihf/ndi-benchmark
+NDI SDK for Linux/bin/arm-rpi2-linux-gnueabihf/
+NDI SDK for Linux/bin/arm-rpi2-linux-gnueabihf/ndi-discovery-server
+NDI SDK for Linux/bin/arm-rpi2-linux-gnueabihf/ndi-free-audio
+NDI SDK for Linux/bin/arm-rpi2-linux-gnueabihf/ndi-record
+NDI SDK for Linux/bin/arm-rpi2-linux-gnueabihf/ndi-benchmark
+NDI SDK for Linux/bin/arm-rpi4-linux-gnueabihf/
+NDI SDK for Linux/bin/arm-rpi4-linux-gnueabihf/ndi-discovery-server
+NDI SDK for Linux/bin/arm-rpi4-linux-gnueabihf/ndi-free-audio
+NDI SDK for Linux/bin/arm-rpi4-linux-gnueabihf/ndi-record
+NDI SDK for Linux/bin/arm-rpi4-linux-gnueabihf/ndi-benchmark
+NDI SDK for Linux/lib/
+NDI SDK for Linux/lib/i686-linux-gnu/
+NDI SDK for Linux/lib/i686-linux-gnu/libndi.so.6.3.1
+NDI SDK for Linux/lib/arm-rpi1-linux-gnueabihf/
+NDI SDK for Linux/lib/arm-rpi1-linux-gnueabihf/libndi.so.6.3.1
+NDI SDK for Linux/lib/x86_64-linux-gnu/
+NDI SDK for Linux/lib/x86_64-linux-gnu/libndi.so.6.3.1
+NDI SDK for Linux/lib/aarch64-rpi4-linux-gnueabi/
+NDI SDK for Linux/lib/aarch64-rpi4-linux-gnueabi/libndi.so.6.3.1
+NDI SDK for Linux/lib/arm-rpi3-linux-gnueabihf/
+NDI SDK for Linux/lib/arm-rpi3-linux-gnueabihf/libndi.so.6.3.1
+NDI SDK for Linux/lib/arm-rpi2-linux-gnueabihf/
+NDI SDK for Linux/lib/arm-rpi2-linux-gnueabihf/libndi.so.6.3.1
+NDI SDK for Linux/lib/arm-rpi4-linux-gnueabihf/
+NDI SDK for Linux/lib/arm-rpi4-linux-gnueabihf/libndi.so.6.3.1
+NDI SDK for Linux/Version.txt
+NDI SDK for Linux/examples/
+NDI SDK for Linux/examples/C++/
+NDI SDK for Linux/examples/C++/NDIlib_Recv_Listener/
+NDI SDK for Linux/examples/C++/NDIlib_Recv_Listener/NDIlib_Recv_Listener.cpp
+NDI SDK for Linux/examples/C++/NDIlib_Send_AudioFile/
+NDI SDK for Linux/examples/C++/NDIlib_Send_AudioFile/NDIlib_Send_AudioFile.cpp
+NDI SDK for Linux/examples/C++/NDIlib_Send_Advertiser/
+NDI SDK for Linux/examples/C++/NDIlib_Send_Advertiser/NDIlib_Send_Advertiser.cpp
+NDI SDK for Linux/examples/C++/NDIlib_Send_Capabilities/
+NDI SDK for Linux/examples/C++/NDIlib_Send_Capabilities/NDIlib_Send_Capabilities.cpp
+NDI SDK for Linux/examples/C++/NDIlib_Send_Benchmark_8K/
+NDI SDK for Linux/examples/C++/NDIlib_Send_Benchmark_8K/NDIlib_Send_Benchmark_8K.cpp
+NDI SDK for Linux/examples/C++/NDIlib_Tally_Echo/
+NDI SDK for Linux/examples/C++/NDIlib_Tally_Echo/NDIlib_Tally_Echo.cpp
+NDI SDK for Linux/examples/C++/NDIlib_Recv_PTZ/
+NDI SDK for Linux/examples/C++/NDIlib_Recv_PTZ/NDIlib_Recv_PTZ.cpp
+NDI SDK for Linux/examples/C++/NDIlib_Recv_Advertiser/
+NDI SDK for Linux/examples/C++/NDIlib_Recv_Advertiser/NDIlib_Recv_Advertiser.cpp
+NDI SDK for Linux/examples/C++/NDIlib_Recv_FrameSync_timing/
+NDI SDK for Linux/examples/C++/NDIlib_Recv_FrameSync_timing/NDIlib_Recv_FrameSync_timing.cpp
+NDI SDK for Linux/examples/C++/NDIlib_Send_PNG/
+NDI SDK for Linux/examples/C++/NDIlib_Send_PNG/NDIlib_Send_PNG.cpp
+NDI SDK for Linux/examples/C++/NDIlib_Routing/
+NDI SDK for Linux/examples/C++/NDIlib_Routing/NDIlib_Routing.cpp
+NDI SDK for Linux/examples/C++/NDIlib_Send_Video_Async/
+NDI SDK for Linux/examples/C++/NDIlib_Send_Video_Async/NDIlib_Send_Video_Async.cpp
+NDI SDK for Linux/examples/C++/NDIlib_Recv_FrameSync_Audio/
+NDI SDK for Linux/examples/C++/NDIlib_Recv_FrameSync_Audio/NDIlib_Recv_FrameSync_Audio.cpp
+NDI SDK for Linux/examples/C++/NDIlib_Find/
+NDI SDK for Linux/examples/C++/NDIlib_Find/NDIlib_Find.cpp
+NDI SDK for Linux/examples/C++/NDIlib_Send_Audio_16bpp/
+NDI SDK for Linux/examples/C++/NDIlib_Send_Audio_16bpp/NDIlib_Send_Audio_16bpp.cpp
+NDI SDK for Linux/examples/C++/NDIlib_FreeAudio/
+NDI SDK for Linux/examples/C++/NDIlib_FreeAudio/NDIlib_FreeAudio.cpp
+NDI SDK for Linux/examples/C++/NDIlib_Send_10bit/
+NDI SDK for Linux/examples/C++/NDIlib_Send_10bit/NDIlib_Send_10bit.cpp
+NDI SDK for Linux/examples/C++/NDIlib_Send_16bit/
+NDI SDK for Linux/examples/C++/NDIlib_Send_16bit/NDIlib_Send_16bit.cpp
+NDI SDK for Linux/examples/C++/NDIlib_DynamicLoad/
+NDI SDK for Linux/examples/C++/NDIlib_DynamicLoad/NDIlib_DynamicLoad.cpp
+NDI SDK for Linux/examples/C++/NDIlib_Recv_FrameSync/
+NDI SDK for Linux/examples/C++/NDIlib_Recv_FrameSync/NDIlib_Recv_FrameSync.cpp
+NDI SDK for Linux/examples/C++/NDIlib_Send_VirtualPTZ/
+NDI SDK for Linux/examples/C++/NDIlib_Send_VirtualPTZ/NDIlib_Send_VirtualPTZ.cpp
+NDI SDK for Linux/examples/C++/NDIlib_Send_Video_Advanced/
+NDI SDK for Linux/examples/C++/NDIlib_Send_Video_Advanced/NDIlib_Send_Video_Advanced.cpp
+NDI SDK for Linux/examples/C++/NDIlib_Send_Video_and_Audio/
+NDI SDK for Linux/examples/C++/NDIlib_Send_Video_and_Audio/NDIlib_Send_Video_and_Audio.cpp
+NDI SDK for Linux/examples/C++/NDIlib_Recv_Multichannel/
+NDI SDK for Linux/examples/C++/NDIlib_Recv_Multichannel/NDIlib_Recv_Multichannel.cpp
+NDI SDK for Linux/examples/C++/ThirdParty/
+NDI SDK for Linux/examples/C++/ThirdParty/picopng.hpp
+NDI SDK for Linux/examples/C++/ThirdParty/rapidxml_print.hpp
+NDI SDK for Linux/examples/C++/ThirdParty/rapidxml.hpp
+NDI SDK for Linux/examples/C++/ThirdParty/lodepng.h
+NDI SDK for Linux/examples/C++/ThirdParty/miniaudio.h
+NDI SDK for Linux/examples/C++/ThirdParty/lodepng.cpp
+NDI SDK for Linux/examples/C++/Makefile.proj
+NDI SDK for Linux/examples/C++/NDIlib_Recv_Listener_Advanced/
+NDI SDK for Linux/examples/C++/NDIlib_Recv_Listener_Advanced/NDIlib_Recv_Listener_Advanced.cpp
+NDI SDK for Linux/examples/C++/Makefile
+NDI SDK for Linux/examples/C++/NDIlib_Send_BMD/
+NDI SDK for Linux/examples/C++/NDIlib_Send_BMD/NDIlib_Send_BMD.cpp
+NDI SDK for Linux/examples/C++/NDIlib_Send_BMD/BMDSDK/
+NDI SDK for Linux/examples/C++/NDIlib_Send_BMD/BMDSDK/Linux/
+NDI SDK for Linux/examples/C++/NDIlib_Send_BMD/BMDSDK/Linux/include/
+NDI SDK for Linux/examples/C++/NDIlib_Send_BMD/BMDSDK/Linux/include/DeckLinkAPIConfiguration_v10_2.h
+NDI SDK for Linux/examples/C++/NDIlib_Send_BMD/BMDSDK/Linux/include/DeckLinkAPI_v9_9.h
+NDI SDK for Linux/examples/C++/NDIlib_Send_BMD/BMDSDK/Linux/include/DeckLinkAPI.h
+NDI SDK for Linux/examples/C++/NDIlib_Send_BMD/BMDSDK/Linux/include/DeckLinkAPI_v7_6.h
+NDI SDK for Linux/examples/C++/NDIlib_Send_BMD/BMDSDK/Linux/include/DeckLinkAPI_v10_4.h
+NDI SDK for Linux/examples/C++/NDIlib_Send_BMD/BMDSDK/Linux/include/DeckLinkAPIConfiguration_v10_4.h
+NDI SDK for Linux/examples/C++/NDIlib_Send_BMD/BMDSDK/Linux/include/DeckLinkAPI_v9_2.h
+NDI SDK for Linux/examples/C++/NDIlib_Send_BMD/BMDSDK/Linux/include/DeckLinkAPIVersion.h
+NDI SDK for Linux/examples/C++/NDIlib_Send_BMD/BMDSDK/Linux/include/DeckLinkAPI_v10_6.h
+NDI SDK for Linux/examples/C++/NDIlib_Send_BMD/BMDSDK/Linux/include/DeckLinkAPIDiscovery.h
+NDI SDK for Linux/examples/C++/NDIlib_Send_BMD/BMDSDK/Linux/include/DeckLinkAPIDispatch.cpp
+NDI SDK for Linux/examples/C++/NDIlib_Send_BMD/BMDSDK/Linux/include/DeckLinkAPIConfiguration_v10_9.h
+NDI SDK for Linux/examples/C++/NDIlib_Send_BMD/BMDSDK/Linux/include/DeckLinkAPIDeckControl.h
+NDI SDK for Linux/examples/C++/NDIlib_Send_BMD/BMDSDK/Linux/include/DeckLinkAPI_v7_1.h
+NDI SDK for Linux/examples/C++/NDIlib_Send_BMD/BMDSDK/Linux/include/LinuxCOM.h
+NDI SDK for Linux/examples/C++/NDIlib_Send_BMD/BMDSDK/Linux/include/DeckLinkAPITypes.h
+NDI SDK for Linux/examples/C++/NDIlib_Send_BMD/BMDSDK/Linux/include/DeckLinkAPIConfiguration_v10_5.h
+NDI SDK for Linux/examples/C++/NDIlib_Send_BMD/BMDSDK/Linux/include/DeckLinkAPIDispatch_v10_8.cpp
+NDI SDK for Linux/examples/C++/NDIlib_Send_BMD/BMDSDK/Linux/include/DeckLinkAPI_v8_0.h
+NDI SDK for Linux/examples/C++/NDIlib_Send_BMD/BMDSDK/Linux/include/DeckLinkAPIModes.h
+NDI SDK for Linux/examples/C++/NDIlib_Send_BMD/BMDSDK/Linux/include/DeckLinkAPI_v7_3.h
+NDI SDK for Linux/examples/C++/NDIlib_Send_BMD/BMDSDK/Linux/include/DeckLinkAPIDispatch_v7_6.cpp
+NDI SDK for Linux/examples/C++/NDIlib_Send_BMD/BMDSDK/Linux/include/DeckLinkAPI_v10_5.h
+NDI SDK for Linux/examples/C++/NDIlib_Send_BMD/BMDSDK/Linux/include/DeckLinkAPI_v10_9.h
+NDI SDK for Linux/examples/C++/NDIlib_Send_BMD/BMDSDK/Linux/include/DeckLinkAPIDispatch_v8_0.cpp
+NDI SDK for Linux/examples/C++/NDIlib_Send_BMD/BMDSDK/Linux/include/DeckLinkAPI_v7_9.h
+NDI SDK for Linux/examples/C++/NDIlib_Send_BMD/BMDSDK/Linux/include/DeckLinkAPI_v10_2.h
+NDI SDK for Linux/examples/C++/NDIlib_Send_BMD/BMDSDK/Linux/include/DeckLinkAPI_v8_1.h
+NDI SDK for Linux/examples/C++/NDIlib_Send_BMD/BMDSDK/Linux/include/DeckLinkAPIConfiguration.h
+NDI SDK for Linux/examples/C++/NDIlib_Recv_FrameSync_resend/
+NDI SDK for Linux/examples/C++/NDIlib_Recv_FrameSync_resend/NDIlib_Recv_FrameSync_resend.cpp
+NDI SDK for Linux/examples/C++/NDIlib_Send_Video/
+NDI SDK for Linux/examples/C++/NDIlib_Send_Video/NDIlib_Send_Video.cpp
+NDI SDK for Linux/examples/C++/NDIlib_Recv_HDR/
+NDI SDK for Linux/examples/C++/NDIlib_Recv_HDR/NDIlib_Recv_HDR.cpp
+NDI SDK for Linux/examples/C++/NDIlib_Recv_WebControl/
+NDI SDK for Linux/examples/C++/NDIlib_Recv_WebControl/NDIlib_Recv_WebControl.cpp
+NDI SDK for Linux/examples/C++/NDIlib_Send_Latency/
+NDI SDK for Linux/examples/C++/NDIlib_Send_Latency/NDIlib_Send_Latency.cpp
+NDI SDK for Linux/examples/C++/NDIlib_Send_Listener/
+NDI SDK for Linux/examples/C++/NDIlib_Send_Listener/NDIlib_Send_Listener.cpp
+NDI SDK for Linux/examples/C++/NDIlib_Recv_PNG/
+NDI SDK for Linux/examples/C++/NDIlib_Recv_PNG/NDIlib_Recv_PNG.cpp
+NDI SDK for Linux/examples/C++/NDIlib_Recv/
+NDI SDK for Linux/examples/C++/NDIlib_Recv/NDIlib_Recv.cpp
+NDI SDK for Linux/examples/C++/NDIlib_Send_Audio/
+NDI SDK for Linux/examples/C++/NDIlib_Send_Audio/NDIlib_Send_Audio.cpp
+NDI SDK for Linux/examples/C++/NDIlib_Send_Benchmark/
+NDI SDK for Linux/examples/C++/NDIlib_Send_Benchmark/NDIlib_Send_Benchmark.cpp
+NDI SDK for Linux/examples/C++/NDIlib_Send_Listener_Advanced/
+NDI SDK for Linux/examples/C++/NDIlib_Send_Listener_Advanced/NDIlib_Send_Listener_Advanced.cpp
+NDI SDK for Linux/examples/C++/NDIlib_Recv_Audio_16bpp/
+NDI SDK for Linux/examples/C++/NDIlib_Recv_Audio_16bpp/NDIlib_Recv_Audio_16bpp.cpp
+NDI SDK for Linux/licenses/
+NDI SDK for Linux/licenses/libndi_licenses.txt

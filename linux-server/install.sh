@@ -87,20 +87,9 @@ echo -e "${CYAN}[3/7] Checking NDI SDK...${NC}"
 
 NDI_FOUND=0
 NDI_LIB_DIR=""
-NDI_LIB_PATHS=(
-    "/usr/lib/libndi.so"
-    "/usr/lib/x86_64-linux-gnu/libndi.so"
-    "/usr/local/lib/libndi.so"
-    "/usr/lib/libndi.so.5"
-    "/usr/lib/libndi.so.6"
-    "/usr/lib/x86_64-linux-gnu/libndi.so.5"
-    "/usr/lib/x86_64-linux-gnu/libndi.so.6"
-    "/usr/local/lib/libndi.so.5"
-    "/usr/local/lib/libndi.so.6"
-    "/opt/ndi/lib/libndi.so"
-)
 
-for p in "${NDI_LIB_PATHS[@]}"; do
+echo "  Checking system library paths..."
+for p in /usr/lib/libndi.so /usr/lib/x86_64-linux-gnu/libndi.so /usr/local/lib/libndi.so; do
     if [ -e "$p" ]; then
         NDI_FOUND=1
         NDI_LIB_DIR="$(dirname "$p")"
@@ -108,6 +97,17 @@ for p in "${NDI_LIB_PATHS[@]}"; do
         break
     fi
 done
+
+if [ "$NDI_FOUND" = "0" ]; then
+    for p in /usr/lib/libndi.so.* /usr/lib/x86_64-linux-gnu/libndi.so.* /usr/local/lib/libndi.so.*; do
+        if [ -e "$p" ]; then
+            NDI_FOUND=1
+            NDI_LIB_DIR="$(dirname "$p")"
+            echo -e "  NDI runtime library found (versioned): $p"
+            break
+        fi
+    done
+fi
 
 if [ "$NDI_FOUND" = "0" ]; then
     NDI_SEARCH=$(ldconfig -p 2>/dev/null | grep 'libndi\.so' | head -1 | sed 's/.*=> //')
@@ -119,14 +119,35 @@ if [ "$NDI_FOUND" = "0" ]; then
 fi
 
 if [ "$NDI_FOUND" = "0" ]; then
+    echo "  Not in system paths. Searching for NDI SDK installation..."
+    NDI_SDK_SO=""
+    ARCH="x86_64-linux-gnu"
+    for search_dir in /home /opt /usr/local; do
+        NDI_SDK_SO=$(find "$search_dir" -path "*/lib/${ARCH}/libndi.so*" -type f 2>/dev/null | head -1)
+        [ -n "$NDI_SDK_SO" ] && break
+    done
+
+    if [ -n "$NDI_SDK_SO" ]; then
+        echo "  Found NDI SDK library: $NDI_SDK_SO"
+        echo "  Installing to /usr/local/lib/..."
+        sudo cp "$NDI_SDK_SO" /usr/local/lib/ 2>/dev/null
+        sudo ln -sf "/usr/local/lib/$(basename "$NDI_SDK_SO")" /usr/local/lib/libndi.so 2>/dev/null
+        sudo ldconfig 2>/dev/null || true
+        if [ -e /usr/local/lib/libndi.so ]; then
+            NDI_FOUND=1
+            NDI_LIB_DIR="/usr/local/lib"
+            echo -e "  ${GREEN}NDI library installed to /usr/local/lib/${NC}"
+        fi
+    fi
+fi
+
+if [ "$NDI_FOUND" = "0" ]; then
     echo -e "${YELLOW}  NDI runtime library not found.${NC}"
     echo ""
     echo "  To enable NDI output, install the NDI SDK:"
     echo "    1. Download from: https://ndi.video/tools/download/"
     echo "    2. Run the installer (e.g., Install_NDI_SDK_v6_Linux.sh)"
-    echo "    3. Copy libndi.so to /usr/lib/ or /usr/local/lib/"
-    echo "    4. Run: sudo ldconfig"
-    echo "    5. Re-run this script"
+    echo "    3. Re-run this script (it will auto-install the library)"
     echo ""
     echo -e "${YELLOW}  Continuing without NDI support (grandiose will use mock mode)...${NC}"
 fi
@@ -209,9 +230,8 @@ PYEOF
         echo "  Patching grandiose binding.gyp for Linux..."
 
         if [ -n "$NDI_LIB_DIR" ]; then
-            HAS_UNVERSIONED=$(find "$NDI_LIB_DIR" -maxdepth 1 -name 'libndi.so' \( -type f -o -type l \) 2>/dev/null | head -1)
-            if [ -z "$HAS_UNVERSIONED" ]; then
-                VERSIONED_SO=$(find "$NDI_LIB_DIR" -maxdepth 1 -name 'libndi.so.*' \( -type f -o -type l \) 2>/dev/null | head -1)
+            if [ ! -e "$NDI_LIB_DIR/libndi.so" ]; then
+                VERSIONED_SO=$(ls "$NDI_LIB_DIR"/libndi.so.* 2>/dev/null | head -1)
                 if [ -n "$VERSIONED_SO" ]; then
                     echo "  Creating libndi.so symlink -> $(basename "$VERSIONED_SO")"
                     sudo ln -sf "$VERSIONED_SO" "$NDI_LIB_DIR/libndi.so" 2>/dev/null || true
