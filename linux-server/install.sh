@@ -211,13 +211,22 @@ PYEOF
     if [ -f "$BINDING_GYP" ]; then
         echo "  Patching grandiose binding.gyp for Linux..."
 
-        NDI_LINK_FLAG="-lndi"
+        SAFE_NDI_LIB=""
         if [ -n "$NDI_LIB_DIR" ]; then
-            NDI_LINK_FLAG="-L${NDI_LIB_DIR} -lndi"
-            sudo ldconfig 2>/dev/null || true
+            REAL_SO=$(find "$NDI_LIB_DIR" -maxdepth 1 -name 'libndi.so*' \( -type f -o -type l \) 2>/dev/null | head -1)
+            if [ -n "$REAL_SO" ]; then
+                SAFE_NDI_DIR="/usr/local/lib"
+                sudo mkdir -p "$SAFE_NDI_DIR" 2>/dev/null || true
+                if [ ! -e "$SAFE_NDI_DIR/libndi.so" ]; then
+                    echo "  Creating symlink: $SAFE_NDI_DIR/libndi.so -> $REAL_SO"
+                    sudo ln -sf "$REAL_SO" "$SAFE_NDI_DIR/libndi.so" 2>/dev/null || \
+                        ln -sf "$REAL_SO" "$SAFE_NDI_DIR/libndi.so" 2>/dev/null || true
+                fi
+                sudo ldconfig 2>/dev/null || true
+            fi
         fi
 
-        cat > "$BINDING_GYP" << GYEOF
+        cat > "$BINDING_GYP" << 'GYEOF'
 {
   "targets": [
     {
@@ -233,13 +242,12 @@ PYEOF
       "cflags!": ["-fno-exceptions"],
       "cflags_cc!": ["-fno-exceptions"],
       "cflags_cc": ["-Wno-implicit-fallthrough", "-Wno-write-strings"],
-      "ldflags": ["${NDI_LINK_FLAG}"],
-      "libraries": ["${NDI_LINK_FLAG}"]
+      "libraries": ["-lndi"]
     }
   ]
 }
 GYEOF
-        echo "  Wrote binding.gyp with NDI link flags: ${NDI_LINK_FLAG}"
+        echo "  Wrote binding.gyp with -lndi (symlinked to /usr/local/lib/)"
     fi
 
     echo "  Building grandiose native addon..."
