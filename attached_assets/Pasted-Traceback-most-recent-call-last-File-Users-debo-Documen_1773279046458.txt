@@ -1,0 +1,46 @@
+Traceback (most recent call last):
+  File "/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/node_modules/node-gyp/gyp/gyp_main.py", line 45, in <module>
+    sys.exit(gyp.script_main())
+             ^^^^^^^^^^^^^^^^^
+  File "/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/node_modules/node-gyp/gyp/pylib/gyp/__init__.py", line 688, in script_main
+    return main(sys.argv[1:])
+           ^^^^^^^^^^^^^^^^^^
+  File "/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/node_modules/node-gyp/gyp/pylib/gyp/__init__.py", line 680, in main
+    return gyp_main(args)
+           ^^^^^^^^^^^^^^
+  File "/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/node_modules/node-gyp/gyp/pylib/gyp/__init__.py", line 647, in gyp_main
+    [generator, flat_list, targets, data] = Load(
+                                            ^^^^^
+  File "/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/node_modules/node-gyp/gyp/pylib/gyp/__init__.py", line 124, in Load
+    generator.CalculateVariables(default_variables, params)
+  File "/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/node_modules/node-gyp/gyp/pylib/gyp/generator/make.py", line 68, in CalculateVariables
+    flavor = gyp.common.GetFlavor(params)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/node_modules/node-gyp/gyp/pylib/gyp/common.py", line 504, in GetFlavor
+    defines = GetCrossCompilerPredefines()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/node_modules/node-gyp/gyp/pylib/gyp/common.py", line 460, in GetCrossCompilerPredefines
+    stdout = subprocess.run(
+             ^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/lib/python3.12/subprocess.py", line 548, in run
+    with Popen(*popenargs, **kwargs) as process:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/lib/python3.12/subprocess.py", line 1026, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+  File "/opt/homebrew/Cellar/python@3.12/3.12.13/Frameworks/Python.framework/Versions/3.12/lib/python3.12/subprocess.py", line 1955, in _execute_child
+    raise child_exception_type(errno_num, err_msg, err_filename)
+PermissionError: [Errno 13] Permission denied: '/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/build-tools/cxx-objcpp.sh'
+gyp ERR! configure error 
+gyp ERR! stack Error: `gyp` failed with exit code: 1
+gyp ERR! stack at ChildProcess.<anonymous> (/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/node_modules/node-gyp/lib/configure.js:317:18)
+gyp ERR! stack at ChildProcess.emit (node:events:524:28)
+gyp ERR! stack at ChildProcess._handle.onexit (node:internal/child_process:293:12)
+gyp ERR! System Darwin 24.3.0
+gyp ERR! command "/opt/homebrew/Cellar/node@20/20.20.1/bin/node" "/Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon/node_modules/.bin/node-gyp" "rebuild"
+gyp ERR! cwd /Users/debo/Documents/Attached-Assets/zoom-meeting-sdk-addon
+gyp ERR! node -v v20.20.1
+gyp ERR! node-gyp -v v10.3.1
+gyp ERR! not ok 
+  Zoom addon build failed (non-fatal)
+  The app will run in stub mode without actual Zoom connectivity.
+  Linking Electron frameworks...

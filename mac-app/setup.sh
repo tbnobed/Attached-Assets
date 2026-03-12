@@ -159,6 +159,7 @@ else
         echo "  Building Zoom Meeting SDK addon..."
         cd "$PROJECT_DIR/zoom-meeting-sdk-addon"
         npm install
+        chmod +x build-tools/cxx-objcpp.sh 2>/dev/null || true
         CXX="$(pwd)/build-tools/cxx-objcpp.sh" npx node-gyp rebuild || {
             echo -e "${YELLOW}  Zoom addon build failed (non-fatal)${NC}"
             echo "  The app will run in stub mode without actual Zoom connectivity."
