@@ -5,7 +5,9 @@
   "main": "main.js",
   "scripts": {
     "start": "npx electron . --no-sandbox --disable-gpu-sandbox",
-    "setup": "bash setup.sh"
+    "setup": "bash setup.sh",
+    "build": "bash build-app.sh",
+    "create-dmg": "bash create-dmg.sh"
   },
   "dependencies": {
     "electron": "^40.6.1"

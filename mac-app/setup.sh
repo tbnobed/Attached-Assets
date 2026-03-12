@@ -247,15 +247,32 @@ fi
 
 echo ""
 if [ "$ALL_OK" = true ]; then
+    echo ""
+    echo -e "${CYAN}  Building ZoomLink.app...${NC}"
+    bash "$SCRIPT_DIR/build-app.sh" || {
+        echo -e "${YELLOW}  App bundle build failed (non-fatal)${NC}"
+        echo "  You can still run from Terminal with: cd $SCRIPT_DIR && npm start"
+    }
+
+    echo ""
+    echo -e "${CYAN}  Creating ZoomLink installer DMG...${NC}"
+    bash "$SCRIPT_DIR/create-dmg.sh" || echo -e "${YELLOW}  DMG creation skipped (non-fatal)${NC}"
+
+    echo ""
     echo "============================================"
     echo -e "${GREEN}  Setup complete!${NC}"
     echo "============================================"
     echo ""
-    echo "  To start the Mac app:"
-    echo "    cd $SCRIPT_DIR && npx electron . --no-sandbox --disable-gpu-sandbox"
-    echo ""
-    echo "  Or simply:"
+    echo "  To run from Terminal:"
     echo "    cd $SCRIPT_DIR && npm start"
+    echo ""
+    echo "  Or use the app bundle:"
+    echo "    open $SCRIPT_DIR/dist/ZoomLink.app"
+    echo ""
+    echo "  Or share the installer:"
+    echo "    $SCRIPT_DIR/dist/ZoomLink-Installer.dmg"
+    echo ""
+    echo "  To install permanently, drag dist/ZoomLink.app to /Applications"
     echo ""
     echo "  Configure Zoom SDK credentials via the Settings (gear icon) in the app,"
     echo "  then connect to your Linux server's IP on port 9300."
