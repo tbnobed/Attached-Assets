@@ -72,7 +72,7 @@ class RemoteSDIClient extends EventEmitter {
     this._heartbeatTimer = null;
     this._destroyed = false;
     this._reconnectAttempts = 0;
-    this._maxReconnectAttempts = 10;
+    this._maxReconnectAttempts = Infinity;
     this._reconnectDelay = 2000;
     this._draining = false;
     this._frameDropCount = 0;
@@ -116,6 +116,7 @@ class RemoteSDIClient extends EventEmitter {
 
     this._socket = new net.Socket();
     this._socket.setNoDelay(true);
+    this._socket.setKeepAlive(true, 10000);
 
     this._socket.connect(this._port, this._host, () => {
       console.log(`[RemoteSDI] Connected to ${this._host}:${this._port}`);
@@ -156,21 +157,15 @@ class RemoteSDIClient extends EventEmitter {
 
   _scheduleReconnect() {
     if (this._destroyed || this._reconnecting) return;
-    if (this._reconnectAttempts >= this._maxReconnectAttempts) {
-      console.log('[RemoteSDI] Max reconnect attempts reached');
-      this.emit('status', { state: 'failed', host: this._host, port: this._port });
-      return;
-    }
 
     this._reconnecting = true;
     this._reconnectAttempts++;
-    const delay = Math.min(this._reconnectDelay * this._reconnectAttempts, 15000);
+    const delay = Math.min(this._reconnectDelay * Math.min(this._reconnectAttempts, 5), 10000);
 
-    console.log(`[RemoteSDI] Reconnecting in ${delay}ms (attempt ${this._reconnectAttempts}/${this._maxReconnectAttempts})`);
+    console.log(`[RemoteSDI] Reconnecting in ${delay}ms (attempt ${this._reconnectAttempts})`);
     this.emit('status', {
       state: 'reconnecting',
       attempt: this._reconnectAttempts,
-      maxAttempts: this._maxReconnectAttempts,
       host: this._host,
       port: this._port,
     });

@@ -35,8 +35,9 @@ mac-app/
 ```
 
 - **Stripped of**: NDIManager, DeckLinkManager, RecorderManager — these are all on the Linux server now
-- **RemoteSDIClient**: TCP binary protocol (magic `0x5A4C4B31`, 23-byte header), auto-reconnect, heartbeat, back-pressure aware
-- **UI shows**: Participant video previews, Remote SDI connection bar, 8-output SDI assignment grid, activity log
+- **RemoteSDIClient**: TCP binary protocol (magic `0x5A4C4B31`, 23-byte header), unlimited auto-reconnect with capped backoff, heartbeat, TCP keepalive, back-pressure aware
+- **Device Discovery**: On connect, queries Linux server HTTP API (`/api/devices`) at TCP port + 1 to get actual DeckLink device count and names
+- **UI shows**: Participant video previews, Remote SDI connection bar, dynamic SDI assignment grid (shows actual server outputs), activity log
 - **UI does NOT show**: Local NDI controls, DeckLink device panel, recording buttons, output directory picker
 - Run: `cd mac-app && npx electron . --no-sandbox --disable-gpu-sandbox`
 

@@ -85,6 +85,7 @@ contextBridge.exposeInMainWorld('zoomISO', {
   remoteSDIConnect: (host, port) => ipcRenderer.invoke('remote-sdi-connect', host, port),
   remoteSDIDisconnect: () => ipcRenderer.invoke('remote-sdi-disconnect'),
   remoteSDIStatus: () => ipcRenderer.invoke('remote-sdi-status'),
+  remoteSDIQueryDevices: (host, apiPort) => ipcRenderer.invoke('remote-sdi-query-devices', host, apiPort),
   remoteSDIAssign: (userId, deviceIndex) => ipcRenderer.invoke('remote-sdi-assign', userId, deviceIndex),
   remoteSDIUnassign: (userId) => ipcRenderer.invoke('remote-sdi-unassign', userId),
   onRemoteSDIStatus: (callback) => {

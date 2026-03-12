@@ -1387,6 +1387,9 @@
 
     state.rsdiState = 'disconnected';
     state.rsdiAssignments = {};
+    state.rsdiDevices = [];
+    state.rsdiServerHost = null;
+    state.rsdiApiPort = 9301;
 
     function updateRemoteSDIUI(info) {
       const dotEl = document.getElementById('rsdiDot');
@@ -1412,15 +1415,9 @@
           disconnectBtn.disabled = false;
           break;
         case 'reconnecting':
-          textEl.textContent = 'Reconnecting... attempt ' + (info.attempt || '?') + '/' + (info.maxAttempts || 10);
+          textEl.textContent = 'Reconnecting... attempt ' + (info.attempt || '?');
           connectBtn.disabled = true;
           disconnectBtn.disabled = false;
-          break;
-        case 'failed':
-          textEl.textContent = 'Connection failed — max reconnect attempts reached';
-          statsEl.style.display = 'none';
-          connectBtn.disabled = false;
-          disconnectBtn.disabled = true;
           break;
         case 'disconnected':
         default:
@@ -1450,15 +1447,27 @@
     function renderRsdiAssignments() {
       const list = document.getElementById('rsdiAssignmentList');
       const participants = Array.from(state.participants.entries());
+      const devices = state.rsdiDevices || [];
+
+      if (state.rsdiState !== 'connected' && devices.length === 0) {
+        list.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:8px 0;">Connect to server to see available outputs</div>';
+        return;
+      }
+
+      if (devices.length === 0) {
+        list.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:8px 0;">No DeckLink output devices found on server</div>';
+        return;
+      }
 
       if (participants.length === 0) {
         list.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:8px 0;">No participants to assign</div>';
         return;
       }
 
-      const maxOutputs = 8;
       let html = '';
-      for (let i = 0; i < maxOutputs; i++) {
+      for (const dev of devices) {
+        if (!dev.supportsOutput) continue;
+        const i = dev.index;
         const currentAssignments = state.rsdiAssignments || {};
         let assignedUserId = null;
         for (const [uid, devIdx] of Object.entries(currentAssignments)) {
@@ -1471,10 +1480,16 @@
             return '<option value="' + uid + '" ' + selected + '>' + p.displayName + '</option>';
           }).join('');
 
+        const label = dev.displayName || dev.name || ('SDI Out ' + (i + 1));
+
         html += '<div class="rsdi-assign-item">' +
-          '<span class="rsdi-label">SDI Out ' + (i + 1) + '</span>' +
+          '<span class="rsdi-label">' + label + '</span>' +
           '<select onchange="remoteSDIAssign(this.value, ' + i + ')">' + optionsHtml + '</select>' +
           '</div>';
+      }
+      if (!html) {
+        list.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:8px 0;">No output-capable DeckLink devices on server</div>';
+        return;
       }
       list.innerHTML = html;
     }
@@ -1503,22 +1518,43 @@
         log('Enter the Linux server IP address', 'error');
         return;
       }
+      state.rsdiServerHost = host;
+      state.rsdiApiPort = port + 1;
       log('Connecting to Remote SDI server ' + host + ':' + port + '...', 'info');
       await window.zoomISO.remoteSDIConnect(host, port);
+
+      const devResult = await window.zoomISO.remoteSDIQueryDevices(host, state.rsdiApiPort);
+      if (devResult && devResult.success && devResult.devices) {
+        state.rsdiDevices = devResult.devices;
+        log('Server reports ' + devResult.devices.length + ' DeckLink device(s)', 'success');
+      } else {
+        state.rsdiDevices = [];
+        log('Could not query server devices: ' + (devResult ? devResult.error : 'unknown error'), 'warn');
+      }
+      renderRsdiAssignments();
     });
 
     document.getElementById('btnRsdiDisconnect').addEventListener('click', async () => {
       await window.zoomISO.remoteSDIDisconnect();
+      state.rsdiDevices = [];
+      state.rsdiServerHost = null;
+      state.rsdiAssignments = {};
+      renderRsdiAssignments();
       log('Disconnected from Remote SDI server', 'warn');
     });
 
     if (window.zoomISO) {
-      window.zoomISO.onRemoteSDIStatus((info) => {
+      window.zoomISO.onRemoteSDIStatus(async (info) => {
         updateRemoteSDIUI(info);
         if (info.state === 'connected') {
           log('Connected to Remote SDI server ' + info.host + ':' + info.port, 'success');
-        } else if (info.state === 'failed') {
-          log('Remote SDI connection failed', 'error');
+          if (state.rsdiDevices.length === 0 && info.host) {
+            const devResult = await window.zoomISO.remoteSDIQueryDevices(info.host, state.rsdiApiPort || 9301);
+            if (devResult && devResult.success && devResult.devices) {
+              state.rsdiDevices = devResult.devices;
+              renderRsdiAssignments();
+            }
+          }
         }
       });
 

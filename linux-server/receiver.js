@@ -61,6 +61,9 @@ class FrameReceiver extends EventEmitter {
     const remoteAddr = `${socket.remoteAddress}:${socket.remotePort}`;
     const decoder = new Decoder();
 
+    socket.setKeepAlive(true, 10000);
+    socket.setNoDelay(true);
+
     const client = {
       id: clientId,
       socket,
@@ -128,7 +131,7 @@ class FrameReceiver extends EventEmitter {
         } catch (e) {}
         const participant = {
           userId: packet.userId,
-          name: info.name || `User ${packet.userId}`,
+          name: info.displayName || info.name || `User ${packet.userId}`,
           ...info,
         };
         this.participants.set(packet.userId, participant);

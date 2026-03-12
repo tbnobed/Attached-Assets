@@ -168,6 +168,36 @@ function setupIpcHandlers(ipcMain, context) {
     }
   });
 
+  ipcMain.handle('remote-sdi-query-devices', async (_event, host, apiPort) => {
+    const http = require('http');
+    const p = apiPort || 9301;
+    return new Promise((resolve) => {
+      const req = http.get(`http://${host}:${p}/api/devices`, { timeout: 5000 }, (res) => {
+        let body = '';
+        res.on('data', (chunk) => { body += chunk; });
+        res.on('end', () => {
+          if (res.statusCode < 200 || res.statusCode >= 300) {
+            resolve({ success: false, error: `Server returned HTTP ${res.statusCode}`, devices: [] });
+            return;
+          }
+          try {
+            const data = JSON.parse(body);
+            resolve({ success: true, devices: data.devices || [], displayModes: data.displayModes || {} });
+          } catch (e) {
+            resolve({ success: false, error: 'Invalid response from server', devices: [] });
+          }
+        });
+      });
+      req.on('error', (err) => {
+        resolve({ success: false, error: err.message, devices: [] });
+      });
+      req.on('timeout', () => {
+        req.destroy();
+        resolve({ success: false, error: 'Connection timed out', devices: [] });
+      });
+    });
+  });
+
   ipcMain.handle('remote-sdi-disconnect', () => {
     remoteSDIClient.disconnect();
     return { success: true };
