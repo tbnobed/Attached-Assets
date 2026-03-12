@@ -1,0 +1,32 @@
+gyp info spawn args [ 'BUILDTYPE=Release', '-C', 'build' ]
+make: Entering directory '/home/administrator/Attached-Assets/linux-server/node_modules/grandiose/build'
+  CXX(target) Release/obj.target/grandiose/src/grandiose_util.o
+../src/grandiose_util.cc: In function ‘napi_status checkArgs(napi_env, napi_callback_info, char*, napi_value__**, size_t, napi_valuetype*)’:
+../src/grandiose_util.cc:92:23: warning: comparison of integer expressions of different signedness: ‘int’ and ‘size_t’ {aka ‘long unsigned int’} [-Wsign-compare]
+   92 |   for ( int x = 0 ; x < argc ; x++ ) {
+      |                     ~~^~~~~~
+  CXX(target) Release/obj.target/grandiose/src/grandiose_find.o
+  CXX(target) Release/obj.target/grandiose/src/grandiose_send.o
+  CXX(target) Release/obj.target/grandiose/src/grandiose_receive.o
+../src/grandiose_receive.cc: In function ‘void dataReceiveComplete(napi_env, napi_status, void*)’:
+../src/grandiose_receive.cc:881:10: warning: enumeration value ‘NDIlib_frame_type_none’ not handled in switch [-Wswitch]
+  881 |   switch (c->frameType) {
+      |          ^
+  CXX(target) Release/obj.target/grandiose/src/grandiose.o
+  SOLINK_MODULE(target) Release/obj.target/grandiose.node
+/bin/sh: 1: Syntax error: "(" unexpected
+make: *** [grandiose.target.mk:145: Release/obj.target/grandiose.node] Error 2
+make: Leaving directory '/home/administrator/Attached-Assets/linux-server/node_modules/grandiose/build'
+gyp ERR! build error
+gyp ERR! stack Error: `make` failed with exit code: 2
+gyp ERR! stack at ChildProcess.<anonymous> (/home/administrator/.npm/_npx/c463d28440264a05/node_modules/node-gyp/lib/build.js:219:23)
+gyp ERR! System Linux 6.14.0-27-generic
+gyp ERR! command "/usr/bin/node" "/home/administrator/.npm/_npx/c463d28440264a05/node_modules/.bin/node-gyp" "rebuild"
+gyp ERR! cwd /home/administrator/Attached-Assets/linux-server/node_modules/grandiose
+gyp ERR! node -v v20.20.1
+gyp ERR! node-gyp -v v12.2.0
+gyp ERR! $npm_package_name grandiose
+gyp ERR! $npm_package_version 0.0.4
+gyp ERR! not ok
+  grandiose build failed — NDI will run in mock mode
+  This is expected if the NDI SDK runtime library is not installed.

@@ -244,7 +244,17 @@ GYEOF
 
     echo "  Building grandiose native addon..."
     cd "$GRANDIOSE_DIR"
-    npx node-gyp rebuild 2>&1 || {
+    npx node-gyp configure 2>&1
+    if [ -d "$GRANDIOSE_DIR/build" ]; then
+        for mkfile in "$GRANDIOSE_DIR/build/"*.mk "$GRANDIOSE_DIR/build/"Makefile; do
+            if [ -f "$mkfile" ]; then
+                if ! grep -q '^SHELL.*bash' "$mkfile"; then
+                    sed -i '1s|^|SHELL := /bin/bash\n|' "$mkfile"
+                fi
+            fi
+        done
+    fi
+    npx node-gyp build 2>&1 || {
         echo -e "${YELLOW}  grandiose build failed — NDI will run in mock mode${NC}"
         echo "  This is expected if the NDI SDK runtime library is not installed."
     }
