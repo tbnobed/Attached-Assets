@@ -169,9 +169,16 @@ if [ -d "$PROJECT_DIR/zoom-meeting-sdk-addon" ]; then
 
         find "$SDK_LIB" -type l | while read lnk; do
             real="$(readlink "$lnk")"
-            if [ -e "$real" ] || [ -e "$(dirname "$lnk")/$real" ]; then
+            if [[ "$real" = /* ]]; then
+                src="$real"
+            else
+                src="$(dirname "$lnk")/$real"
+            fi
+            if [ -e "$src" ]; then
                 rm "$lnk"
-                cp -R "$(dirname "$lnk")/$real" "$lnk" 2>/dev/null || true
+                cp -R "$src" "$lnk"
+            else
+                echo -e "${YELLOW}  Warning: cannot resolve symlink $(basename "$lnk")${NC}"
             fi
         done
 
