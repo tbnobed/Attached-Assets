@@ -211,38 +211,37 @@ PYEOF
     if [ -f "$BINDING_GYP" ]; then
         if grep -q 'Processing.NDI.Lib.x64' "$BINDING_GYP"; then
             echo "  Patching grandiose binding.gyp for Linux (NDI library name)..."
-            NDI_LIB_DIRS_JSON="[\"/usr/lib\", \"/usr/local/lib\", \"/usr/lib/x86_64-linux-gnu\"]"
+
             if [ -n "$NDI_LIB_DIR" ]; then
-                NDI_LIB_DIRS_JSON="[\"$NDI_LIB_DIR\", \"/usr/lib\", \"/usr/local/lib\", \"/usr/lib/x86_64-linux-gnu\"]"
+                NDI_SO_ACTUAL=$(find "$NDI_LIB_DIR" -maxdepth 1 -name 'libndi.so*' \( -type f -o -type l \) 2>/dev/null | head -1)
             fi
-            python3 - "$BINDING_GYP" "$NDI_LIB_DIRS_JSON" << 'PYEOF'
+
+            if [ -n "$NDI_SO_ACTUAL" ]; then
+                NDI_LINK_LIB="$NDI_SO_ACTUAL"
+            else
+                NDI_LINK_LIB="-lndi"
+            fi
+
+            python3 - "$BINDING_GYP" "$NDI_LINK_LIB" << 'PYEOF'
 import json, sys
 path = sys.argv[1]
-lib_dirs = json.loads(sys.argv[2])
+ndi_lib = sys.argv[2]
 with open(path) as f:
     gyp = json.load(f)
 for target in gyp.get("targets", []):
     target["link_settings"] = {
-        "libraries": ["-lndi"],
-        "library_dirs": lib_dirs
+        "libraries": [ndi_lib]
     }
     if "copies" in target:
         del target["copies"]
 with open(path, "w") as f:
     json.dump(gyp, f, indent=2)
-print("  Patched binding.gyp: using -lndi with library_dirs=" + str(lib_dirs))
+print("  Patched binding.gyp: libraries=[" + ndi_lib + "]")
 PYEOF
         fi
     fi
 
     if [ -n "$NDI_LIB_DIR" ]; then
-        NDI_SO=$(find "$NDI_LIB_DIR" -maxdepth 1 -name 'libndi.so*' -type f 2>/dev/null | head -1)
-        if [ -n "$NDI_SO" ] && [ ! -e "$NDI_LIB_DIR/libndi.so" ]; then
-            echo "  Creating libndi.so symlink: $NDI_LIB_DIR/libndi.so -> $(basename "$NDI_SO")"
-            sudo ln -sf "$NDI_SO" "$NDI_LIB_DIR/libndi.so" 2>/dev/null || \
-                ln -sf "$NDI_SO" "$NDI_LIB_DIR/libndi.so" 2>/dev/null || \
-                echo -e "${YELLOW}  Could not create libndi.so symlink (try: sudo ln -sf $NDI_SO $NDI_LIB_DIR/libndi.so)${NC}"
-        fi
         sudo ldconfig 2>/dev/null || true
     fi
 
