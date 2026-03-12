@@ -148,7 +148,7 @@ step "Zoom Meeting SDK native addon"
 ZOOM_SDK_PATH="${ZOOM_SDK_PATH:-/Users/debo/Documents/zoom-sdk-macos-6.7.6.75900}"
 
 if [ -d "$PROJECT_DIR/zoom-meeting-sdk-addon/build/Release" ]; then
-    echo -e "${CYAN}  Zoom addon already built — skipping${NC}"
+    echo -e "${CYAN}  Zoom addon already built — skipping build${NC}"
     echo "  To rebuild: cd zoom-meeting-sdk-addon && npx node-gyp rebuild"
 else
     if [ -d "$ZOOM_SDK_PATH" ]; then
@@ -164,28 +164,6 @@ else
             echo -e "${YELLOW}  Zoom addon build failed (non-fatal)${NC}"
             echo "  The app will run in stub mode without actual Zoom connectivity."
         }
-
-        echo "  Linking Electron frameworks (root Electron)..."
-        cd "$PROJECT_DIR"
-        npm run link-frameworks || {
-            echo -e "${YELLOW}  Root framework linking failed (non-fatal)${NC}"
-        }
-
-        echo "  Linking Electron frameworks (mac-app Electron)..."
-        MAC_ELECTRON="$SCRIPT_DIR/node_modules/electron/dist/Electron.app"
-        SDK_LIB="$PROJECT_DIR/zoom-meeting-sdk-addon/sdk/lib"
-        if [ -d "$MAC_ELECTRON" ] && [ -d "$SDK_LIB" ]; then
-            MAC_FRAMEWORKS="$MAC_ELECTRON/Contents/Frameworks"
-            mkdir -p "$MAC_FRAMEWORKS"
-            for item in "$SDK_LIB"/*; do
-                bname="$(basename "$item")"
-                rm -rf "$MAC_FRAMEWORKS/$bname" 2>/dev/null
-                ln -sf "$item" "$MAC_FRAMEWORKS/$bname"
-            done
-            echo -e "  ${GREEN}Linked SDK frameworks into mac-app Electron${NC}"
-        else
-            echo -e "${YELLOW}  mac-app Electron or SDK lib not found — skipping${NC}"
-        fi
     else
         echo -e "${YELLOW}  Zoom SDK not found at: $ZOOM_SDK_PATH${NC}"
         echo ""
@@ -197,6 +175,37 @@ else
         echo ""
         echo -e "${YELLOW}  Continuing without Zoom SDK (app will run in stub mode)...${NC}"
     fi
+fi
+
+SDK_LIB="$PROJECT_DIR/zoom-meeting-sdk-addon/sdk/lib"
+if [ -d "$SDK_LIB" ]; then
+    echo "  Linking Zoom SDK frameworks into Electron..."
+
+    ROOT_ELECTRON="$PROJECT_DIR/node_modules/electron/dist/Electron.app"
+    if [ -d "$ROOT_ELECTRON" ]; then
+        ROOT_FRAMEWORKS="$ROOT_ELECTRON/Contents/Frameworks"
+        mkdir -p "$ROOT_FRAMEWORKS"
+        for item in "$SDK_LIB"/*; do
+            bname="$(basename "$item")"
+            rm -rf "$ROOT_FRAMEWORKS/$bname" 2>/dev/null
+            ln -sf "$item" "$ROOT_FRAMEWORKS/$bname"
+        done
+        echo -e "  ${GREEN}Linked SDK frameworks into root Electron${NC}"
+    fi
+
+    MAC_ELECTRON="$SCRIPT_DIR/node_modules/electron/dist/Electron.app"
+    if [ -d "$MAC_ELECTRON" ]; then
+        MAC_FRAMEWORKS="$MAC_ELECTRON/Contents/Frameworks"
+        mkdir -p "$MAC_FRAMEWORKS"
+        for item in "$SDK_LIB"/*; do
+            bname="$(basename "$item")"
+            rm -rf "$MAC_FRAMEWORKS/$bname" 2>/dev/null
+            ln -sf "$item" "$MAC_FRAMEWORKS/$bname"
+        done
+        echo -e "  ${GREEN}Linked SDK frameworks into mac-app Electron${NC}"
+    fi
+else
+    echo -e "${YELLOW}  Zoom SDK lib not found — framework linking skipped${NC}"
 fi
 
 # ===========================================================
