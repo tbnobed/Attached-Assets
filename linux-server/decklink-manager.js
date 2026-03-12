@@ -185,11 +185,23 @@ class DeckLinkManager extends EventEmitter {
     console.log(`[DeckLink] Output stopped on device ${deviceIndex}`);
   }
 
-  assignParticipant(userId, deviceIndex) {
+  async assignParticipant(userId, deviceIndex) {
     deviceIndex = typeof deviceIndex === 'string' ? parseInt(deviceIndex, 10) : deviceIndex;
-    const output = this.outputs.get(deviceIndex);
+    let output = this.outputs.get(deviceIndex);
     if (!output) {
-      return { success: false, error: `No active output on device ${deviceIndex}` };
+      const device = this.devices.find(d => d.index === deviceIndex);
+      if (!device || !device.supportsOutput) {
+        return { success: false, error: `Device ${deviceIndex} not found or does not support output` };
+      }
+      console.log(`[DeckLink] Auto-starting output on device ${deviceIndex} for assignment`);
+      const startResult = await this.startOutput(deviceIndex);
+      if (!startResult.success) {
+        return { success: false, error: `Failed to auto-start output: ${startResult.error}` };
+      }
+      output = this.outputs.get(deviceIndex);
+      if (!output) {
+        return { success: false, error: `Output state missing after start on device ${deviceIndex}` };
+      }
     }
 
     const prevDevice = this.assignments.get(userId);

@@ -103,14 +103,14 @@ function createApi(options = {}) {
     }
 
     if (req.method === 'POST' && pathname === '/api/assign') {
-      readBody(req, (body) => {
+      readBody(req, async (body) => {
         try {
           const { userId, deviceIndex } = body;
           if (userId === undefined || deviceIndex === undefined) {
             json(res, { success: false, error: 'userId and deviceIndex required' }, 400);
             return;
           }
-          const result = deckLinkManager.assignParticipant(userId, deviceIndex);
+          const result = await deckLinkManager.assignParticipant(userId, deviceIndex);
           json(res, result, result.success ? 200 : 400);
         } catch (err) {
           json(res, { success: false, error: err.message }, 500);

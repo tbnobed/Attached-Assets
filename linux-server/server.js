@@ -113,12 +113,17 @@ receiver.on('participant-leave', ({ userId }) => {
   console.log(`[Server] Participant left: id=${userId}`);
 });
 
-receiver.on('assignment-update', (assignment) => {
+receiver.on('assignment-update', async (assignment) => {
   if (assignment.userId !== undefined && assignment.deviceIndex !== undefined) {
     if (assignment.deviceIndex === null || assignment.deviceIndex === -1) {
       deckLinkManager.unassignParticipant(assignment.userId);
     } else {
-      deckLinkManager.assignParticipant(assignment.userId, assignment.deviceIndex);
+      const result = await deckLinkManager.assignParticipant(assignment.userId, assignment.deviceIndex);
+      if (result.success) {
+        console.log(`[Server] Assigned user ${assignment.userId} → device ${assignment.deviceIndex}`);
+      } else {
+        console.error(`[Server] Assignment failed: ${result.error}`);
+      }
     }
   }
 });
