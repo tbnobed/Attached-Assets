@@ -282,6 +282,86 @@ function setupIpcHandlers(ipcMain, context) {
     return { success: false, error: 'All retries failed', devices: [] };
   });
 
+  ipcMain.handle('remote-ndi-create', async (_event, host, apiPort, userId, displayName, isoIndex) => {
+    const http = require('http');
+    const p = apiPort || 9301;
+    try {
+      const result = await new Promise((resolve) => {
+        const postData = JSON.stringify({ userId, displayName, isoIndex: isoIndex || 1 });
+        const req = http.request({
+          hostname: host, port: p, path: '/api/ndi/create',
+          method: 'POST', timeout: 60000,
+          headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(postData) }
+        }, (res) => {
+          let body = '';
+          res.on('data', (chunk) => { body += chunk; });
+          res.on('end', () => {
+            try { resolve(JSON.parse(body)); } catch { resolve({ success: false, error: 'Invalid response' }); }
+          });
+        });
+        req.on('error', (err) => resolve({ success: false, error: err.message }));
+        req.on('timeout', () => { req.destroy(); resolve({ success: false, error: 'Timeout (NDI init can take ~40s)' }); });
+        req.write(postData);
+        req.end();
+      });
+      return result;
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  });
+
+  ipcMain.handle('remote-ndi-destroy', async (_event, host, apiPort, userId) => {
+    const http = require('http');
+    const p = apiPort || 9301;
+    try {
+      const result = await new Promise((resolve) => {
+        const postData = JSON.stringify({ userId });
+        const req = http.request({
+          hostname: host, port: p, path: '/api/ndi/destroy',
+          method: 'POST', timeout: 10000,
+          headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(postData) }
+        }, (res) => {
+          let body = '';
+          res.on('data', (chunk) => { body += chunk; });
+          res.on('end', () => {
+            try { resolve(JSON.parse(body)); } catch { resolve({ success: false, error: 'Invalid response' }); }
+          });
+        });
+        req.on('error', (err) => resolve({ success: false, error: err.message }));
+        req.on('timeout', () => { req.destroy(); resolve({ success: false, error: 'Timeout' }); });
+        req.write(postData);
+        req.end();
+      });
+      return result;
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  });
+
+  ipcMain.handle('remote-ndi-query-status', async (_event, host, apiPort) => {
+    const http = require('http');
+    const p = apiPort || 9301;
+    try {
+      const result = await new Promise((resolve) => {
+        const req = http.get(`http://${host}:${p}/api/status`, { timeout: 5000 }, (res) => {
+          let body = '';
+          res.on('data', (chunk) => { body += chunk; });
+          res.on('end', () => {
+            try {
+              const data = JSON.parse(body);
+              resolve({ success: true, ndi: data.ndi || {} });
+            } catch { resolve({ success: false, error: 'Invalid response' }); }
+          });
+        });
+        req.on('error', (err) => resolve({ success: false, error: err.message }));
+        req.on('timeout', () => { req.destroy(); resolve({ success: false, error: 'Timeout' }); });
+      });
+      return result;
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  });
+
   ipcMain.handle('remote-sdi-disconnect', () => {
     remoteSDIClient.disconnect();
     return { success: true };

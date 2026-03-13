@@ -856,6 +856,95 @@
       border-radius: 4px;
       font-size: 10px;
     }
+
+    .ndi-source-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .ndi-source-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .ndi-source-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .ndi-source-name {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .ndi-source-detail {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    .ndi-source-status {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 3px;
+      white-space: nowrap;
+    }
+
+    .ndi-source-status.active {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--accent-green);
+    }
+
+    .ndi-source-status.creating {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--accent-amber);
+    }
+
+    .ndi-btn-enable {
+      background: #6366f1;
+      color: white;
+      border: none;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 10px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .ndi-btn-enable:hover { background: #4f46e5; }
+
+    .ndi-btn-enable:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .ndi-btn-disable {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--accent-red);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 10px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .ndi-btn-disable:hover { background: rgba(239, 68, 68, 0.25); }
   </style>
 </head>
 <body>
@@ -950,6 +1039,10 @@
         <div class="section-title" style="margin-top:8px;">Remote SDI Assignments</div>
         <div id="rsdiAssignmentList" class="remote-sdi-assignments">
           <div style="color:var(--text-muted);font-size:13px;padding:8px 0;">Connect to server and add participants to assign remote SDI outputs</div>
+        </div>
+        <div class="section-title" style="margin-top:8px;">NDI Output</div>
+        <div id="ndiSourceList" class="ndi-source-list">
+          <div style="color:var(--text-muted);font-size:13px;padding:8px 0;">Connect to server and add participants to enable NDI outputs</div>
         </div>
       </div>
 
@@ -1384,6 +1477,7 @@
         log(`Participant left: ${p.displayName}`, 'warn');
         state.participants.delete(p.userId);
         renderParticipants();
+        renderNdiSources();
       });
 
       window.zoomISO.onConnectionStatus((connected) => {
@@ -1487,6 +1581,8 @@
     state.rsdiDevices = [];
     state.rsdiServerHost = null;
     state.rsdiApiPort = 9301;
+    state.ndiSources = {};
+    state.ndiCreating = {};
 
     function updateRemoteSDIUI(info) {
       const dotEl = document.getElementById('rsdiDot');
@@ -1539,6 +1635,7 @@
         state.rsdiAssignments = r.assignments;
       }
       renderRsdiAssignments();
+      renderNdiSources();
     }
 
     function renderRsdiAssignments() {
@@ -1605,6 +1702,108 @@
 
     if (!state.rsdiOutputActive) state.rsdiOutputActive = {};
     if (!state.rsdiOutputMode) state.rsdiOutputMode = {};
+
+    function renderNdiSources() {
+      const list = document.getElementById('ndiSourceList');
+      const participants = Array.from(state.participants.entries());
+
+      if (state.rsdiState !== 'connected') {
+        list.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:8px 0;">Connect to server to manage NDI outputs</div>';
+        return;
+      }
+
+      if (participants.length === 0) {
+        list.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:8px 0;">No participants — join a meeting first</div>';
+        return;
+      }
+
+      let html = '';
+      for (const [userId, p] of participants) {
+        const ndiActive = !!(state.ndiSources && state.ndiSources[userId]);
+        const isCreating = !!(state.ndiCreating && state.ndiCreating[userId]);
+        const sourceName = ndiActive ? state.ndiSources[userId] : '';
+
+        html += '<div class="ndi-source-card">' +
+          '<div class="ndi-source-info">' +
+            '<div class="ndi-source-name">' + (p.displayName || 'User ' + userId) + '</div>' +
+            '<div class="ndi-source-detail">' +
+              (ndiActive ? sourceName : (isCreating ? 'Initializing NDI (~40s)...' : 'ISO ' + (p.isoIndex || '?'))) +
+            '</div>' +
+          '</div>';
+
+        if (isCreating) {
+          html += '<span class="ndi-source-status creating">Creating...</span>';
+        } else if (ndiActive) {
+          html += '<span class="ndi-source-status active">Active</span>' +
+            '<button class="ndi-btn-disable" onclick="ndiDisableSource(\'' + userId + '\')">Disable</button>';
+        } else {
+          html += '<button class="ndi-btn-enable" onclick="ndiEnableSource(\'' + userId + '\')">Enable NDI</button>';
+        }
+
+        html += '</div>';
+      }
+      list.innerHTML = html;
+    }
+
+    async function ndiEnableSource(userId) {
+      const host = state.rsdiServerHost;
+      const apiPort = state.rsdiApiPort || 9301;
+      if (!host) { log('Not connected to server', 'error'); return; }
+
+      const p = state.participants.get(parseInt(userId)) || state.participants.get(userId);
+      const displayName = p ? p.displayName : 'User_' + userId;
+      const isoIndex = p ? (p.isoIndex || 1) : 1;
+      const numericUserId = parseInt(userId) || userId;
+
+      state.ndiCreating[numericUserId] = true;
+      renderNdiSources();
+      log('Enabling NDI for ' + displayName + ' (this takes ~40s)...', 'info');
+
+      const result = await window.zoomISO.remoteNDICreate(host, apiPort, numericUserId, displayName, isoIndex);
+      delete state.ndiCreating[numericUserId];
+
+      if (result && result.success) {
+        state.ndiSources[numericUserId] = (result.source && result.source.sourceName) || ('NDI_' + displayName);
+        log('NDI enabled for ' + displayName + ': ' + (state.ndiSources[numericUserId]), 'success');
+      } else {
+        log('Failed to enable NDI for ' + displayName + ': ' + (result ? result.error : 'unknown'), 'error');
+      }
+      renderNdiSources();
+    }
+
+    async function ndiDisableSource(userId) {
+      const host = state.rsdiServerHost;
+      const apiPort = state.rsdiApiPort || 9301;
+      if (!host) { log('Not connected to server', 'error'); return; }
+
+      const numericUserId = parseInt(userId) || userId;
+      const p = state.participants.get(numericUserId) || state.participants.get(userId);
+      const displayName = p ? p.displayName : 'User_' + userId;
+
+      const result = await window.zoomISO.remoteNDIDestroy(host, apiPort, numericUserId);
+      if (result && result.success) {
+        delete state.ndiSources[numericUserId];
+        log('NDI disabled for ' + displayName, 'warn');
+      } else {
+        log('Failed to disable NDI: ' + (result ? result.error : 'unknown'), 'error');
+      }
+      renderNdiSources();
+    }
+
+    async function ndiRefreshStatus() {
+      const host = state.rsdiServerHost;
+      const apiPort = state.rsdiApiPort || 9301;
+      if (!host || state.rsdiState !== 'connected') return;
+
+      const result = await window.zoomISO.remoteNDIQueryStatus(host, apiPort);
+      if (result && result.success && result.ndi && result.ndi.sources) {
+        state.ndiSources = {};
+        for (const [uid, src] of Object.entries(result.ndi.sources)) {
+          state.ndiSources[uid] = src.sourceName || ('NDI_' + (src.displayName || uid));
+        }
+        renderNdiSources();
+      }
+    }
 
     function remoteSDIModeChanged(deviceIndex, mode) {
       state.rsdiOutputMode[deviceIndex] = mode;
@@ -1701,6 +1900,7 @@
         log('Could not query server devices: ' + (devResult ? devResult.error : 'unknown error'), 'warn');
       }
       renderRsdiAssignments();
+      ndiRefreshStatus();
     });
 
     document.getElementById('btnRsdiDisconnect').addEventListener('click', async () => {
@@ -1711,7 +1911,10 @@
       state.rsdiOutputActive = {};
       state.rsdiOutputMode = {};
       state.rsdiDisplayModes = null;
+      state.ndiSources = {};
+      state.ndiCreating = {};
       renderRsdiAssignments();
+      renderNdiSources();
       log('Disconnected from Remote SDI server', 'warn');
     });
 
@@ -1742,6 +1945,7 @@
               log('Device query failed: ' + devResult.error, 'warn');
             }
             renderRsdiAssignments();
+            ndiRefreshStatus();
           }
         }
       });
