@@ -57,6 +57,7 @@ linux-server/
 ├── web/index.html      # Web dashboard with DeckLink + NDI + recording controls
 ├── install.sh          # One-command setup for Ubuntu
 ├── decklink-addon/     # Native C++ addon for Linux DeckLink SDK (ships own DeckLinkAPIDispatch.cpp for Linux)
+├── process-utils/      # Native addon for fd redirect (stdout/stderr → /dev/null) + SIGINT handler
 ├── frame-decoder.js    # JPEG auto-detect + sharp decode → BGRA for DeckLink
 ├── package.json        # Dependencies: sharp, grandiose (optional)
 └── README.md           # Full setup and API documentation
@@ -95,13 +96,18 @@ linux-server/
 7. NDI auto-creates source on participant-join, destroys on participant-leave
 8. Web dashboard on port 9301 provides full control
 
-### Native SDK stdout suppression
-- Native SDKs (DeckLink driver, NDI/libndi.so via grandiose) print debug messages directly to stdout via `printf()` (e.g. "Frame number X sent.") — these cannot be intercepted from JavaScript
-- At startup, `server.js` overrides `console.log/warn/error` to write to **stderr** (so our logs are still visible)
-- Then calls `decklink-addon`'s `redirectStdoutToDevNull()` which does `dup2(/dev/null, STDOUT_FILENO)` at the C level, permanently silencing fd 1
-- This happens BEFORE `grandiose` (NDI) is loaded, so all native SDK output from both DeckLink and NDI is suppressed
-- The decklink addon also wraps individual SDK calls with suppress/restore as a safety net
-- **After rebuild**: `cd linux-server/decklink-addon && npm run build` is required whenever the C++ addon changes
+### Native SDK output suppression
+- Native SDKs (DeckLink driver, NDI/libndi.so via grandiose) print debug spam directly to stdout/stderr (e.g. "Frame number X sent.") — cannot be intercepted from JavaScript
+- `linux-server/process-utils/` is a standalone native addon that handles fd-level redirection and signal handling:
+  - `redirectStdoutToDevNull()` — dup2(devnull, fd 1), returns saved fd
+  - `redirectStderrToDevNull()` — dup2(devnull, fd 2), returns saved fd
+  - `installSigintHandler()` — native C sigaction handler calling `_exit(0)` to bypass blocked event loop
+- At startup, `server.js` redirects BOTH stdout AND stderr to /dev/null via process-utils, BEFORE loading grandiose/NDI
+- Server logs go to a WriteStream created from the saved real stderr fd (visible in terminal)
+- Native SIGINT handler installed at bottom of server.js (after all JS setup) for reliable Ctrl+C
+- **After changes**: `cd linux-server/process-utils && npm install && npm run build`
+- DeckLink addon also wraps individual SDK calls with its own suppress/restore as a safety net
+- **DeckLink addon rebuild**: `cd linux-server/decklink-addon && npm run build`
 
 ## Key Files (Original — DO NOT MODIFY)
 - `src/main/main.js` - Electron main entry point
