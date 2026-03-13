@@ -59,7 +59,7 @@ const recorderManager = new RecorderManager({ outputDir: RECORDING_DIR });
 const receiver = new FrameReceiver({ port: TCP_PORT, host: HOST });
 const api = createApi({ port: API_PORT, deckLinkManager, ndiManager, recorderManager, receiver });
 
-let _ndiAutoCreate = !NDI_DISABLED;
+let _ndiAutoCreate = false;
 
 let _videoDecodeCount = 0;
 const _decoding = new Map();
@@ -151,7 +151,6 @@ receiver.on('participant-join', (participant) => {
 
 receiver.on('participant-leave', ({ userId }) => {
   deckLinkManager.unassignParticipant(userId);
-  if (!NDI_DISABLED) ndiManager.destroySource(userId);
   recorderManager.stopRecording(userId);
   console.log(`[Server] Participant left: id=${userId}`);
 });
