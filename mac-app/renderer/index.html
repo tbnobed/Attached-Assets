@@ -728,8 +728,8 @@
     .rsdi-stat strong { color: var(--text-primary); }
 
     .remote-sdi-assignments {
-      display: flex;
-      flex-direction: column;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
       gap: 6px;
     }
 
@@ -764,26 +764,33 @@
       background: var(--bg-primary);
       border: 1px solid var(--border);
       border-radius: 6px;
-      padding: 8px 10px;
-      margin-bottom: 6px;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
     }
 
     .rsdi-device-header {
       display: flex;
       align-items: center;
-      gap: 8px;
-      margin-bottom: 6px;
+      justify-content: space-between;
+      gap: 4px;
     }
 
     .rsdi-device-header .rsdi-label {
-      flex: 1;
+      font-size: 11px;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .rsdi-output-status {
-      font-size: 11px;
-      padding: 2px 8px;
+      font-size: 10px;
+      padding: 1px 6px;
       border-radius: 3px;
       font-weight: 600;
+      flex-shrink: 0;
     }
 
     .rsdi-output-status.active {
@@ -799,26 +806,29 @@
     .rsdi-device-controls {
       display: flex;
       align-items: center;
-      gap: 6px;
-      margin-bottom: 6px;
+      gap: 4px;
     }
 
     .rsdi-device-controls select {
+      flex: 1;
+      min-width: 0;
       background: var(--bg-secondary);
       color: var(--text-primary);
       border: 1px solid var(--border);
-      padding: 3px 6px;
+      padding: 3px 4px;
       border-radius: 4px;
-      font-size: 11px;
+      font-size: 10px;
     }
 
     .rsdi-device-controls button {
-      padding: 3px 10px;
-      font-size: 11px;
+      padding: 3px 8px;
+      font-size: 10px;
       border-radius: 4px;
       cursor: pointer;
       border: none;
       font-weight: 600;
+      white-space: nowrap;
+      flex-shrink: 0;
     }
 
     .rsdi-btn-start {
@@ -833,18 +843,18 @@
 
     .rsdi-assign-row {
       display: flex;
-      align-items: center;
-      gap: 8px;
+      flex-direction: column;
+      gap: 3px;
     }
 
     .rsdi-assign-row select {
-      flex: 1;
+      width: 100%;
       background: var(--bg-secondary);
       color: var(--text-primary);
       border: 1px solid var(--border);
-      padding: 3px 6px;
+      padding: 3px 4px;
       border-radius: 4px;
-      font-size: 11px;
+      font-size: 10px;
     }
   </style>
 </head>
@@ -1585,10 +1595,9 @@
           '</div>' +
           (isActive
             ? '<div class="rsdi-assign-row">' +
-                '<span style="font-size:11px;color:var(--text-secondary);min-width:50px;">Assign:</span>' +
                 '<select onchange="remoteSDIAssign(this.value, ' + i + ')">' + participantOptionsHtml + '</select>' +
               '</div>'
-            : '<div style="font-size:11px;color:var(--text-muted);padding-top:2px;">Start output to assign participants</div>') +
+            : '<div style="font-size:10px;color:var(--text-muted);">Start output to assign</div>') +
           '</div>';
       }
       list.innerHTML = html;
