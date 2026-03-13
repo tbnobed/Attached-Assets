@@ -23,9 +23,6 @@ try {
         _logStream.on('error', () => {});
       }
     }
-    if (typeof decklinkAddon.installSigintHandler === 'function') {
-      decklinkAddon.installSigintHandler();
-    }
   }
 } catch (e) {
 }
@@ -209,8 +206,16 @@ function shutdown() {
   });
 }
 
-process.on('SIGINT', shutdown);
 process.on('SIGTERM', shutdown);
+
+try {
+  const decklinkAddon = require(path.join(__dirname, 'decklink-addon'));
+  if (decklinkAddon.available && typeof decklinkAddon.installSigintHandler === 'function') {
+    decklinkAddon.installSigintHandler();
+  }
+} catch (e) {
+  process.on('SIGINT', shutdown);
+}
 
 process.on('uncaughtException', (err) => {
   console.error('[Server] UNCAUGHT EXCEPTION:', err.message);
