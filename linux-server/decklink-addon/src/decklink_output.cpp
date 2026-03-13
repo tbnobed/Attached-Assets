@@ -9,13 +9,11 @@
 #include <chrono>
 #include <unistd.h>
 #include <fcntl.h>
-#include <csignal>
 
 #include "DeckLinkAPI.h"
 
 static int g_devnull_fd = -1;
 static int g_real_stdout_fd = -1;
-static int g_real_stderr_fd = -1;
 
 static void initStdoutRedirect() {
     if (g_real_stdout_fd < 0) {
@@ -622,36 +620,8 @@ Napi::Value RedirectStdoutToDevNull(const Napi::CallbackInfo& info) {
     return Napi::Boolean::New(info.Env(), true);
 }
 
-Napi::Value RedirectStderrToDevNull(const Napi::CallbackInfo& info) {
-    initStdoutRedirect();
-    if (g_real_stderr_fd < 0) {
-        g_real_stderr_fd = dup(STDERR_FILENO);
-    }
-    if (g_devnull_fd >= 0) {
-        dup2(g_devnull_fd, STDERR_FILENO);
-    }
-    return Napi::Number::New(info.Env(), g_real_stderr_fd);
-}
-
 Napi::Value RestoreStdout(const Napi::CallbackInfo& info) {
     restoreStdout();
-    return Napi::Boolean::New(info.Env(), true);
-}
-
-Napi::Value RestoreStderr(const Napi::CallbackInfo& info) {
-    if (g_real_stderr_fd >= 0) {
-        dup2(g_real_stderr_fd, STDERR_FILENO);
-    }
-    return Napi::Boolean::New(info.Env(), true);
-}
-
-static void sigintHandler(int sig) {
-    (void)sig;
-    _exit(0);
-}
-
-Napi::Value InstallSigintHandler(const Napi::CallbackInfo& info) {
-    signal(SIGINT, sigintHandler);
     return Napi::Boolean::New(info.Env(), true);
 }
 
@@ -666,10 +636,7 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
     exports.Set("closeDevice", Napi::Function::New(env, CloseDevice));
     exports.Set("isAvailable", Napi::Function::New(env, IsAvailable));
     exports.Set("redirectStdoutToDevNull", Napi::Function::New(env, RedirectStdoutToDevNull));
-    exports.Set("redirectStderrToDevNull", Napi::Function::New(env, RedirectStderrToDevNull));
     exports.Set("restoreStdout", Napi::Function::New(env, RestoreStdout));
-    exports.Set("restoreStderr", Napi::Function::New(env, RestoreStderr));
-    exports.Set("installSigintHandler", Napi::Function::New(env, InstallSigintHandler));
 
     exports.Set("bmdModeNTSC",           Napi::Number::New(env, fourcc("ntsc")));
     exports.Set("bmdModeNTSC2398",       Napi::Number::New(env, fourcc("nt23")));

@@ -11,17 +11,13 @@ const { Console } = require('console');
 let _logStream = process.stderr;
 
 try {
-  const decklinkAddon = require(path.join(__dirname, 'decklink-addon'));
-  if (decklinkAddon.available) {
-    if (typeof decklinkAddon.redirectStdoutToDevNull === 'function') {
-      decklinkAddon.redirectStdoutToDevNull();
-    }
-    if (typeof decklinkAddon.redirectStderrToDevNull === 'function') {
-      const savedFd = decklinkAddon.redirectStderrToDevNull();
-      if (savedFd >= 0) {
-        _logStream = fs.createWriteStream(null, { fd: savedFd });
-        _logStream.on('error', () => {});
-      }
+  const procUtils = require(path.join(__dirname, 'process-utils'));
+  if (procUtils.available) {
+    procUtils.redirectStdoutToDevNull();
+    const savedStderrFd = procUtils.redirectStderrToDevNull();
+    if (savedStderrFd >= 0) {
+      _logStream = fs.createWriteStream(null, { fd: savedStderrFd });
+      _logStream.on('error', () => {});
     }
   }
 } catch (e) {
@@ -209,9 +205,11 @@ function shutdown() {
 process.on('SIGTERM', shutdown);
 
 try {
-  const decklinkAddon = require(path.join(__dirname, 'decklink-addon'));
-  if (decklinkAddon.available && typeof decklinkAddon.installSigintHandler === 'function') {
-    decklinkAddon.installSigintHandler();
+  const procUtils = require(path.join(__dirname, 'process-utils'));
+  if (procUtils.available) {
+    procUtils.installSigintHandler();
+  } else {
+    process.on('SIGINT', shutdown);
   }
 } catch (e) {
   process.on('SIGINT', shutdown);

@@ -1,0 +1,14 @@
+{
+  "name": "process-utils",
+  "version": "1.0.0",
+  "description": "Native fd redirect and signal handling utilities",
+  "main": "index.js",
+  "scripts": {
+    "build": "node-gyp rebuild",
+    "clean": "node-gyp clean"
+  },
+  "dependencies": {
+    "node-addon-api": "^7.0.0",
+    "node-gyp": "^10.0.0"
+  }
+}

@@ -72,21 +72,6 @@ module.exports = {
     return addon.restoreStdout();
   },
 
-  redirectStderrToDevNull() {
-    if (!addon || typeof addon.redirectStderrToDevNull !== 'function') return -1;
-    return addon.redirectStderrToDevNull();
-  },
-
-  restoreStderr() {
-    if (!addon || typeof addon.restoreStderr !== 'function') return false;
-    return addon.restoreStderr();
-  },
-
-  installSigintHandler() {
-    if (!addon || typeof addon.installSigintHandler !== 'function') return false;
-    return addon.installSigintHandler();
-  },
-
   bmdModeNTSC:           addon ? addon.bmdModeNTSC : 0,
   bmdModeNTSC2398:       addon ? addon.bmdModeNTSC2398 : 0,
   bmdModePAL:            addon ? addon.bmdModePAL : 0,
