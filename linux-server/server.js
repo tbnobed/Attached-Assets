@@ -26,7 +26,7 @@ try {
   console.warn('[Server] Could not redirect native stdout:', e.message);
 }
 
-const NDI_DISABLED = true;
+const NDI_DISABLED = false;
 const NDIManager = NDI_DISABLED ? null : require('./ndi-manager').NDIManager;
 const { RecorderManager } = require('./recorder-manager');
 const { FrameReceiver } = require('./receiver');
