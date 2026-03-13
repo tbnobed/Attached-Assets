@@ -159,39 +159,12 @@ class FrameReceiver extends EventEmitter {
         break;
       }
 
-      case PacketType.API_REQUEST: {
-        let req = {};
-        try {
-          req = JSON.parse(packet.payload.toString('utf8'));
-        } catch (e) {
-          console.error(`[Receiver] Bad API_REQUEST payload`);
-          break;
-        }
-        const reqId = packet.userId;
-        this.emit('api-request', { clientId, reqId, path: req.path, body: req.body || {} });
-        break;
-      }
-
       case PacketType.HEARTBEAT:
         break;
 
       default:
         console.warn(`[Receiver] Unknown packet type: 0x${packet.type.toString(16)}`);
     }
-  }
-
-  sendApiResponse(clientId, reqId, data) {
-    const client = this.clients.get(clientId);
-    if (!client || !client.socket || client.socket.destroyed) return;
-
-    const { encode } = require('./protocol');
-    const payload = Buffer.from(JSON.stringify(data));
-    const pkt = encode({
-      type: PacketType.API_RESPONSE,
-      userId: reqId,
-      payload,
-    });
-    client.socket.write(pkt);
   }
 
   _checkHeartbeats() {

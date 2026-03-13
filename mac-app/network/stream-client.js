@@ -12,8 +12,6 @@ const PacketType = {
   PARTICIPANT_JOIN: 0x10,
   PARTICIPANT_LEAVE: 0x11,
   ASSIGNMENT_UPDATE: 0x20,
-  API_REQUEST: 0x30,
-  API_RESPONSE: 0x31,
   HEARTBEAT: 0xFF,
 };
 
@@ -84,9 +82,6 @@ class RemoteSDIClient extends EventEmitter {
     this._bytesSent = 0;
     this._lastStatTime = Date.now();
     this._assignments = new Map();
-    this._apiRequestId = 0;
-    this._apiPending = new Map();
-    this._inBuf = Buffer.alloc(0);
   }
 
   connect(host, port = 9300) {
@@ -107,12 +102,6 @@ class RemoteSDIClient extends EventEmitter {
     this._reconnectTimer = null;
     this._reconnecting = false;
     this._connected = false;
-
-    for (const [reqId, cb] of this._apiPending) {
-      cb({ success: false, error: 'Disconnected' });
-    }
-    this._apiPending.clear();
-    this._inBuf = Buffer.alloc(0);
 
     if (this._socket) {
       this._socket.removeAllListeners();
@@ -145,7 +134,6 @@ class RemoteSDIClient extends EventEmitter {
       this._lastStatTime = Date.now();
 
       this._startHeartbeat();
-      this._setupIncomingDecoder();
 
       this.emit('status', { state: 'connected', host: this._host, port: this._port });
     });
@@ -225,78 +213,6 @@ class RemoteSDIClient extends EventEmitter {
       clearInterval(this._heartbeatTimer);
       this._heartbeatTimer = null;
     }
-  }
-
-  _setupIncomingDecoder() {
-    if (!this._socket) return;
-    this._inBuf = Buffer.alloc(0);
-
-    this._socket.on('data', (data) => {
-      this._inBuf = Buffer.concat([this._inBuf, data]);
-
-      while (this._inBuf.length >= HEADER_SIZE) {
-        if (this._inBuf[0] !== 0x5A || this._inBuf[1] !== 0x4C ||
-            this._inBuf[2] !== 0x4B || this._inBuf[3] !== 0x31) {
-          let found = -1;
-          for (let i = 1; i <= this._inBuf.length - 4; i++) {
-            if (this._inBuf[i] === 0x5A && this._inBuf[i+1] === 0x4C &&
-                this._inBuf[i+2] === 0x4B && this._inBuf[i+3] === 0x31) {
-              found = i; break;
-            }
-          }
-          if (found === -1) { this._inBuf = Buffer.alloc(0); break; }
-          this._inBuf = this._inBuf.subarray(found);
-          continue;
-        }
-
-        const payloadLen = this._inBuf.readUInt32BE(HEADER_SIZE - 4);
-        const totalLen = HEADER_SIZE + payloadLen;
-        if (this._inBuf.length < totalLen) break;
-
-        const type = this._inBuf.readUInt8(4);
-        const reqId = this._inBuf.readUInt32BE(5);
-        const payload = Buffer.from(this._inBuf.subarray(HEADER_SIZE, totalLen));
-        this._inBuf = this._inBuf.subarray(totalLen);
-
-        if (type === PacketType.API_RESPONSE) {
-          const cb = this._apiPending.get(reqId);
-          if (cb) {
-            this._apiPending.delete(reqId);
-            try {
-              cb(JSON.parse(payload.toString('utf8')));
-            } catch (e) {
-              cb({ success: false, error: 'Invalid response JSON' });
-            }
-          }
-        }
-      }
-    });
-  }
-
-  apiRequest(path, body = {}, timeout = 10000) {
-    return new Promise((resolve) => {
-      if (!this._connected) {
-        return resolve({ success: false, error: 'Not connected' });
-      }
-      const reqId = ++this._apiRequestId;
-      const payload = Buffer.from(JSON.stringify({ path, body }));
-
-      const timer = setTimeout(() => {
-        this._apiPending.delete(reqId);
-        resolve({ success: false, error: 'Request timed out' });
-      }, timeout);
-
-      this._apiPending.set(reqId, (response) => {
-        clearTimeout(timer);
-        resolve(response);
-      });
-
-      this._writeRaw(encodePacket({
-        type: PacketType.API_REQUEST,
-        userId: reqId,
-        payload,
-      }));
-    });
   }
 
   _writeRaw(buf) {
