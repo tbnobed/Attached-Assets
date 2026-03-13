@@ -4,27 +4,42 @@ if (!process.env.UV_THREADPOOL_SIZE) {
   process.env.UV_THREADPOOL_SIZE = '16';
 }
 const UV_POOL = process.env.UV_THREADPOOL_SIZE;
+const fs = require('fs');
+const path = require('path');
 
 const { Console } = require('console');
-const _stderr = new Console({ stdout: process.stderr, stderr: process.stderr });
-console.log = _stderr.log.bind(_stderr);
-console.warn = _stderr.warn.bind(_stderr);
-console.error = _stderr.error.bind(_stderr);
-console.info = _stderr.info.bind(_stderr);
-console.debug = _stderr.debug.bind(_stderr);
-
-const { DeckLinkManager } = require('./decklink-manager');
+let _logStream = process.stderr;
 
 try {
-  const path = require('path');
   const decklinkAddon = require(path.join(__dirname, 'decklink-addon'));
-  if (decklinkAddon.available && typeof decklinkAddon.redirectStdoutToDevNull === 'function') {
-    decklinkAddon.redirectStdoutToDevNull();
-    console.log('[Server] Native stdout redirected to /dev/null (suppresses SDK debug output)');
+  if (decklinkAddon.available) {
+    if (typeof decklinkAddon.redirectStdoutToDevNull === 'function') {
+      decklinkAddon.redirectStdoutToDevNull();
+    }
+    if (typeof decklinkAddon.redirectStderrToDevNull === 'function') {
+      const savedFd = decklinkAddon.redirectStderrToDevNull();
+      if (savedFd >= 0) {
+        _logStream = fs.createWriteStream(null, { fd: savedFd });
+        _logStream.on('error', () => {});
+      }
+    }
+    if (typeof decklinkAddon.installSigintHandler === 'function') {
+      decklinkAddon.installSigintHandler();
+    }
   }
 } catch (e) {
-  console.warn('[Server] Could not redirect native stdout:', e.message);
 }
+
+const _console = new Console({ stdout: _logStream, stderr: _logStream });
+console.log = _console.log.bind(_console);
+console.warn = _console.warn.bind(_console);
+console.error = _console.error.bind(_console);
+console.info = _console.info.bind(_console);
+console.debug = _console.debug.bind(_console);
+
+console.log('[Server] Native stdout/stderr redirected to /dev/null (suppresses SDK spam)');
+
+const { DeckLinkManager } = require('./decklink-manager');
 
 const NDI_DISABLED = false;
 const NDIManager = NDI_DISABLED ? null : require('./ndi-manager').NDIManager;
