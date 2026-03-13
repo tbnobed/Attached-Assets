@@ -176,7 +176,7 @@ function setupIpcHandlers(ipcMain, context) {
         const postData = JSON.stringify({ deviceIndex, mode: mode || '1080p2997' });
         const req = http.request({
           hostname: host, port: p, path: '/api/output/start',
-          method: 'POST', timeout: 15000,
+          method: 'POST', timeout: 5000,
           headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(postData) }
         }, (res) => {
           let body = '';

@@ -15,6 +15,17 @@ console.debug = _stderr.debug.bind(_stderr);
 
 const { DeckLinkManager } = require('./decklink-manager');
 
+try {
+  const path = require('path');
+  const decklinkAddon = require(path.join(__dirname, 'decklink-addon'));
+  if (decklinkAddon.available && typeof decklinkAddon.redirectStdoutToDevNull === 'function') {
+    decklinkAddon.redirectStdoutToDevNull();
+    console.log('[Server] Native stdout redirected to /dev/null (suppresses SDK debug output)');
+  }
+} catch (e) {
+  console.warn('[Server] Could not redirect native stdout:', e.message);
+}
+
 const NDI_DISABLED = false;
 const NDIManager = NDI_DISABLED ? null : require('./ndi-manager').NDIManager;
 const { RecorderManager } = require('./recorder-manager');
