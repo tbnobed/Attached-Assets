@@ -65,10 +65,24 @@ let _videoDecodeCount = 0;
 const _decoding = new Map();
 const _pendingDecode = new Map();
 
+const _participantIsoIndex = new Map();
+let _nextIsoIndex = 1;
+
+const _clientParticipants = new Map();
+
+function _getIsoIndex(userId) {
+  if (_participantIsoIndex.has(userId)) {
+    return _participantIsoIndex.get(userId);
+  }
+  const idx = _nextIsoIndex++;
+  _participantIsoIndex.set(userId, idx);
+  return idx;
+}
+
 function _routeFrame(userId, buf, w, h) {
-  deckLinkManager.sendVideoFrame(userId, buf, w, h);
-  if (!NDI_DISABLED) ndiManager.sendVideoFrame(userId, buf, w, h);
-  recorderManager.writeVideoFrame(userId, buf, w, h);
+  try { deckLinkManager.sendVideoFrame(userId, buf, w, h); } catch (e) {}
+  try { if (!NDI_DISABLED) ndiManager.sendVideoFrame(userId, buf, w, h); } catch (e) {}
+  try { recorderManager.writeVideoFrame(userId, buf, w, h); } catch (e) {}
 }
 
 async function _processDecodeQueue(userId) {
@@ -101,16 +115,37 @@ receiver.on('video-frame', ({ userId, width, height, buffer }) => {
 });
 
 receiver.on('audio-data', ({ userId, buffer, sampleRate, channels }) => {
-  deckLinkManager.sendAudioData(userId, buffer, sampleRate, channels);
-  if (!NDI_DISABLED) ndiManager.sendAudioData(userId, buffer, sampleRate, channels);
-  recorderManager.writeAudioData(userId, buffer);
+  try { deckLinkManager.sendAudioData(userId, buffer, sampleRate, channels); } catch (e) {}
+  try { if (!NDI_DISABLED) ndiManager.sendAudioData(userId, buffer, sampleRate, channels); } catch (e) {}
+  try { recorderManager.writeAudioData(userId, buffer); } catch (e) {}
 });
 
-receiver.on('participant-join', async (participant) => {
-  console.log(`[Server] Participant joined: ${participant.name} (id=${participant.userId})`);
+receiver.on('participant-join', (participant) => {
+  const { userId, name, clientId } = participant;
+  console.log(`[Server] Participant joined: ${name} (id=${userId}, client=${clientId || '?'})`);
+
+  if (clientId !== undefined) {
+    if (!_clientParticipants.has(clientId)) {
+      _clientParticipants.set(clientId, new Set());
+    }
+    _clientParticipants.get(clientId).add(userId);
+  }
+
   if (_ndiAutoCreate) {
-    const isoIndex = ndiManager.sources.size + 1;
-    await ndiManager.createSource(participant.userId, participant.name, isoIndex);
+    if (ndiManager.sources && ndiManager.sources.has(userId)) {
+      console.log(`[Server] NDI source already exists for ${name} — skipping creation`);
+      return;
+    }
+    const isoIndex = _getIsoIndex(userId);
+    const t0 = Date.now();
+    Promise.resolve(ndiManager.createSource(userId, name, isoIndex)).then(() => {
+      const dt = Date.now() - t0;
+      if (dt > 100) {
+        console.warn(`[Server] NDI createSource took ${dt}ms (may have blocked event loop)`);
+      }
+    }).catch((err) => {
+      console.error(`[Server] NDI createSource failed: ${err.message}`);
+    });
   }
 });
 
@@ -142,6 +177,15 @@ receiver.on('client-connected', ({ clientId, remoteAddr }) => {
 
 receiver.on('client-disconnected', ({ clientId, remoteAddr }) => {
   console.log(`[Server] Mac client disconnected: ${remoteAddr} (id=${clientId})`);
+
+  const participantIds = _clientParticipants.get(clientId);
+  if (participantIds) {
+    for (const userId of participantIds) {
+      receiver.participants.delete(userId);
+    }
+    _clientParticipants.delete(clientId);
+    console.log(`[Server] Cleaned up ${participantIds.size} participant(s) from client ${clientId}`);
+  }
 });
 
 async function main() {

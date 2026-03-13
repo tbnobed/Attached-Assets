@@ -1,0 +1,52 @@
+[Receiver] Client 1 connected from 172.31.204.134:61840
+[Server] Mac client connected: 172.31.204.134:61840 (id=1)
+[Server] Participant joined: Obed Test (id=16778240)
+[Receiver] Participant joined: Obed Test (id=16778240)
+[NDI] Created source: ZoomLink_ISO1_Obed_Test
+[Receiver] Client 1 timed out (no heartbeat for 30000ms)
+[Server] Mac client disconnected: 172.31.204.134:61840 (id=1)
+[Receiver] Client 2 connected from 172.31.204.134:61845
+[Server] Mac client connected: 172.31.204.134:61845 (id=2)
+[Receiver] Client 1 disconnected
+[Server] Mac client disconnected: 172.31.204.134:61840 (id=1)
+[Server] Participant joined: Obed Test (id=16778240)
+[NDI] Destroyed source for Obed Test
+[Receiver] Participant joined: Obed Test (id=16778240)
+[NDI] Created source: ZoomLink_ISO2_Obed_Test
+[Server] Decoded JPEG #1: 640x360 (54KB → 900KB)
+[Server] Decoded JPEG #2: 640x360 (54KB → 900KB)
+[Server] Decoded JPEG #3: 640x360 (54KB → 900KB)
+[Receiver] Client 2 disconnected
+[Server] Mac client disconnected: 172.31.204.134:61845 (id=2)
+ [Receiver] Client 3 connected from 10.10.1.94:49742
+[Server] Mac client connected: 10.10.1.94:49742 (id=3)
+[Server] Participant joined: Obed Sandoval (id=16783360)
+[Receiver] Participant joined: Obed Sandoval (id=16783360)
+[NDI] Created source: ZoomLink_ISO2_Obed_Sandoval
+[Receiver] Client 3 timed out (no heartbeat for 30000ms)
+[Server] Mac client disconnected: 10.10.1.94:49742 (id=3)
+[Receiver] Client 3 disconnected
+[Server] Mac client disconnected: 10.10.1.94:49742 (id=3)
+[Receiver] Client 4 connected from 10.10.1.94:49745
+[Server] Mac client connected: 10.10.1.94:49745 (id=4)
+[Server] Participant joined: Obed Sandoval (id=16783360)
+[NDI] Destroyed source for Obed Sandoval
+[Receiver] Participant joined: Obed Sandoval (id=16783360)
+[NDI] Created source: ZoomLink_ISO3_Obed_Sandoval
+[Receiver] Client 4 timed out (no heartbeat for 30000ms)
+[Server] Mac client disconnected: 10.10.1.94:49745 (id=4)
+[Receiver] Client 4 disconnected
+[Server] Mac client disconnected: 10.10.1.94:49745 (id=4)
+[DeckLink] Output started on device 0: 1080i 59.94 (handle=1)
+[Receiver] Client 5 connected from 10.10.1.94:49750
+[Server] Mac client connected: 10.10.1.94:49750 (id=5)
+[Server] Participant joined: Obed Sandoval (id=16783360)
+[NDI] Destroyed source for Obed Sandoval
+[Receiver] Participant joined: Obed Sandoval (id=16783360)
+[NDI] Created source: ZoomLink_ISO3_Obed_Sandoval
+[Receiver] Client 5 timed out (no heartbeat for 30000ms)
+[Server] Mac client disconnected: 10.10.1.94:49750 (id=5)
+[Receiver] Client 5 disconnected
+[Server] Mac client disconnected: 10.10.1.94:49750 (id=5)
+[Receiver] Client 6 connected from 10.10.1.94:49754
+[Server] Mac client connected: 10.10.1.94:49754 (id=6)

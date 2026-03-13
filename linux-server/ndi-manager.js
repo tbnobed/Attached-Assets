@@ -38,6 +38,11 @@ class NDIManager extends EventEmitter {
     const sourceName = `${this.prefix}_ISO${isoIndex || userId}_${safeName}`;
 
     if (this.sources.has(userId)) {
+      const existing = this.sources.get(userId);
+      if (existing.sourceName === sourceName && existing.sender && !existing.mock) {
+        console.log(`[NDI] Source ${sourceName} already exists — reusing`);
+        return existing;
+      }
       this.destroySource(userId);
     }
 
@@ -60,11 +65,16 @@ class NDIManager extends EventEmitter {
     }
 
     try {
+      const t0 = Date.now();
       const sender = await this.grandiose.send({
         name: sourceName,
         clockVideo: false,
         clockAudio: false,
       });
+      const dt = Date.now() - t0;
+      if (dt > 50) {
+        console.warn(`[NDI] grandiose.send() took ${dt}ms`);
+      }
 
       const source = {
         userId,
@@ -98,8 +108,13 @@ class NDIManager extends EventEmitter {
 
     if (!source.mock && source.sender) {
       try {
+        const t0 = Date.now();
         if (typeof source.sender.destroy === 'function') {
           source.sender.destroy();
+        }
+        const dt = Date.now() - t0;
+        if (dt > 50) {
+          console.warn(`[NDI] sender.destroy() took ${dt}ms for ${source.displayName}`);
         }
       } catch (err) {
         console.error(`[NDI] Error destroying source for ${source.displayName}:`, err.message);
@@ -131,7 +146,7 @@ class NDIManager extends EventEmitter {
         xres: width,
         yres: height,
         frameRateN: 30000,
-        frameRateD: 1000,
+        frameRateD: 1001,
         pictureAspectRatio: width / height,
         frameFormatType: 1,
         fourCC: this.grandiose.FOURCC_BGRA,
@@ -170,6 +185,11 @@ class NDIManager extends EventEmitter {
       sr: sampleRate || 48000,
     });
 
+    const maxQueued = 10;
+    if (source._audioQueue.length > maxQueued) {
+      source._audioQueue = source._audioQueue.slice(-maxQueued);
+    }
+
     if (!source._audioSending) {
       this._drainAudioQueue(userId);
     }
@@ -203,9 +223,9 @@ class NDIManager extends EventEmitter {
         });
 
         if (result && typeof result.then === 'function') {
-          result.then(() => setImmediate(processNext)).catch(() => setImmediate(processNext));
+          result.then(() => setTimeout(processNext, 0)).catch(() => setTimeout(processNext, 0));
         } else {
-          setImmediate(processNext);
+          setTimeout(processNext, 0);
         }
       } catch (err) {
         source._audioErrorCount++;

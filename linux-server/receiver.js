@@ -73,6 +73,7 @@ class FrameReceiver extends EventEmitter {
       lastHeartbeat: Date.now(),
       packetsReceived: 0,
       bytesReceived: 0,
+      lastCheckBytes: 0,
     };
 
     this.clients.set(clientId, client);
@@ -132,11 +133,12 @@ class FrameReceiver extends EventEmitter {
         const participant = {
           userId: packet.userId,
           name: info.displayName || info.name || `User ${packet.userId}`,
+          clientId,
           ...info,
         };
         this.participants.set(packet.userId, participant);
         this.emit('participant-join', participant);
-        console.log(`[Receiver] Participant joined: ${participant.name} (id=${packet.userId})`);
+        console.log(`[Receiver] Participant joined: ${participant.name} (id=${packet.userId}, client=${clientId})`);
         break;
       }
 
@@ -172,11 +174,17 @@ class FrameReceiver extends EventEmitter {
     const timeout = 30000;
 
     for (const [id, client] of this.clients) {
-      if (now - client.lastHeartbeat > timeout) {
-        console.warn(`[Receiver] Client ${id} timed out (no heartbeat for ${timeout}ms)`);
+      const age = now - client.lastHeartbeat;
+      const bytesSinceCheck = client.bytesReceived - client.lastCheckBytes;
+      client.lastCheckBytes = client.bytesReceived;
+
+      if (age > timeout) {
+        console.warn(`[Receiver] Client ${id} timed out (no data for ${Math.round(age / 1000)}s, total bytes=${client.bytesReceived}, packets=${client.packetsReceived})`);
         client.socket.destroy();
         this.clients.delete(id);
         this.emit('client-disconnected', { clientId: id, remoteAddr: client.remoteAddr, reason: 'timeout' });
+      } else if (bytesSinceCheck === 0 && age > 15000) {
+        console.warn(`[Receiver] Client ${id} stall warning: no data for ${Math.round(age / 1000)}s`);
       }
     }
   }
