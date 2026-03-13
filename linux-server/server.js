@@ -13,18 +13,22 @@ console.error = _stderr.error.bind(_stderr);
 console.info = _stderr.info.bind(_stderr);
 console.debug = _stderr.debug.bind(_stderr);
 
-const { DeckLinkManager } = require('./decklink-manager');
-
-try {
-  const path = require('path');
-  const decklinkAddon = require(path.join(__dirname, 'decklink-addon'));
-  if (decklinkAddon.available && typeof decklinkAddon.redirectStdoutToDevNull === 'function') {
-    decklinkAddon.redirectStdoutToDevNull();
-    console.log('[Server] Native stdout redirected to /dev/null (suppresses SDK debug output)');
+const fs = require('fs');
+(function redirectNativeStdout() {
+  try {
+    try { fs.closeSync(1); } catch (_) {}
+    const fd = fs.openSync('/dev/null', 'w');
+    if (fd === 1) {
+      console.log('[Server] fd 1 (stdout) redirected to /dev/null — native SDK spam suppressed');
+    } else {
+      console.warn('[Server] /dev/null opened on fd ' + fd + ' instead of 1 — spam may still appear');
+    }
+  } catch (e) {
+    console.warn('[Server] Failed to redirect fd 1:', e.message);
   }
-} catch (e) {
-  console.warn('[Server] Could not redirect native stdout:', e.message);
-}
+})();
+
+const { DeckLinkManager } = require('./decklink-manager');
 
 const NDI_DISABLED = false;
 const NDIManager = NDI_DISABLED ? null : require('./ndi-manager').NDIManager;
