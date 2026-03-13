@@ -13,30 +13,6 @@ console.error = _stderr.error.bind(_stderr);
 console.info = _stderr.info.bind(_stderr);
 console.debug = _stderr.debug.bind(_stderr);
 
-const fs = require('fs');
-(function redirectNativeStdout() {
-  try {
-    process.stdout.write = () => true;
-    process.stdout.end = () => {};
-    process.stdout.on('error', () => {});
-    if (process.stdout._handle && typeof process.stdout._handle.close === 'function') {
-      process.stdout._handle.close();
-      process.stdout._handle = null;
-    }
-
-    try { fs.closeSync(1); } catch (_) {}
-    const fd = fs.openSync('/dev/null', 'w');
-    if (fd === 1) {
-      console.log('[Server] fd 1 (stdout) redirected to /dev/null — native SDK spam suppressed');
-    } else {
-      fs.closeSync(fd);
-      console.warn('[Server] /dev/null opened on fd ' + fd + ' instead of 1 — spam may still appear');
-    }
-  } catch (e) {
-    console.warn('[Server] Failed to redirect fd 1:', e.message);
-  }
-})();
-
 const { DeckLinkManager } = require('./decklink-manager');
 
 const NDI_DISABLED = false;
