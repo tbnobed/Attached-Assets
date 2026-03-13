@@ -1,0 +1,65 @@
+[6:09:16 PM]Application initialized (Capture Client)
+[6:09:20 PM]Zoom SDK authenticated — ready to join meetings
+[6:09:45 PM]Joining meeting 87565241136...
+[6:09:46 PM]Join initiated for meeting 87565241136
+[6:09:49 PM]Participant joined: Participant (ISO 1)
+[6:09:49 PM]Connected to meeting
+[6:09:49 PM]In meeting — waiting for raw recording permission...
+[6:09:49 PM]Raw recording started — capturing ISO video/audio feeds
+[6:09:49 PM]Raw recording active — capturing participant feeds
+[6:09:59 PM]Connecting to Remote SDI server 10.10.1.106:9300...
+[6:09:59 PM]Remote SDI error: connect ECONNREFUSED 10.10.1.106:9300
+[6:10:01 PM]Remote SDI error: connect ECONNREFUSED 10.10.1.106:9300
+[6:10:01 PM]Could not query server devices: connect ECONNREFUSED 10.10.1.106:9301
+[6:10:05 PM]Remote SDI error: connect ECONNREFUSED 10.10.1.106:9300
+[6:10:11 PM]Connected to Remote SDI server 10.10.1.106:9300
+[6:10:29 PM]Device query failed: Connection timed out
+[6:10:51 PM]Remote SDI error: write EPIPE
+[6:10:54 PM]Connected to Remote SDI server 10.10.1.106:9300
+[6:11:11 PM]Device query failed: Connection timed out
+[6:11:34 PM]Remote SDI error: write EPIPE
+[6:11:36 PM]Connected to Remote SDI server 10.10.1.106:9300
+[6:11:53 PM]Device query failed: Connection timed out
+[6:12:16 PM]Remote SDI error: write EPIPE
+[6:12:18 PM]Connected to Remote SDI server 10.10.1.106:9300
+[6:12:35 PM]Device query failed: Connection timed out
+[6:12:58 PM]Remote SDI error: write EPIPE
+[6:13:00 PM]Connected to Remote SDI server 10.10.1.106:9300
+[6:13:18 PM]Device query failed: Connection timed out
+[6:13:40 PM]Remote SDI error: write EPIPE
+[6:13:42 PM]Connected to Remote SDI server 10.10.1.106:9300
+[6:14:00 PM]Device query failed: Connection timed out
+[6:14:22 PM]Remote SDI error: write EPIPE
+[6:14:24 PM]Connected to Remote SDI server 10.10.1.106:9300
+[6:14:42 PM]Device query failed: Connection timed out
+[6:15:04 PM]Remote SDI error: write EPIPE
+[6:15:06 PM]Connected to Remote SDI server 10.10.1.106:9300
+[6:15:24 PM]Device query failed: Connection timed out
+[6:15:46 PM]Remote SDI error: write EPIPE
+[6:15:48 PM]Connected to Remote SDI server 10.10.1.106:9300
+[6:16:06 PM]Device query failed: Connection timed out
+[6:16:28 PM]Remote SDI error: write EPIPE
+[6:16:30 PM]Connected to Remote SDI server 10.10.1.106:9300
+[6:16:48 PM]Device query failed: Connection timed out
+[6:17:10 PM]Remote SDI error: write EPIPE
+[6:17:13 PM]Connected to Remote SDI server 10.10.1.106:9300
+[6:17:30 PM]Device query failed: Connection timed out
+[6:17:53 PM]Remote SDI error: write EPIPE
+[6:17:55 PM]Connected to Remote SDI server 10.10.1.106:9300
+[6:18:12 PM]Device query failed: Connection timed out
+[6:18:35 PM]Remote SDI error: write EPIPE
+[6:18:37 PM]Connected to Remote SDI server 10.10.1.106:9300
+[6:18:55 PM]Device query failed: Connection timed out
+[6:19:17 PM]Remote SDI error: write EPIPE
+[6:19:19 PM]Connected to Remote SDI server 10.10.1.106:9300
+[6:19:37 PM]Device query failed: Connection timed out
+[6:19:59 PM]Remote SDI error: write EPIPE
+[6:20:01 PM]Connected to Remote SDI server 10.10.1.106:9300
+[6:20:19 PM]Device query failed: Connection timed out
+[6:20:41 PM]Remote SDI error: write EPIPE
+[6:20:43 PM]Connected to Remote SDI server 10.10.1.106:9300
+[6:21:01 PM]Device query failed: Connection timed out
+[6:21:23 PM]Remote SDI error: write EPIPE
+[6:21:25 PM]Connected to Remote SDI server 10.10.1.106:9300
+[6:21:40 PM]Disconnected from Remote SDI server
+[6:21:43 PM]Device query failed: Connection timed out
