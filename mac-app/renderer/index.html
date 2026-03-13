@@ -1632,10 +1632,13 @@
       document.getElementById('rsdiFps').textContent = r.fps || 0;
 
       if (r.assignments) {
+        const prev = JSON.stringify(state.rsdiAssignments);
         state.rsdiAssignments = r.assignments;
+        if (JSON.stringify(r.assignments) !== prev) {
+          renderRsdiAssignments();
+          renderNdiSources();
+        }
       }
-      renderRsdiAssignments();
-      renderNdiSources();
     }
 
     function renderRsdiAssignments() {
