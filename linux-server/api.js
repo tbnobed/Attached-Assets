@@ -282,8 +282,12 @@ function createApi(options = {}) {
 
   return {
     start() {
-      return new Promise((resolve) => {
-        server.listen(port, () => {
+      return new Promise((resolve, reject) => {
+        server.on('error', (err) => {
+          console.error(`[API] Failed to start HTTP server on port ${port}:`, err.message);
+          reject(err);
+        });
+        server.listen(port, '0.0.0.0', () => {
           console.log(`[API] HTTP API listening on port ${port}`);
           console.log(`[API] Dashboard: http://localhost:${port}/`);
           resolve();

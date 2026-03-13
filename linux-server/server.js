@@ -210,4 +210,13 @@ function shutdown() {
 process.on('SIGINT', shutdown);
 process.on('SIGTERM', shutdown);
 
+process.on('uncaughtException', (err) => {
+  console.error('[Server] UNCAUGHT EXCEPTION:', err.message);
+  console.error(err.stack);
+});
+
+process.on('unhandledRejection', (reason) => {
+  console.error('[Server] UNHANDLED REJECTION:', reason);
+});
+
 main();
